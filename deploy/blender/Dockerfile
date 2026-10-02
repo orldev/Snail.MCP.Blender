@@ -2,7 +2,7 @@
 # Blender without an interface, with the Snail Bridge add-on installed, serving the MCP server that runs beside it.
 # Built from the repository root: docker build -f deploy/blender/Dockerfile .
 
-FROM ubuntu:24.04
+FROM ubuntu:25.10
 
 ARG BLENDER_VERSION=5.2.1
 ARG BLENDER_SHA256=a31f524fa99a527d3d52b7f5aaa68c34e1a19d5a1c9473f79c5cc610fd5b10e9
