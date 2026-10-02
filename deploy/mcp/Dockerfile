@@ -19,7 +19,7 @@ ARG VERSION=0.0.0-dev
 
 RUN dotnet publish src/Snail.MCP.Blender.csproj -c Release -o /app -p:UseAppHost=false -p:Version="$VERSION"
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.11
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.12
 
 WORKDIR /app
 COPY --from=build /app .
