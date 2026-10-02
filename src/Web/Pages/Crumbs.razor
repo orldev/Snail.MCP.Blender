@@ -1,0 +1,23 @@
+@preservewhitespace true
+<p class="crumbs">
+    @for (var index = 0; index < Items.Count; index++)
+    {
+        @if (index > 0)
+        {
+            <span class="sep"> / </span>
+        }
+        @if (index == Items.Count - 1)
+        {
+            <span class="crumb-here">@Items[index].Label</span>
+        }
+        else
+        {
+            <a href="@Items[index].Href">@Items[index].Label</a>
+        }
+    }
+</p>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<Crumb> Items { get; set; } = [];
+}

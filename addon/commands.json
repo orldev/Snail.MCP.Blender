@@ -1,0 +1,727 @@
+{
+  "note": "What each command means, in one place: which parameters it takes, where among them it names an object or a collection, which of them name a file or a folder, which link carries it, whether it only reads, whether it destroys and whether it reaches beyond Blender. The add-on reads this to refuse a parameter it would otherwise ignore, and for leases, the journal and the Python setting; the server reads the channel to choose the link and its guard tests read the rest for the tool annotations. The params and targets lists are not written by hand: tools/parameters_from_source.py reads them out of the handlers, and CI fails when the file and the handlers disagree.",
+  "target_keys": [
+    "name",
+    "names",
+    "target",
+    "targets",
+    "objects",
+    "object",
+    "armature",
+    "collection",
+    "parent",
+    "camera",
+    "light",
+    "strip"
+  ],
+  "named_after_something_else": [
+    "batch_job",
+    "snapshot",
+    "scenes",
+    "view_layer",
+    "file_output",
+    "render_job",
+    "open_project"
+  ],
+  "channels": {
+    "control": "Blender's main thread, one after another: the default, and the only channel that can wait behind a render.",
+    "data": "The socket thread, for files and the data directory, so a download never waits behind a render.",
+    "monitor": "The socket thread, for a heartbeat and the progress of the render in flight."
+  },
+  "commands": {
+    "add_armature": {
+      "params": [ "bones", "location", "name" ]
+    },
+    "add_camera": {
+      "params": [ "clip_end", "clip_start", "dof", "lens", "location", "look_at", "make_active", "name", "rotation", "sensor_width" ],
+      "targets": [ "dof.focus_object" ]
+    },
+    "add_constraint": {
+      "params": [ "bone", "constraint_name", "influence", "name", "settings", "type" ],
+      "targets": [ "name" ]
+    },
+    "add_curve": {
+      "params": [ "bevel_depth", "bevel_object", "bevel_resolution", "closed", "extrude", "fill_mode", "kind", "location", "name", "offset", "points", "resolution_u", "size", "taper_object" ],
+      "targets": [ "bevel_object", "taper_object" ]
+    },
+    "add_driver": {
+      "params": [ "data_path", "expression", "index", "name", "variables" ],
+      "targets": [ "name", "variables[].object" ]
+    },
+    "add_empty": {
+      "params": [ "image_path", "location", "name", "parent", "rotation", "size", "type" ],
+      "targets": [ "parent" ],
+      "paths": [
+        "image_path"
+      ]
+    },
+    "add_fcurve_modifier": {
+      "params": [ "channels", "name", "settings", "type" ],
+      "targets": [ "name" ]
+    },
+    "add_light": {
+      "params": [ "angle", "color", "energy", "ies_path", "location", "name", "radius", "rotation", "shadow", "shape", "size", "size_y", "spot_blend", "spot_size", "spread", "temperature", "type" ]
+    },
+    "add_marker": {
+      "params": [ "camera", "frame", "marker_name" ],
+      "targets": [ "camera" ]
+    },
+    "add_modifier": {
+      "params": [ "apply", "modifier_name", "name", "settings", "type" ],
+      "targets": [ "name" ]
+    },
+    "add_node": {
+      "params": [ "inputs", "label", "location", "material", "name", "properties", "type" ]
+    },
+    "add_particles": {
+      "params": [ "count", "frame_end", "frame_start", "hair_length", "lifetime", "name", "settings", "system_name", "type" ],
+      "targets": [ "name" ]
+    },
+    "add_physics": {
+      "params": [ "name", "settings", "type" ],
+      "targets": [ "name" ]
+    },
+    "add_primitive": {
+      "params": [ "depth", "kind", "location", "minor_radius", "name", "rotation", "scale", "size" ]
+    },
+    "add_shape_key": {
+      "params": [ "from_mix", "key_name", "name", "relative", "value", "vertices" ],
+      "targets": [ "name" ]
+    },
+    "add_text": {
+      "params": [ "align", "bevel_depth", "body", "extrude", "font_path", "location", "name", "rotation", "size", "upright" ]
+    },
+    "append_assets": {
+      "params": [ "activate", "collection", "link", "names", "path", "scene", "type" ],
+      "targets": [ "collection" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "apply_modifier": {
+      "params": [ "modifier", "name" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "apply_transforms": {
+      "params": [ "location", "name", "rotation", "scale" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "assign_material": {
+      "params": [ "append", "material", "object", "selected_faces", "slot" ],
+      "targets": [ "object" ]
+    },
+    "bake_physics": {
+      "params": [ "frame_end", "free" ]
+    },
+    "bake_texture": {
+      "params": [ "height", "image_name", "keep_node", "margin", "name", "path", "preview", "preview_size", "samples", "type", "width" ],
+      "targets": [ "name" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "batch_job": {
+      "params": [ "agent", "commands", "continue_on_error", "directory", "input", "name", "output" ],
+      "destructive": true,
+      "open_world": true,
+      "unguarded": true,
+      "paths": [
+        "input",
+        "output",
+        "directory"
+      ]
+    },
+    "batch_status": {
+      "params": [ "directory", "id", "log_lines" ],
+      "read_only": true,
+      "paths": [
+        "directory"
+      ]
+    },
+    "build_geometry_nodes": {
+      "params": [ "clear", "inputs", "interface_inputs", "links", "modifier", "name", "nodes", "tree_name" ],
+      "targets": [ "name" ]
+    },
+    "build_node_graph": {
+      "params": [ "clear", "links", "material", "nodes" ]
+    },
+    "camera_move": {
+      "params": [ "camera", "distance", "distance_end", "end", "height", "height_end", "interpolation", "name", "pivot_name", "revolutions", "scene", "start", "start_angle", "target", "targets", "type" ],
+      "targets": [ "camera", "name", "pivot_name", "target", "targets" ]
+    },
+    "compositor": {
+      "params": [ "action", "from_node", "from_socket", "inputs", "location", "name", "node", "properties", "to_node", "to_socket", "type" ],
+      "read_only": {
+        "actions": [
+          "info"
+        ]
+      }
+    },
+    "convert_to_mesh": {
+      "params": [ "keep_original", "name" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "create_collection": {
+      "params": [ "name", "parent" ],
+      "targets": [ "parent" ]
+    },
+    "create_material": {
+      "params": [ "alpha", "assign_to", "base_color", "blend_method", "coat", "emission_color", "emission_strength", "ior", "metallic", "name", "roughness", "sheen", "specular", "subsurface", "transmission" ]
+    },
+    "cryptomatte_matte": {
+      "params": [ "directory", "layer", "name", "names", "output", "scene", "slot" ],
+      "paths": [
+        "directory"
+      ]
+    },
+    "delete_keyframes": {
+      "params": [ "channels", "frame", "name" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "delete_objects": {
+      "params": [ "names", "selected" ],
+      "targets": [ "names" ],
+      "destructive": true
+    },
+    "describe_constraint": {
+      "params": [ "type" ],
+      "read_only": true
+    },
+    "describe_modifier": {
+      "params": [ "type" ],
+      "read_only": true
+    },
+    "describe_operator": {
+      "params": [ "name" ],
+      "read_only": true
+    },
+    "duplicate_object": {
+      "params": [ "linked", "name", "new_name", "offset" ],
+      "targets": [ "name" ]
+    },
+    "export_file": {
+      "params": [ "format", "names", "options", "path", "selected_only" ],
+      "targets": [ "names" ],
+      "destructive": true,
+      "paths": [
+        "path"
+      ]
+    },
+    "file_get": {
+      "params": [ "area", "length", "offset", "path" ],
+      "channel": "data",
+      "paths": [
+        "path"
+      ]
+    },
+    "file_list": {
+      "params": [ "area", "limit", "offset", "path" ],
+      "channel": "data",
+      "paths": [
+        "path"
+      ]
+    },
+    "file_output": {
+      "params": [ "action", "all_passes", "color_depth", "color_management", "color_mode", "compression", "directory", "exr_codec", "file_format", "file_name", "name", "quality", "slots" ],
+      "read_only": {
+        "actions": [
+          "info"
+        ]
+      },
+      "paths": [
+        "directory"
+      ]
+    },
+    "file_put": {
+      "params": [ "area", "data", "done", "offset", "overwrite", "path", "sha256" ],
+      "channel": "data",
+      "destructive": true,
+      "paths": [
+        "path"
+      ]
+    },
+    "follow_path": {
+      "params": [ "curve", "duration", "follow", "forward_axis", "name", "start" ],
+      "targets": [ "curve", "name" ]
+    },
+    "import_file": {
+      "params": [ "format", "options", "path" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "insert_keyframe": {
+      "params": [ "channels", "frame", "interpolation", "name", "values" ],
+      "targets": [ "name" ]
+    },
+    "inspect_image": {
+      "params": [ "path", "preview", "preview_size" ],
+      "read_only": true,
+      "paths": [
+        "path"
+      ]
+    },
+    "join_objects": {
+      "params": [ "names", "target" ],
+      "targets": [ "names", "target" ],
+      "destructive": true
+    },
+    "journal": {
+      "params": [ "author", "limit", "since", "target" ],
+      "read_only": true
+    },
+    "lease": {
+      "params": [ "action", "agent", "force", "name", "names", "note", "ttl_seconds" ],
+      "read_only": {
+        "actions": [
+          "list"
+        ]
+      }
+    },
+    "lens_effects": {
+      "params": [ "chromatic_aberration", "clear", "defocus", "denoise", "glare", "grain", "halation", "scene", "vector_blur", "vignette" ]
+    },
+    "light_linking": {
+      "params": [ "blocker_mode", "blockers", "clear", "light", "receiver_mode", "receivers" ],
+      "targets": [ "blockers", "light", "receivers" ]
+    },
+    "light_rig": {
+      "params": [ "distance", "fill_ratio", "fill_temperature", "key_angle", "key_energy", "key_temperature", "name", "rim_ratio", "rim_temperature", "roles", "scene", "target", "targets" ],
+      "targets": [ "target", "targets" ]
+    },
+    "link_nodes": {
+      "params": [ "from_node", "from_socket", "material", "to_node", "to_socket" ]
+    },
+    "list_assets": {
+      "params": [ "assets_only", "path", "types" ],
+      "read_only": true,
+      "paths": [
+        "path"
+      ]
+    },
+    "list_keyframes": {
+      "params": [ "channels", "name" ],
+      "targets": [ "name" ],
+      "read_only": true
+    },
+    "list_materials": {
+      "params": [], "read_only": true }, "list_objects": {
+      "params": [ "limit", "name_contains", "type" ],
+      "read_only": true
+    },
+    "load_image_texture": {
+      "params": [ "colorspace", "connect_to", "material", "name", "path", "projection" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "material_info": {
+      "params": [ "name" ],
+      "read_only": true
+    },
+    "mesh_bevel": {
+      "params": [ "name", "profile", "segments", "vertices_only", "width" ],
+      "targets": [ "name" ]
+    },
+    "mesh_extrude": {
+      "params": [ "distance", "individual", "name" ],
+      "targets": [ "name" ]
+    },
+    "mesh_geometry": {
+      "params": [ "limit", "name", "selected_only", "world" ],
+      "targets": [ "name" ],
+      "read_only": true
+    },
+    "mesh_inset": {
+      "params": [ "depth", "individual", "name", "thickness" ],
+      "targets": [ "name" ]
+    },
+    "mesh_merge": {
+      "params": [ "distance", "name" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "mesh_normals": {
+      "params": [ "inside", "name" ],
+      "targets": [ "name" ]
+    },
+    "mesh_select": {
+      "params": [ "axis", "edges", "extend", "faces", "material_index", "max", "min", "mode", "name", "threshold", "vertices" ],
+      "targets": [ "name" ]
+    },
+    "mesh_set_vertices": {
+      "params": [ "name", "relative", "vertices" ],
+      "targets": [ "name" ]
+    },
+    "mesh_shade": {
+      "params": [ "angle", "name", "smooth" ],
+      "targets": [ "name" ]
+    },
+    "mesh_subdivide": {
+      "params": [ "cuts", "name", "smooth" ],
+      "targets": [ "name" ]
+    },
+    "move_keyframes": {
+      "params": [ "channels", "from_frame", "name", "offset", "pivot", "scale", "to_frame" ],
+      "targets": [ "name" ]
+    },
+    "move_to_collection": {
+      "params": [ "collection", "keep_others", "names" ],
+      "targets": [ "collection", "names" ]
+    },
+    "new_file": {
+      "params": [ "empty" ],
+      "destructive": true
+    },
+    "object_info": {
+      "params": [ "name" ],
+      "targets": [ "name" ],
+      "read_only": true
+    },
+    "object_render_flags": {
+      "params": [ "caustics", "holdout", "light_group", "motion_blur", "name", "names", "pass_index", "shadow_catcher", "shadow_terminator_offset", "visible" ],
+      "targets": [ "name", "names" ]
+    },
+    "open_file": {
+      "params": [ "load_ui", "path" ],
+      "destructive": true,
+      "paths": [
+        "path"
+      ]
+    },
+    "open_project": {
+      "params": [ "discard", "from", "name" ],
+      "destructive": true
+    },
+    "parent_to_armature": {
+      "params": [ "armature", "method", "name" ],
+      "targets": [ "armature", "name" ]
+    },
+    "ping": {
+      "params": [ "commands" ],
+      "channel": "monitor",
+      "read_only": true
+    },
+    "pose_bone": {
+      "params": [ "armature", "bone", "frame", "location", "rotation", "scale" ],
+      "targets": [ "armature" ]
+    },
+    "procedural_texture": {
+      "params": [ "bump_strength", "color_ramp", "connect_to", "inputs", "kind", "material", "name", "properties" ]
+    },
+    "progress": {
+      "params": [], "channel": "monitor", "read_only": true }, "python": {
+      "params": [ "code" ],
+      "destructive": true,
+      "open_world": true,
+      "unguarded": true
+    },
+    "remove_constraint": {
+      "params": [ "bone", "constraint", "name" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "remove_modifier": {
+      "params": [ "modifier", "name" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "remove_node": {
+      "params": [ "material", "node" ],
+      "destructive": true
+    },
+    "remove_physics": {
+      "params": [ "name", "type" ],
+      "targets": [ "name" ],
+      "destructive": true
+    },
+    "render_animation": {
+      "params": [ "end", "file_format", "output_path", "preview", "preview_size", "scene", "start", "step", "view_layer" ],
+      "paths": [
+        "output_path"
+      ]
+    },
+    "render_budget": {
+      "params": [ "apply", "memory_limit_mb", "pack_for_farm", "probe", "scene" ]
+    },
+    "render_check": {
+      "params": [ "output_path", "scene" ],
+      "read_only": true,
+      "paths": [
+        "output_path"
+      ]
+    },
+    "render_image": {
+      "params": [ "frame", "path", "preview", "preview_size", "scene", "view_layer" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "render_job": {
+      "params": [ "cameras", "chunks", "color_depth", "color_mode", "directory", "engine", "exr_codec", "file_format", "frames", "log_lines", "max_parallel", "ocio_config", "output_path", "overwrite", "percentage", "placeholder", "priority", "resolution_x", "resolution_y", "retries", "samples", "scene", "threads", "view_layers" ],
+      "targets": [ "cameras" ],
+      "paths": [
+        "output_path",
+        "directory"
+      ]
+    },
+    "render_job_cancel": {
+      "params": [ "directory", "id" ],
+      "destructive": true,
+      "paths": [
+        "directory"
+      ]
+    },
+    "render_job_status": {
+      "params": [ "directory", "id", "log_lines" ],
+      "read_only": true,
+      "paths": [
+        "directory"
+      ]
+    },
+    "render_object": {
+      "params": [ "azimuth", "elevation", "keep_camera", "lens", "margin", "name", "names", "path", "preview", "preview_size", "resolution_x", "resolution_y", "transparent" ],
+      "targets": [ "name", "names" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "render_passes": {
+      "params": [ "passes" ]
+    },
+    "render_settings": {
+      "params": [ "camera", "color_mode", "denoise", "device", "engine", "file_format", "film_transparent", "filter_size", "output_path", "percentage", "resolution_x", "resolution_y", "samples", "scene" ],
+      "targets": [ "camera" ],
+      "paths": [
+        "output_path"
+      ]
+    },
+    "run": {
+      "params": [ "agent", "commands", "continue_on_error" ],
+      "destructive": true,
+      "open_world": true
+    },
+    "run_operator": {
+      "params": [ "area", "name", "params" ],
+      "destructive": true,
+      "open_world": true,
+      "unguarded": true
+    },
+    "save_file": {
+      "params": [ "copy", "path" ],
+      "destructive": true,
+      "paths": [
+        "path"
+      ]
+    },
+    "scene_info": {
+      "params": [], "read_only": true }, "scenes": {
+      "params": [ "action", "activate", "copy", "name", "new_name", "scene" ],
+      "read_only": {
+        "actions": [
+          "list"
+        ]
+      },
+      "destructive": true
+    },
+    "select_objects": {
+      "params": [ "mode", "name_contains", "names", "type" ],
+      "targets": [ "names" ]
+    },
+    "sequencer_add_effect": {
+      "params": [ "blend_type", "channel", "color", "fade", "frame_start", "inputs", "length", "mute", "name", "opacity", "settings", "text", "transform", "trim_end", "trim_start", "type", "volume" ]
+    },
+    "sequencer_add_strip": {
+      "params": [ "blend_type", "channel", "color", "fade", "files", "font_size", "frame_start", "length", "location", "mute", "name", "opacity", "path", "scene", "settings", "text", "transform", "trim_end", "trim_start", "type", "volume", "with_sound" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "sequencer_encode": {
+      "params": [ "audio", "autosplit", "bitrate", "buffer_size", "codec", "color_depth", "container", "crf", "gop", "lossless", "max_b_frames", "max_bitrate", "min_bitrate", "preset", "prores_profile", "quality" ]
+    },
+    "sequencer_grade": {
+      "params": [ "clear", "color_balance", "curves", "mask_strip", "modifier", "mute", "name", "remove", "settings", "type" ]
+    },
+    "sequencer_info": {
+      "params": [], "read_only": true }, "sequencer_meta": {
+      "params": [ "action", "name", "names", "new_name" ]
+    },
+    "sequencer_mixdown": {
+      "params": [ "accuracy", "bitrate", "channels", "codec", "format", "path", "split_channels" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "sequencer_proxy": {
+      "params": [ "all", "build", "directory", "enabled", "name", "names", "overwrite", "quality", "sizes" ],
+      "paths": [
+        "directory"
+      ]
+    },
+    "sequencer_remove_strip": {
+      "params": [ "all", "name" ],
+      "destructive": true
+    },
+    "sequencer_render": {
+      "params": [ "audio_codec", "codec", "end", "fit_range", "fps", "path", "quality", "resolution_x", "resolution_y", "start" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "sequencer_split": {
+      "params": [ "frame", "keep", "name", "right_name" ]
+    },
+    "sequencer_timing": {
+      "params": [ "audio", "end", "fps", "fps_base", "percentage", "pixel_aspect", "resolution_x", "resolution_y", "start", "sync_mode" ]
+    },
+    "sequencer_update_strip": {
+      "params": [ "blend_type", "channel", "color", "fade", "frame_start", "length", "mute", "name", "new_name", "opacity", "settings", "text", "transform", "trim_end", "trim_start", "volume" ]
+    },
+    "set_camera": {
+      "params": [ "clip_end", "clip_start", "dof", "lens", "look_at", "make_active", "name", "sensor_width" ],
+      "targets": [ "dof.focus_object", "name" ]
+    },
+    "set_camera_optics": {
+      "params": [ "aperture", "camera", "clip", "focus", "fov", "lens", "name", "object_motion_blur", "ortho_scale", "panorama", "scene", "sensor", "shift", "shutter_curve", "type" ],
+      "targets": [ "camera", "focus.object", "name", "object_motion_blur" ]
+    },
+    "set_color_management": {
+      "params": [ "display_device", "exposure", "gamma", "look", "scene", "sequencer_colorspace", "use_curves", "view_transform", "white_balance" ]
+    },
+    "set_curve": {
+      "params": [ "bevel_depth", "bevel_object", "bevel_resolution", "extrude", "fill_mode", "name", "offset", "resolution_u", "taper_object" ],
+      "targets": [ "bevel_object", "name", "taper_object" ]
+    },
+    "set_cycles": {
+      "params": [ "activate", "adaptive_min_samples", "adaptive_sampling", "adaptive_threshold", "animated_seed", "auto_tile", "backend", "bounces", "caustics", "clamp", "denoise", "denoise_gpu", "denoise_passes", "denoise_prefilter", "denoise_quality", "denoiser", "device", "fast_gi", "film_exposure", "filter_width", "guiding", "light_threshold", "light_tree", "persistent_data", "pixel_filter", "samples", "scene", "scrambling_distance", "seed", "settings", "texture_limit", "tile_size", "time_limit", "transparent_glass", "viewport_samples", "volume_max_steps", "volume_step_rate" ]
+    },
+    "set_eevee": {
+      "params": [ "activate", "bokeh", "clamp", "fast_gi", "fast_gi_options", "high_quality_normals", "light_threshold", "overscan", "overscan_size", "raytracing", "raytracing_method", "raytracing_options", "samples", "scene", "settings", "shadow_pool", "shadow_rays", "shadow_resolution", "shadow_steps", "shadows", "viewport_samples", "volumetrics" ]
+    },
+    "set_frame": {
+      "params": [ "end", "fps", "frame", "start" ]
+    },
+    "set_freestyle": {
+      "params": [ "crease_angle", "culling", "enabled", "line_thickness", "linesets", "remove_linesets", "scene", "thickness_mode", "view_layer" ]
+    },
+    "set_geometry_inputs": {
+      "params": [ "inputs", "modifier", "name", "tree_name" ],
+      "targets": [ "name" ]
+    },
+    "set_interpolation": {
+      "params": [ "channels", "easing", "from_frame", "interpolation", "name", "to_frame" ],
+      "targets": [ "name" ]
+    },
+    "set_light": {
+      "params": [ "angle", "color", "energy", "ies_path", "name", "radius", "shadow", "shape", "size", "size_y", "spot_blend", "spot_size", "spread", "temperature" ],
+      "targets": [ "name" ]
+    },
+    "set_material": {
+      "params": [ "alpha", "base_color", "blend_method", "coat", "emission_color", "emission_strength", "ior", "metallic", "name", "new_name", "roughness", "sheen", "specular", "subsurface", "transmission" ]
+    },
+    "set_motion_blur": {
+      "params": [ "depth_scale", "enabled", "max_blur", "position", "rolling_shutter", "rolling_shutter_duration", "scene", "shutter", "shutter_curve", "steps", "view_layer_enabled" ]
+    },
+    "set_node": {
+      "params": [ "inputs", "label", "location", "material", "new_name", "node", "properties" ]
+    },
+    "set_origin": {
+      "params": [ "center", "name", "type" ],
+      "targets": [ "name" ]
+    },
+    "set_output": {
+      "params": [ "color_depth", "color_management", "color_mode", "compression", "crop_to_region", "exr_codec", "file_extension", "file_format", "overwrite", "path", "placeholder", "preset", "quality", "region", "scene", "stamp", "stereo" ],
+      "paths": [
+        "path"
+      ]
+    },
+    "set_shape_key": {
+      "params": [ "frame", "key_name", "name", "slider_max", "slider_min", "value" ],
+      "targets": [ "name" ]
+    },
+    "set_vertex_weights": {
+      "params": [ "all", "group", "mode", "name", "selected", "weights" ],
+      "targets": [ "name" ]
+    },
+    "set_viewport_shading": {
+      "params": [ "mode" ]
+    },
+    "set_world": {
+      "params": [ "color", "hdri_path", "mist", "mist_depth", "mist_start", "rotation", "strength" ],
+      "paths": [
+        "hdri_path"
+      ]
+    },
+    "snapshot": {
+      "params": [ "action", "directory", "name", "note" ],
+      "read_only": {
+        "actions": [
+          "list"
+        ]
+      },
+      "destructive": true
+    },
+    "storage": {
+      "params": [], "channel": "data" }, "storage_delete": {
+      "params": [ "area", "path" ],
+      "channel": "data",
+      "paths": [
+        "path"
+      ]
+    },
+    "storage_list": {
+      "params": [ "area", "path" ],
+      "channel": "data",
+      "paths": [
+        "path"
+      ]
+    },
+    "transform_object": {
+      "params": [ "location", "name", "relative", "rotation", "scale" ],
+      "targets": [ "name" ]
+    },
+    "undo_redo": {
+      "params": [ "action", "steps" ],
+      "destructive": true
+    },
+    "unwrap_uv": {
+      "params": [ "angle_limit", "margin", "method", "name", "size" ],
+      "targets": [ "name" ]
+    },
+    "update_collection": {
+      "params": [ "exclude", "hide_render", "hide_viewport", "name", "new_name" ],
+      "targets": [ "name" ]
+    },
+    "update_constraint": {
+      "params": [ "bone", "constraint", "enabled", "influence", "name", "new_name", "settings" ],
+      "targets": [ "name" ]
+    },
+    "update_modifier": {
+      "params": [ "modifier", "name", "new_name", "settings" ],
+      "targets": [ "name" ]
+    },
+    "update_object": {
+      "params": [ "hide_render", "hide_viewport", "keep_transform", "name", "new_name", "parent" ],
+      "targets": [ "name", "parent" ]
+    },
+    "view_layer": {
+      "params": [ "action", "activate", "aovs", "collections", "cryptomatte", "freestyle", "light_group_members", "light_groups", "material_override", "motion_blur", "name", "new_name", "passes", "remove_aovs", "remove_light_groups", "samples", "scene", "use", "world_override" ],
+      "read_only": {
+        "actions": [
+          "list"
+        ]
+      }
+    },
+    "viewport_capture": {
+      "params": [ "path", "preview", "preview_size" ],
+      "paths": [
+        "path"
+      ]
+    }
+  }
+}

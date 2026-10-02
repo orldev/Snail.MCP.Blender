@@ -1,0 +1,367 @@
+name: Release
+
+# A tag vX.Y.Z releases the server, and the tag is the only place its version is written: the checkout keeps 0.0.0-dev,
+# and this workflow puts the version of the tag into the assembly, the NuGet package, the registry manifest the package
+# carries and the image tags. Every CI job runs in full first. The steps then go from what can be redone to what cannot:
+# both images to the GitHub Container Registry under their version, a smoke test that starts the pair and asks the server
+# whether Blender answers, the package to NuGet, which never takes a version back, and, once it is there, the GitHub
+# Release, the documentation site and last of all the latest tag, which is what a host with no version pinned pulls.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+
+jobs:
+  versions:
+    name: Read the versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.read.outputs.version }}
+      addon: ${{ steps.read.outputs.addon }}
+      blender: ${{ steps.read.outputs.blender }}
+      prerelease: ${{ steps.read.outputs.prerelease }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Read the tag and the pinned versions
+        id: read
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          pattern='^v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?)$'
+          if [[ ! "$TAG" =~ $pattern ]]; then
+            echo "::error::the tag $TAG is not a version: use vMAJOR.MINOR.PATCH, or vMAJOR.MINOR.PATCH-suffix for a prerelease"
+            exit 1
+          fi
+          version="${BASH_REMATCH[1]}"
+          case "$version" in *-*) prerelease=true ;; *) prerelease=false ;; esac
+          {
+            echo "version=$version"
+            echo "addon=$(sed -n 's/^version = "\(.*\)"/\1/p' addon/blender_manifest.toml)"
+            echo "blender=$(sed -n 's/^ARG BLENDER_VERSION=//p' deploy/blender/Dockerfile)"
+            echo "prerelease=$prerelease"
+          } >> "$GITHUB_OUTPUT"
+
+  ci:
+    name: CI
+    needs: versions
+    uses: ./.github/workflows/ci.yml
+    with:
+      full: true
+
+  images:
+    name: Publish ${{ matrix.image }}
+    needs: [versions, ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: s3l-blender
+            dockerfile: deploy/blender/Dockerfile
+          - image: s3l-blender-mcp
+            dockerfile: deploy/mcp/Dockerfile
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # The Blender image is tagged by the release too, not by the add-on's version, which stays put across fixes to the
+      # add-on it carries. Only the version is pushed here; latest moves once the release has gone through.
+      - name: Name the tags
+        id: tags
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          VERSION: ${{ needs.versions.outputs.version }}
+          BLENDER: ${{ needs.versions.outputs.blender }}
+          NAME: ${{ matrix.image }}
+        run: |
+          image="$(printf '%s' "$IMAGE" | tr '[:upper:]' '[:lower:]')"
+          if [ "$NAME" = s3l-blender ]; then
+            tag="$BLENDER-$VERSION"
+            arguments=""
+          else
+            tag="$VERSION"
+            arguments="VERSION=$VERSION"
+          fi
+          {
+            echo "version=$tag"
+            echo "build-args=$arguments"
+            echo "image=$image"
+            echo "tags=$image:$tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4
+
+      - name: Log in to the registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          platforms: linux/amd64
+          push: true
+          build-args: ${{ steps.tags.outputs.build-args }}
+          tags: ${{ steps.tags.outputs.tags }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.version=${{ steps.tags.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
+
+  smoke:
+    name: Smoke-test the images
+    needs: [versions, images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+
+    steps:
+      - name: Log in to the registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # An image that builds may still not start: the add-on can fail to install, a library can be missing, the server
+      # can refuse its configuration. The pair is started the way compose starts it and asked the one question that
+      # covers both: does the server reach Blender.
+      - name: Start the pair and ask whether Blender answers
+        env:
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ needs.versions.outputs.version }}
+          BLENDER: ${{ needs.versions.outputs.blender }}
+        run: |
+          owner="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          mkdir -p secrets
+          openssl rand -hex 32 > secrets/bridge.token
+          openssl rand -hex 32 > secrets/client.token
+          docker network create snail
+          docker run -d --name blender --network snail --init -v "$PWD/secrets:/run/secrets:ro" \
+            "ghcr.io/$owner/s3l-blender:$BLENDER-$VERSION" --host 0.0.0.0 --port 9876 --token-file /run/secrets/bridge.token --backend NONE
+          docker run -d --name mcp --network snail -p 8080:8080 -v "$PWD/secrets:/run/secrets:ro" \
+            -e SNAIL_MCP_BLENDER_BRIDGE__HOST=blender \
+            -e SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE=/run/secrets/bridge.token \
+            -e SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE=/run/secrets/client.token \
+            "ghcr.io/$owner/s3l-blender-mcp:$VERSION"
+          for _ in $(seq 1 60); do
+            health="$(curl -fsS http://127.0.0.1:8080/healthz || true)"
+            case "$health" in *'"blender":"up"'*) echo "$health"; exit 0 ;; esac
+            sleep 2
+          done
+          echo "::error::the images started but the server never reached Blender"
+          docker logs blender
+          docker logs mcp
+          exit 1
+
+  nuget:
+    name: Publish to NuGet
+    needs: [versions, smoke]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'Directory.Build.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Restore
+        run: dotnet restore src
+
+      - name: Build
+        env:
+          VERSION: ${{ needs.versions.outputs.version }}
+        run: dotnet build src -c Release --no-restore -p:Version="$VERSION"
+
+      - name: Write the version into the registry manifest
+        env:
+          VERSION: ${{ needs.versions.outputs.version }}
+        run: |
+          jq --arg version "$VERSION" '.version = $version | .packages[].version = $version' .mcp/server.json > server.json
+          mv server.json .mcp/server.json
+          jq -r '"manifest \(.version), packages \([.packages[].version] | join(", "))"' .mcp/server.json
+
+      - name: Pack
+        env:
+          VERSION: ${{ needs.versions.outputs.version }}
+        run: dotnet pack src -c Release --no-build -p:Version="$VERSION" --output ./artifacts
+
+      - name: Keep the package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: nuget-package
+          path: ./artifacts/*.nupkg
+          retention-days: 7
+
+      - name: NuGet login (OIDC, a temporary API key)
+        uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841 # v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: dotnet nuget push "./artifacts/*.nupkg" --api-key "$NUGET_API_KEY" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  latest:
+    name: Move latest
+    needs: [versions, nuget]
+    if: needs.versions.outputs.prerelease == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Log in to the registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Last, and only for a release that went all the way through: a host with no version pinned pulls latest, and a
+      # server moved there beside an add-on that was never published is a pair that cannot talk.
+      - name: Point latest at this release
+        env:
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ needs.versions.outputs.version }}
+          BLENDER: ${{ needs.versions.outputs.blender }}
+        run: |
+          owner="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          docker buildx imagetools create -t "ghcr.io/$owner/s3l-blender:latest" "ghcr.io/$owner/s3l-blender:$BLENDER-$VERSION"
+          docker buildx imagetools create -t "ghcr.io/$owner/s3l-blender-mcp:latest" "ghcr.io/$owner/s3l-blender-mcp:$VERSION"
+
+  release:
+    name: GitHub Release
+    needs: [versions, nuget]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          OWNER: ${{ github.repository_owner }}
+          VERSION: ${{ needs.versions.outputs.version }}
+          ADDON: ${{ needs.versions.outputs.addon }}
+          BLENDER: ${{ needs.versions.outputs.blender }}
+          PRERELEASE: ${{ needs.versions.outputs.prerelease }}
+        run: |
+          owner="$(printf '%s' "$OWNER" | tr '[:upper:]' '[:lower:]')"
+          item() { printf -- '- %s — %s\n' "\`$1\`" "$2"; }
+          notes="$(
+            printf 'Published:\n\n'
+            item "Snail.MCP.Blender $VERSION" "[the NuGet package](https://www.nuget.org/packages/Snail.MCP.Blender/$VERSION)"
+            item "ghcr.io/$owner/s3l-blender:$BLENDER-$VERSION" "Blender $BLENDER with the add-on $ADDON"
+            item "ghcr.io/$owner/s3l-blender-mcp:$VERSION" "the server"
+          )"
+          flags=(--repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --notes "$notes")
+          if [ "$PRERELEASE" = true ]; then flags+=(--prerelease); fi
+          gh release create "$TAG" "${flags[@]}"
+
+  # GitHub creates the github-pages environment with a rule that deploys from the default branch only; add a rule for the
+  # tags v* in Settings → Environments, or this job is refused.
+  pages:
+    name: Documentation site
+    needs: [versions, nuget]
+    if: needs.versions.outputs.prerelease == 'false'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
+        with:
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'Directory.Build.props', '**/*.csproj') }}
+          restore-keys: nuget-${{ runner.os }}-
+
+      - name: Generate the tool reference
+        run: dotnet run -c Release --project docs/generator -- docs/content
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: docs/requirements.txt
+
+      - name: Install MkDocs
+        run: pip install -r docs/requirements.txt
+
+      - name: Build the site
+        run: mkdocs build --strict --config-file docs/mkdocs.yml
+
+      - name: Configure Pages
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: ./docs/site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

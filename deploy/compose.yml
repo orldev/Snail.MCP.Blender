@@ -1,0 +1,92 @@
+# Snail.MCP.Blender beside a GPU: Blender without an interface and the MCP server in front of it.
+# Put this file, .env and secrets/ in one folder on the machine with the GPU, then: docker compose up -d
+# Traefik reaches the server through traefik/s3l-blender.yml; docs/content/docker.md walks through all of it.
+
+name: s3l-blender
+
+services:
+  blender:
+    image: ghcr.io/orldev/s3l-blender:${BLENDER_TAG:-latest}
+    container_name: s3l-blender
+    # The Python setting goes to both: the server refuses a script before it is sent, and Blender refuses one that reaches it another way.
+    command: ["--host", "0.0.0.0", "--port", "9876", "--token-file", "/run/secrets/bridge_token", "--backend", "${BLENDER_BACKEND:-OPTIX}", "--python", "${PYTHON_ACCESS:-Fallback}"]
+    # Render jobs start a second Blender; an init reaps it when it ends.
+    init: true
+    restart: unless-stopped
+    environment:
+      # compute alone leaves OptiX out: its library comes with the graphics capability.
+      NVIDIA_DRIVER_CAPABILITIES: all
+    volumes:
+      - data:/home/blender/.snail-mcp-blender
+      - cache:/home/blender/.cache
+    secrets:
+      - bridge_token
+    networks:
+      - bridge
+    deploy:
+      resources:
+        # A scene that does not fit in memory kills this container instead of swapping the machine to a standstill, which is
+        # the difference between one failed render and a host nobody can reach. Raise it for heavy scenes; the frames already
+        # written stay, and the job says it was interrupted.
+        limits:
+          memory: ${BLENDER_MEMORY:-24g}
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+
+  mcp:
+    image: ghcr.io/orldev/s3l-blender-mcp:${MCP_TAG:-latest}
+    container_name: s3l-blender-mcp
+    restart: unless-stopped
+    depends_on:
+      - blender
+    ports:
+      # Only on the address the reverse proxy reaches; never on the public one.
+      - "${PUBLISH_ADDRESS:-192.0.2.10}:${PUBLISH_PORT:-8810}:8080"
+    environment:
+      SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE: /run/secrets/client_token
+      SNAIL_MCP_BLENDER_HTTP__PUBLIC_URL: ${PUBLIC_URL:-https://blender.example.com}
+      SNAIL_MCP_BLENDER_BRIDGE__HOST: blender
+      SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE: /run/secrets/bridge_token
+      SNAIL_MCP_BLENDER_PYTHON: ${PYTHON_ACCESS:-Fallback}
+    volumes:
+      - keys:/home/app/.aspnet/DataProtection-Keys
+      # The keys clients are admitted by live here. Without this the file is in the container's own layer, and every recreation — every
+      # update of this stack — turns away every client an operator had minted a key for.
+      - server:/home/app/.snail-mcp-blender
+    deploy:
+      resources:
+        # The server holds a chunk of a transfer at a time and nothing else large; past this something is wrong with it
+        # rather than with the work.
+        limits:
+          memory: ${MCP_MEMORY:-1g}
+    secrets:
+      - bridge_token
+      - client_token
+    networks:
+      - bridge
+      - outside
+
+networks:
+  # Blender's only network: no way out to the internet, and nothing but the MCP server on it.
+  bridge:
+    internal: true
+  outside: {}
+
+secrets:
+  bridge_token:
+    file: ./secrets/bridge.token
+  client_token:
+    file: ./secrets/client.token
+
+volumes:
+  # Projects, render jobs, batches and snapshots. docker compose down -v deletes them.
+  data:
+  # Compiled GPU kernels, so a recreated container does not compile them again.
+  cache:
+  # The keys that sign the pages' sessions and form tokens.
+  keys:
+  # What the server itself keeps: the keys clients are admitted by, and the downloads of a server that serves no project folder.
+  server:

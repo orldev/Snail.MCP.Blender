@@ -1,0 +1,10 @@
+// {
+//   "mcpServers": {
+//     "blender": {
+//       "command": "dotnet",
+//       "args": [
+//         "src/bin/Debug/net10.0/Snail.MCP.Blender.dll"
+//       ]
+//     }
+//   }
+// }

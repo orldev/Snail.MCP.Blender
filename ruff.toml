@@ -1,0 +1,23 @@
+target-version = "py313"
+line-length = 200
+extend-exclude = ["**/__pycache__"]
+
+[lint]
+select = ["F", "E4", "E7", "E9", "B", "I", "PERF", "RET", "RUF", "SIM", "UP"]
+ignore = [
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "SIM108",
+    "SIM117",
+]
+
+[lint.per-file-ignores]
+# The modules are imported for their registration side effect: importing one runs its @command decorators.
+"addon/__init__.py" = ["F401"]
+# The log handle outlives the call on purpose: the worker process writes into it until the job or batch ends.
+"addon/batch.py" = ["SIM115"]
+"addon/jobs.py" = ["SIM115"]
+
+[lint.isort]
+known-first-party = ["addon"]

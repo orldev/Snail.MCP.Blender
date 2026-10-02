@@ -1,0 +1,100 @@
+site_name: Snail.MCP.Blender
+site_description: MCP server for Blender — 149 tools in an always-on base layer and nine on-demand skills, for a Blender on this machine, on another, or in Docker beside it
+site_url: https://orldev.github.io/Snail.MCP.Blender/
+repo_url: https://github.com/orldev/Snail.MCP.Blender
+repo_name: orldev/Snail.MCP.Blender
+edit_uri: ""
+docs_dir: content
+
+theme:
+  name: null
+  custom_dir: theme
+  # A template with no page of its own is rendered only if it is listed here.
+  # mkdocs_theme.yml would be the usual place, but MkDocs reads that file only
+  # for a named theme — with name: null it is never opened.
+  static_templates:
+    - 404.html
+
+plugins:
+  - search
+
+# A page the generator writes but the nav does not list is a page nobody can reach:
+# with --strict this turns the omission into a failed build instead of a quiet INFO.
+validation:
+  nav:
+    omitted_files: warn
+  links:
+    anchors: warn
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Architecture: architecture.md
+  - Configuration: configuration.md
+  - Remote Blender: remote.md
+  - Docker: docker.md
+  - Working order: workflow.md
+  - Prompts: prompts.md
+  - Several agents: agents.md
+  - Troubleshooting: troubleshooting.md
+  - Tools:
+      - Overview: tools/index.md
+      - Diagnostics: tools/diagnostics.md
+      - Skills: tools/skills.md
+      - Finding a tool: tools/discovery.md
+      - Programs: tools/programs.md
+      - Sequences: tools/sequence.md
+      - Files between machines: tools/transfer.md
+      - Scene: tools/scene.md
+      - Objects: tools/objects.md
+      - Camera: tools/camera.md
+      - Light: tools/light.md
+      - Collections: tools/collections.md
+      - Files, projects, snapshots and undo: tools/files.md
+      - Journal, leases and batches: tools/team.md
+      - Operators and Python: tools/operators.md
+      - Mesh editing: tools/mesh.md
+      - Modifiers: tools/modifiers.md
+      - Curves: tools/curves.md
+      - Geometry: tools/geometry.md
+      - Geometry Nodes: tools/geometry-nodes.md
+      - Materials: tools/materials.md
+      - Shader nodes: tools/nodes.md
+      - Textures and UVs: tools/textures.md
+      - Keyframes: tools/keyframes.md
+      - Rigging: tools/rig.md
+      - Paths and drivers: tools/motion.md
+      - Constraints: tools/constraints.md
+      - Shape keys: tools/shape-keys.md
+      - Physics: tools/physics.md
+      - Rendering: tools/rendering.md
+      - Colour management and output: tools/output.md
+      - Cycles, EEVEE, motion blur and Freestyle: tools/engines.md
+      - View layers and light linking: tools/layers.md
+      - Camera optics: tools/optics.md
+      - Camera moves and light rigs: tools/staging.md
+      - Object render flags: tools/flags.md
+      - Product shots, captures and bakes: tools/shots.md
+      - Background render jobs and the pre-flight check: tools/jobs.md
+      - Render budget: tools/budget.md
+      - Lens effects: tools/post.md
+      - Compositor: tools/compositor.md
+      - Import, export and assets: tools/io.md
+      - Video editing: tools/video.md
+      - Cuts, meta strips, proxies, timing and grading: tools/cuts.md
+      - Encode and mixdown: tools/delivery.md

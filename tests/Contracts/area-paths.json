@@ -1,0 +1,26 @@
+{
+  "note": "One reading of a path for both sides: the server (AreaPaths.IsConfined) and the add-on (transfer.inside). Every case here is run against both.",
+  "vectors": [
+    { "path": "", "confined": true, "why": "the area itself, which a listing may ask for" },
+    { "path": "renders/f_0001.png", "confined": true, "why": "an ordinary path" },
+    { "path": "проект/кадр.png", "confined": true, "why": "names are not ASCII" },
+    { "path": "a b/c d.png", "confined": true, "why": "spaces inside names are names" },
+    { "path": "a//b.png", "confined": true, "why": "an empty segment is not a climb" },
+    { "path": " renders/a.png ", "confined": true, "why": "space around the whole path is trimmed by both" },
+    { "path": "name /file.png", "confined": true, "why": "a padded name is still a name" },
+    { "path": ".part", "confined": true, "why": "a leading dot is a name, not a segment" },
+    { "path": ".", "confined": false, "why": "names the folder it is in" },
+    { "path": "..", "confined": false, "why": "climbs" },
+    { "path": "x/..", "confined": false, "why": "climbs back to the area root" },
+    { "path": "x/.. ", "confined": false, "why": "the add-on trims, so this was a climb the server used to pass" },
+    { "path": "x/ ../y", "confined": false, "why": "padded on the other side" },
+    { "path": "x/./y", "confined": false, "why": "a dot segment in the middle" },
+    { "path": "/etc/passwd", "confined": false, "why": "absolute" },
+    { "path": "~/.ssh/id_ed25519", "confined": false, "why": "the home folder" },
+    { "path": "C:/Windows/win.ini", "confined": false, "why": "a drive" },
+    { "path": "a\\b.png", "confined": true, "why": "the other separator is a separator: the add-on reads a folder and a file, and so does the server now" },
+    { "path": "a\\..\\b.png", "confined": false, "why": "a climb written with the other separator" },
+    { "path": "\\\\farm\\share\\a.png", "confined": false, "why": "a UNC name is absolute" },
+    { "path": "a\u0000b.png", "confined": false, "why": "a NUL ends a path in C and not in Python" }
+  ]
+}

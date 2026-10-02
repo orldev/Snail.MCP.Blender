@@ -1,0 +1,18 @@
+# Traefik file provider route: copy into the directory Traefik watches (its providers.file.directory).
+# The server listens on the private address compose publishes it at; Traefik ends TLS in front of it.
+http:
+  routers:
+    s3l-blender:
+      entryPoints:
+      - https
+      service: s3l-blender-host
+      rule: Host(`blender.example.com`)
+      tls:
+        certResolver: letsEncrypt
+
+  services:
+    s3l-blender-host:
+      loadBalancer:
+        servers:
+        - url: http://192.0.2.10:8810/
+        passHostHeader: true

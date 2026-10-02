@@ -1,0 +1,25 @@
+@preservewhitespace true
+<Shell Title="Sign in" IsSignedIn="false">
+    <h1>Sign in</h1>
+
+    <h2>Token</h2>
+    <form class="login" method="post" action="/login">
+        <AntiforgeryToken />
+        <input type="hidden" name="returnUrl" value="@ReturnUrl">
+        <label class="field" for="token">The token this server's clients present: the one in the Claude Code entry for it.</label>
+        <input class="field-input" id="token" name="token" type="password" autocomplete="current-password" autofocus required>
+        @if (IsRefused)
+        {
+            <p class="note is-error">That token is not this server's.</p>
+        }
+        <p><button class="button" type="submit">Sign in</button></p>
+    </form>
+</Shell>
+
+@code {
+    [Parameter]
+    public string ReturnUrl { get; set; } = "/";
+
+    [Parameter]
+    public bool IsRefused { get; set; }
+}

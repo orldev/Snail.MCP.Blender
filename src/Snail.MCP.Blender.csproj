@@ -1,0 +1,58 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <RollForward>LatestMajor</RollForward>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackAsTool>true</PackAsTool>
+        <ToolCommandName>snail-mcp-blender</ToolCommandName>
+        <PackageType>McpServer</PackageType>
+        <PackageId>Snail.MCP.Blender</PackageId>
+        <Version>0.0.0-dev</Version>
+        <Authors>orldev</Authors>
+        <Description>MCP server that lets AI agents drive a running Blender through its Python add-on: scene, objects, modeling, materials, animation, physics, rendering, video editing and import/export. Runs over stdio for a Blender on this machine or behind an SSH tunnel, or over HTTP with a bearer token beside Blender in Docker.</Description>
+        <PackageTags>mcp;mcp-server;modelcontextprotocol;ai;claude;blender;3d;dotnet-tool</PackageTags>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/orldev/Snail.MCP.Blender</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/orldev/Snail.MCP.Blender</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="/" Visible="false" />
+        <None Include="..\.mcp\server.json" Pack="true" PackagePath="/.mcp/" Visible="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Jint" Version="4.16.4" />
+        <PackageReference Include="ModelContextProtocol" Version="2.2.0" />
+        <PackageReference Include="ModelContextProtocol.AspNetCore" Version="2.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="..\addon\**\*" Link="addon\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="..\docs\theme\css\site.css" LogicalName="assets/site.css" Visible="false" />
+        <EmbeddedResource Include="Web\Pages\Assets\pages.css" LogicalName="assets/pages.css" />
+        <EmbeddedResource Include="Web\Pages\Assets\pages.js" LogicalName="assets/pages.js" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="Snail.MCP.Blender.Tests" />
+    </ItemGroup>
+
+</Project>

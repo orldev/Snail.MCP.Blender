@@ -1,0 +1,6 @@
+# Paths are relative to the repository root, the build context. The Blender image needs the add-on and the list of libraries.
+*
+!addon
+!deploy/blender/packages.txt
+**/__pycache__
+**/.DS_Store

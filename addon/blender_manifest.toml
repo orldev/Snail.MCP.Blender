@@ -1,0 +1,18 @@
+schema_version = "1.0.0"
+
+id = "snail_bridge"
+version = "0.1.0"
+name = "Snail Bridge"
+tagline = "Lets the Snail MCP server drive Blender over a TCP link"
+maintainer = "orldev"
+type = "add-on"
+
+website = "https://github.com/orldev/Snail.MCP.Blender"
+tags = ["Pipeline", "System"]
+
+blender_version_min = "5.2.0"
+license = ["SPDX:MIT"]
+
+[permissions]
+files = "Writes projects, jobs, batches and snapshots to its data folder"
+network = "Accepts the MCP server on 127.0.0.1, or on --host in a container"

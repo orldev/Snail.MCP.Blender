@@ -1,0 +1,9 @@
+@if (Flash is not null)
+{
+    <p class="@(Flash.IsError ? "note is-error" : "note")" role="status">@Flash.Text</p>
+}
+
+@code {
+    [Parameter]
+    public Flash? Flash { get; set; }
+}

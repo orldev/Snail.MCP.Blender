@@ -1,0 +1,162 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+  "name": "io.github.orldev/snail-mcp-blender",
+  "description": "MCP server for Blender: 149 tools, via an add-on here, through an SSH tunnel, or in Docker",
+  "version": "0.0.0-dev",
+  "packages": [
+    {
+      "registryType": "nuget",
+      "identifier": "Snail.MCP.Blender",
+      "version": "0.0.0-dev",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [],
+      "environmentVariables": [
+        {
+          "name": "SNAIL_MCP_BLENDER_DATA_DIRECTORY",
+          "description": "This server's own files: the add-on zip, downloads without a project, the token of a Blender on this machine. Default: ~/.snail-mcp-blender.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_PROJECT_DIRECTORY",
+          "description": "Over stdio, the project folder: downloads land in it and relative uploads are read from it. Default: the folder the client starts the server in; a server over HTTP has none.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__HOST",
+          "description": "Address of the add-on: the loopback, or the Blender container's name when the server runs beside it in Docker. A Blender on another machine is reached through the tunnel instead.",
+          "isRequired": false,
+          "default": "127.0.0.1"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__PORT",
+          "description": "Port the server connects to: the add-on's port, or the local end of the SSH tunnel.",
+          "isRequired": false,
+          "default": "9876"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__CONNECT_TIMEOUT_SECONDS",
+          "description": "Seconds to wait for the socket to open.",
+          "isRequired": false,
+          "default": "5"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__REQUEST_TIMEOUT_SECONDS",
+          "description": "Seconds to wait for one add-on reply; renders and imports use their own longer timeout.",
+          "isRequired": false,
+          "default": "30"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__TOKEN",
+          "description": "Shared secret for the add-on; empty reads the token file.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE",
+          "description": "Where to read the add-on's generated token, e.g. a copy of a remote add-on's. Default: <data>/state/token.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__HOST",
+          "description": "user@host of a Blender on another machine: the server keeps an SSH tunnel to it while it runs. Empty keeps the link on this machine.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__KEY",
+          "description": "Private key for the tunnel's SSH login; the SSH agent and ~/.ssh/config decide when empty.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__REMOTE_PORT",
+          "description": "The add-on's port on the other machine.",
+          "isRequired": false,
+          "default": "9876"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_IDLE_TIMEOUT_MINUTES",
+          "description": "Over stdio, minutes without a tool call after which the process exits on its own; 0, the default, disables the watchdog, since a client that ends closes the pipe and the server exits with it. A server over HTTP never exits on its own.",
+          "isRequired": false,
+          "default": "0"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES",
+          "description": "Minutes a loaded skill may go unused before its tools leave the catalog; 0 keeps skills loaded.",
+          "isRequired": false,
+          "default": "0"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_AGENT",
+          "description": "Name this server signs its requests with, so the add-on's journal and leases tell agents apart.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_BRIDGE__AGENT",
+          "description": "The name the link signs its requests with, when it should differ from SNAIL_MCP_BLENDER_AGENT.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_PYTHON",
+          "description": "How far blender_python may go: allow, fallback (a script only where no dedicated tool covers its work, in sequences and batches too) or off, which also refuses script operators and python steps.",
+          "isRequired": false,
+          "default": "allow"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_OCIO_CONFIG",
+          "description": "OpenColorIO config background render jobs run under; empty keeps Blender's own.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_TRANSPORT",
+          "description": "Stdio when the client starts the server, which is how a client runs this package; Http when it runs on its own beside Blender, as the Docker image does, and clients connect to it with a bearer token.",
+          "isRequired": false,
+          "default": "Stdio"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_HTTP__URL",
+          "description": "Over HTTP: the address to listen on.",
+          "isRequired": false,
+          "default": "http://127.0.0.1:8080"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_HTTP__TOKEN",
+          "description": "Over HTTP: the token clients present as a bearer on /mcp and at the pages' sign-in; wins over HTTP__TOKEN_FILE. Over HTTP the server refuses to start without one of the two.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE",
+          "description": "Over HTTP: a file holding that token, the way a container receives a secret.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_HTTP__PUBLIC_URL",
+          "description": "Over HTTP: the address clients reach the server at behind a reverse proxy, which links to files are built on. Default: HTTP__URL.",
+          "isRequired": false
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_HTTP__LINK_MINUTES",
+          "description": "Over HTTP: minutes a signed file link stays valid, 1 to 1440.",
+          "isRequired": false,
+          "default": "15"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_HTTP__UPLOAD_PART_MB",
+          "description": "Over HTTP: megabytes an upload sends per request; lower it when a proxy stops reading a body before a part arrives.",
+          "isRequired": false,
+          "default": "16"
+        },
+        {
+          "name": "SNAIL_MCP_BLENDER_CONFIG",
+          "description": "Path of an explicit settings file with the same keys under a Snail section.",
+          "isRequired": false
+        }
+      ]
+    }
+  ],
+  "repository": {
+    "url": "https://github.com/orldev/Snail.MCP.Blender",
+    "source": "github"
+  }
+}

@@ -1,0 +1,74 @@
+@preservewhitespace true
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <meta name="robots" content="noindex">
+    @if (Refresh > 0)
+    {
+        <meta http-equiv="refresh" content="@Refresh">
+    }
+    <title>@Title · Snail.MCP.Blender</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+    <link rel="stylesheet" href="/assets/site.css">
+    <link rel="stylesheet" href="/assets/pages.css">
+</head>
+<body>
+    <a class="skip" href="#content">Skip to content</a>
+
+    <header class="head" id="head">
+        <div class="wrap head-wrap">
+            <div class="head-row">
+                <a class="wordmark" href="/">Snail.MCP.Blender</a>
+                @if (IsSignedIn)
+                {
+                    <nav class="nav" aria-label="Sections">@for (var index = 0; index < PageViews.Sections.Count; index++) { var link = PageViews.Sections[index]; @if (index > 0) {<span class="sep">,</span>@(" ")}<a class="@(link.Label == Section ? "nav-link is-active" : "nav-link")" href="@link.Href">@link.Label</a>}</nav>
+                    <form class="signout" method="post" action="/logout">
+                        <AntiforgeryToken />
+                        <button class="act-link" type="submit">Sign out</button>
+                    </form>
+                }
+            </div>
+        </div>
+    </header>
+
+    <main class="page" id="content">
+        <div class="wrap">
+            <article class="prose">
+                @ChildContent
+            </article>
+        </div>
+    </main>
+
+    <footer class="foot">
+        <div class="wrap">
+            <div class="foot-row">
+                <span class="foot-meta">Snail.MCP.Blender · the server beside Blender</span>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/assets/pages.js" defer></script>
+</body>
+</html>
+
+@code {
+    [Parameter, EditorRequired]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Section { get; set; }
+
+    [Parameter]
+    public bool IsSignedIn { get; set; } = true;
+
+    [Parameter]
+    public int Refresh { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

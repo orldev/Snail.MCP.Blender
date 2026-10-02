@@ -1,0 +1,312 @@
+/* ==========================================================================
+   Pages of the server beside Blender, on top of the documentation's site.css.
+   The same eight greys and hairlines; what a page that acts adds is a form, a
+   checkbox and a button that is a word. Nothing here fills a box.
+   ========================================================================== */
+
+.head-row > .signout {
+  grid-column: 3;
+  justify-self: end;
+  margin: 0;
+}
+
+.act-link,
+.button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sec);
+  font: 400 13px/24px var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.prose .act-link {
+  color: var(--sec);
+  text-decoration: none;
+}
+
+.act-link:hover,
+.act-link:focus-visible,
+.prose .act-link:hover,
+.prose .act-link:focus-visible {
+  color: var(--ink);
+}
+
+.signout .act-link {
+  line-height: 30px;
+}
+
+.prose .act-link.is-danger:hover,
+.prose .act-link.is-danger:focus-visible {
+  color: var(--err);
+}
+
+.prose .act-link:disabled {
+  color: var(--line-strong);
+  cursor: default;
+}
+
+.button {
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 15px;
+  border-bottom: 1px solid var(--ink);
+}
+
+.prose .crumbs {
+  margin-top: -20px;
+  color: var(--muted);
+  font: 400 12px/18px var(--mono);
+}
+
+.prose .crumbs a {
+  color: var(--sec);
+  text-decoration: none;
+}
+
+.prose .crumbs a:hover {
+  color: var(--ink);
+}
+
+.crumb-here {
+  color: var(--ink);
+}
+
+.prose .note {
+  color: var(--sec);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.prose .note.is-error,
+.prose .is-problem {
+  color: var(--err);
+}
+
+/* The form of a listing adds no box: its summary and actions become the
+   caption in the margin, its table the content beside them, one row. */
+.listing {
+  display: contents;
+}
+
+.prose .tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
+}
+
+.listing > .tools {
+  grid-column: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin: 0;
+}
+
+.listing > .scroll {
+  grid-column: 2;
+}
+
+.prose .lead {
+  color: var(--muted);
+  font: 400 12px/24px var(--mono);
+}
+
+.prose .entries td,
+.prose .rows td {
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.prose .entries td:first-child {
+  font-weight: 400;
+}
+
+.prose .entries .name {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.prose .entries .name a {
+  text-decoration: none;
+}
+
+.prose .entries .name a:hover {
+  text-decoration: underline;
+}
+
+.prose .check {
+  width: 20px;
+  padding-right: 12px;
+}
+
+.prose input[type="checkbox"] {
+  margin: 0;
+  accent-color: var(--ink);
+  vertical-align: middle;
+}
+
+.prose .num {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose .when {
+  white-space: nowrap;
+}
+
+.prose .row-acts {
+  padding-right: 0;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.prose .row-acts > * + * {
+  margin-left: 16px;
+}
+
+.tag {
+  margin-left: 8px;
+  color: var(--muted);
+  font: 400 11px/18px var(--mono);
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.prose .rows td:first-child {
+  width: 200px;
+}
+
+.prose .field {
+  display: block;
+  color: var(--sec);
+  font-size: 13px;
+  line-height: 20px;
+}
+
+.prose .field-input {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin: 8px 0 24px;
+  padding: 8px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line-strong);
+  border-radius: 0;
+  background: none;
+  color: var(--ink);
+  font: 400 15px/24px var(--mono);
+}
+
+.prose .field-input:focus {
+  outline: none;
+  border-bottom-color: var(--ink);
+}
+
+
+.prose .preview img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+}
+
+.prose .preview-text {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--data);
+  font: 400 13px/20px var(--mono);
+  white-space: pre;
+  overflow-x: auto;
+}
+
+@media (max-width: 999px) {
+  .head-row > .signout {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .head-row > .nav {
+    display: block;
+    grid-column: 1 / -1;
+    padding-top: 12px;
+    font-size: 15px;
+    line-height: 24px;
+  }
+
+  .prose .crumbs {
+    margin-top: 0;
+  }
+
+  .listing > .tools {
+    flex-direction: row;
+    gap: 8px 24px;
+    margin: 32px 0 8px;
+  }
+
+  /* A listing at 390 is a list, not a table to scroll sideways: the name and
+     its size on one line, state and actions under the name, the box to tick
+     beside both. The header row goes, and with it the box for ticking all. */
+  .prose .entries,
+  .prose .entries tbody {
+    display: block;
+  }
+
+  /* site.css widens every table of four columns and more to 760 here, for the
+     generated parameter tables; a listing is no longer a table at this width. */
+  .prose .scroll table.entries:has(th) {
+    width: 100%;
+  }
+
+  .prose .entries thead,
+  .prose .entries .when {
+    display: none;
+  }
+
+  .prose .entries tr {
+    display: grid;
+    grid-template-columns: 20px minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 4px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .prose .entries td {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+
+  .prose .entries .check {
+    grid-row: 1 / span 3;
+    width: auto;
+  }
+
+  .prose .entries .name {
+    grid-column: 2;
+    overflow-wrap: anywhere;
+  }
+
+  .prose .entries .num {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .prose .entries .state,
+  .prose .entries .detail,
+  .prose .entries .row-acts {
+    grid-column: 2 / -1;
+    text-align: left;
+    font-size: 13px;
+  }
+
+  .prose .rows td:first-child {
+    width: auto;
+  }
+}

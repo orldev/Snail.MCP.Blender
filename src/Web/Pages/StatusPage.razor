@@ -1,0 +1,27 @@
+@preservewhitespace true
+<Shell Title="Status" Section="Status" Refresh="10">
+    <h1>Status</h1>
+
+    @foreach (var group in Groups)
+    {
+        <h2>@group.Caption</h2>
+        <div class="scroll">
+            <table class="rows">
+                <tbody>
+                    @foreach (var row in group.Rows)
+                    {
+                        <tr>
+                            <td>@row.Label</td>
+                            <td class="@(row.IsProblem ? "is-problem" : null)">@row.Value</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</Shell>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<StatusGroup> Groups { get; set; } = [];
+}

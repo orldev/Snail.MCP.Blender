@@ -1,0 +1,38 @@
+@preservewhitespace true
+<Shell Title="@View.Name" Section="@View.Title">
+    <h1>@View.Name</h1>
+    <Crumbs Items="View.Crumbs" />
+    <FlashNote Flash="Flash" />
+
+    <h2>File</h2>
+    <form class="tools" method="post" action="/delete">
+        <AntiforgeryToken />
+        <input type="hidden" name="area" value="@View.Area">
+        <input type="hidden" name="path" value="@View.Folder">
+        <span class="lead">@Readable.Size(View.Bytes)</span>
+        <a class="act-link" href="@View.DownloadHref">Download</a>
+        <button class="act-link is-danger" type="submit" name="only" value="@View.Name" data-confirm="one" data-bytes="@View.Bytes">Delete</button>
+    </form>
+
+    <h2>Preview</h2>
+    @if (View.IsImage)
+    {
+        <figure class="preview"><img src="@View.RawHref" alt="@View.Name"></figure>
+    }
+    else if (View.Text is not null)
+    {
+        <pre class="preview-text">@View.Text</pre>
+    }
+    else
+    {
+        <p class="note">No preview for this kind of file, or it is too large to show; download it to open it.</p>
+    }
+</Shell>
+
+@code {
+    [Parameter, EditorRequired]
+    public FileView View { get; set; } = null!;
+
+    [Parameter]
+    public Flash? Flash { get; set; }
+}

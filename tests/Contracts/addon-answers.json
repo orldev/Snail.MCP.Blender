@@ -1,0 +1,434 @@
+{
+  "note": "What a real add-on answered, scenario by scenario, so a unit test can refuse the way Blender does. Recorded by tests/Live/AddOnAnswersLiveTests.cs, which runs them all again and fails on a difference; run it with SNAIL_TEST_RECORD=1 to record. Fields listed as volatile belong to the machine, not the add-on.",
+  "answers": [
+    {
+      "scenario": "a scene that has just been opened",
+      "command": "scene_info",
+      "ok": true,
+      "result": {
+        "name": "Scene",
+        "file": "",
+        "mode": "OBJECT",
+        "frame": {
+          "current": 1,
+          "start": 1,
+          "end": 250,
+          "fps": 24
+        },
+        "render": {
+          "engine": "BLENDER_EEVEE",
+          "resolution": [
+            1920,
+            1080
+          ],
+          "percentage": 100
+        },
+        "objects": {
+          "MESH": 1,
+          "LIGHT": 1,
+          "CAMERA": 1
+        },
+        "collections": [
+          "Collection"
+        ],
+        "active": "Cube",
+        "selected": [
+          "Cube"
+        ],
+        "camera": "Camera"
+      }
+    },
+    {
+      "scenario": "object_info for a name no object has",
+      "command": "object_info",
+      "ok": false,
+      "error": {
+        "type": "NotFound",
+        "message": "no object named \u0027Ghost\u0027",
+        "details": {
+          "objects": [
+            "Camera",
+            "Cube",
+            "Light"
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "delete_objects naming one that is not there",
+      "command": "delete_objects",
+      "ok": false,
+      "error": {
+        "type": "NotFound",
+        "message": "no object named \u0027Ghost\u0027",
+        "details": {
+          "objects": [
+            "Camera",
+            "Cube",
+            "Light"
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "an operator Blender does not have",
+      "command": "run_operator",
+      "ok": false,
+      "error": {
+        "type": "UnknownOperator",
+        "message": "bpy.ops.mesh.primitive_teapot_add does not exist",
+        "details": null
+      }
+    },
+    {
+      "scenario": "an operator given a property it does not take",
+      "command": "run_operator",
+      "ok": false,
+      "error": {
+        "type": "UnknownParameter",
+        "message": "bpy.ops.mesh.primitive_cube_add has no property radius",
+        "details": {
+          "known": [
+            "size",
+            "calc_uvs",
+            "enter_editmode",
+            "align",
+            "location",
+            "rotation",
+            "scale"
+          ]
+        }
+      },
+      "volatile": [
+        "message"
+      ]
+    },
+    {
+      "scenario": "an operator that cannot run in this context",
+      "command": "run_operator",
+      "ok": false,
+      "error": {
+        "type": "PollFailed",
+        "message": "bpy.ops.mesh.extrude_region_move cannot run in the current context",
+        "details": {
+          "mode": "OBJECT",
+          "active": "Cube"
+        }
+      }
+    },
+    {
+      "scenario": "a primitive of a kind there is none of",
+      "command": "add_primitive",
+      "ok": false,
+      "error": {
+        "type": "BadRequest",
+        "message": "unknown primitive \u0027dodecahedron\u0027",
+        "details": {
+          "known": [
+            "circle",
+            "cone",
+            "cube",
+            "cylinder",
+            "grid",
+            "ico_sphere",
+            "monkey",
+            "plane",
+            "torus",
+            "uv_sphere"
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "a material asked for by a name no material has",
+      "command": "material_info",
+      "ok": false,
+      "error": {
+        "type": "NotFound",
+        "message": "no material named \u0027Ghost\u0027",
+        "details": {
+          "materials": [
+            "Dots Stroke",
+            "Material"
+          ]
+        }
+      }
+    },
+    {
+      "scenario": "a parameter the command does not read",
+      "command": "set_camera_optics",
+      "ok": false,
+      "error": {
+        "type": "BadRequest",
+        "message": "\u0027set_camera_optics\u0027 takes no \u0027shift_x\u0027 (did you mean \u0027shift\u0027?)",
+        "details": {
+          "unknown": [
+            "shift_x"
+          ],
+          "accepted": [
+            "agent",
+            "aperture",
+            "camera",
+            "clip",
+            "focus",
+            "fov",
+            "lens",
+            "name",
+            "object_motion_blur",
+            "ortho_scale",
+            "panorama",
+            "scene",
+            "sensor",
+            "shift",
+            "shutter_curve",
+            "type"
+          ],
+          "suggestions": {
+            "shift_x": [
+              "shift"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "scenario": "the status of a render job that was never queued",
+      "command": "render_job_status",
+      "ok": false,
+      "error": {
+        "type": "NotFound",
+        "message": "no render job \u0027job-that-never-was\u0027",
+        "details": {
+          "known": []
+        }
+      },
+      "volatile": [
+        "message"
+      ]
+    },
+    {
+      "scenario": "a file asked for where there is none",
+      "command": "file_get",
+      "ok": false,
+      "error": {
+        "type": "NotFound",
+        "message": "no file at \u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-a9c2ccd7f78746ddb59fd976f25d551d/files/nothing/here.png\u0027",
+        "details": null
+      },
+      "volatile": [
+        "message"
+      ]
+    },
+    {
+      "scenario": "a path that climbs out of its area",
+      "command": "file_list",
+      "ok": false,
+      "error": {
+        "type": "BadRequest",
+        "message": "\u0027../..\u0027 names a folder by \u0027.\u0027 or \u0027..\u0027; name it by its path inside the files area",
+        "details": null
+      },
+      "volatile": [
+        "message"
+      ]
+    },
+    {
+      "scenario": "an area of the data directory there is none of",
+      "command": "storage_list",
+      "ok": false,
+      "error": {
+        "type": "BadRequest",
+        "message": "\u0027.\u0027 names a folder by \u0027.\u0027 or \u0027..\u0027; name it by its path inside the secrets area",
+        "details": null
+      }
+    },
+    {
+      "scenario": "a lease on an object another agent holds",
+      "command": "transform_object",
+      "ok": false,
+      "error": {
+        "type": "Leased",
+        "message": "\u0027Leased\u0027 is held by agent \u0027lighting\u0027 until 22:45:17",
+        "details": {
+          "agent": "lighting",
+          "target": "Leased",
+          "note": null,
+          "seconds_left": 300
+        }
+      },
+      "volatile": [
+        "message"
+      ]
+    },
+    {
+      "scenario": "a file put where one already is",
+      "command": "file_put",
+      "ok": false,
+      "error": {
+        "type": "Exists",
+        "message": "\u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-a9c2ccd7f78746ddb59fd976f25d551d/files/answers/twice.txt\u0027 already exists; pass overwrite to replace it",
+        "details": {
+          "path": "/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-a9c2ccd7f78746ddb59fd976f25d551d/files/answers/twice.txt"
+        }
+      },
+      "volatile": [
+        "message",
+        "details"
+      ]
+    },
+    {
+      "scenario": "a command of a name the add-on has never registered",
+      "command": "no_such_command",
+      "ok": false,
+      "error": {
+        "type": "UnknownCommand",
+        "message": "\u0027no_such_command\u0027 is not a bridge command",
+        "details": {
+          "known": [
+            "add_armature",
+            "add_camera",
+            "add_constraint",
+            "add_curve",
+            "add_driver",
+            "add_empty",
+            "add_fcurve_modifier",
+            "add_light",
+            "add_marker",
+            "add_modifier",
+            "add_node",
+            "add_particles",
+            "add_physics",
+            "add_primitive",
+            "add_shape_key",
+            "add_text",
+            "append_assets",
+            "apply_modifier",
+            "apply_transforms",
+            "assign_material",
+            "bake_physics",
+            "bake_texture",
+            "batch_job",
+            "batch_status",
+            "build_geometry_nodes",
+            "build_node_graph",
+            "camera_move",
+            "compositor",
+            "convert_to_mesh",
+            "create_collection",
+            "create_material",
+            "cryptomatte_matte",
+            "delete_keyframes",
+            "delete_objects",
+            "describe_constraint",
+            "describe_modifier",
+            "describe_operator",
+            "duplicate_object",
+            "export_file",
+            "file_output",
+            "follow_path",
+            "import_file",
+            "insert_keyframe",
+            "inspect_image",
+            "join_objects",
+            "journal",
+            "lease",
+            "lens_effects",
+            "light_linking",
+            "light_rig",
+            "link_nodes",
+            "list_assets",
+            "list_keyframes",
+            "list_materials",
+            "list_objects",
+            "load_image_texture",
+            "material_info",
+            "mesh_bevel",
+            "mesh_extrude",
+            "mesh_geometry",
+            "mesh_inset",
+            "mesh_merge",
+            "mesh_normals",
+            "mesh_select",
+            "mesh_set_vertices",
+            "mesh_shade",
+            "mesh_subdivide",
+            "move_keyframes",
+            "move_to_collection",
+            "new_file",
+            "object_info",
+            "object_render_flags",
+            "open_file",
+            "open_project",
+            "parent_to_armature",
+            "pose_bone",
+            "procedural_texture",
+            "python",
+            "remove_constraint",
+            "remove_modifier",
+            "remove_node",
+            "remove_physics",
+            "render_animation",
+            "render_budget",
+            "render_check",
+            "render_image",
+            "render_job",
+            "render_job_cancel",
+            "render_job_status",
+            "render_object",
+            "render_passes",
+            "render_settings",
+            "run",
+            "run_operator",
+            "save_file",
+            "scene_info",
+            "scenes",
+            "select_objects",
+            "sequencer_add_effect",
+            "sequencer_add_strip",
+            "sequencer_encode",
+            "sequencer_grade",
+            "sequencer_info",
+            "sequencer_meta",
+            "sequencer_mixdown",
+            "sequencer_proxy",
+            "sequencer_remove_strip",
+            "sequencer_render",
+            "sequencer_split",
+            "sequencer_timing",
+            "sequencer_update_strip",
+            "set_camera",
+            "set_camera_optics",
+            "set_color_management",
+            "set_curve",
+            "set_cycles",
+            "set_eevee",
+            "set_frame",
+            "set_freestyle",
+            "set_geometry_inputs",
+            "set_interpolation",
+            "set_light",
+            "set_material",
+            "set_motion_blur",
+            "set_node",
+            "set_origin",
+            "set_output",
+            "set_shape_key",
+            "set_vertex_weights",
+            "set_viewport_shading",
+            "set_world",
+            "snapshot",
+            "transform_object",
+            "undo_redo",
+            "unwrap_uv",
+            "update_collection",
+            "update_constraint",
+            "update_modifier",
+            "update_object",
+            "view_layer",
+            "viewport_capture"
+          ]
+        }
+      }
+    }
+  ]
+}

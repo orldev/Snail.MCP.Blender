@@ -1,0 +1,105 @@
+@preservewhitespace true
+<Shell Title="@View.Title" Section="@View.Title">
+    <h1>@View.Title</h1>
+    <Crumbs Items="View.Crumbs" />
+    <FlashNote Flash="View.Flash" />
+
+    @if (View.Problem is not null)
+    {
+        <p class="note is-error">@View.Problem</p>
+    }
+    else if (View.Entries.Count == 0)
+    {
+        <p class="note">Nothing here.</p>
+    }
+    else
+    {
+        <form class="listing" method="post" action="/delete">
+            <AntiforgeryToken />
+            <input type="hidden" name="area" value="@View.Area">
+            <input type="hidden" name="path" value="@View.Path">
+
+            <p class="tools">
+                <span class="lead">@View.Entries.Count @(View.Entries.Count == 1 ? "entry" : "entries") · @Readable.Size(View.Bytes)@(View.Truncated ? " · the first 2000 shown" : null)</span>
+                @if (View.ZipHref is not null)
+                {
+                    <a class="act-link" href="@View.ZipHref">Download .zip</a>
+                }
+                @if (View.CanPrune)
+                {
+                    <button class="act-link is-danger" type="submit" formaction="/prune" data-confirm="ended">Delete everything that ended</button>
+                }
+                <button class="act-link is-danger" type="submit" data-confirm="selected">Delete selected</button>
+            </p>
+
+            <div class="scroll">
+                <table class="entries">
+                    <thead>
+                        <tr>
+                            <th class="check"><input type="checkbox" data-select-all aria-label="Select all"></th>
+                            <th>Name</th>
+                            @if (View.HasJobs)
+                            {
+                                <th>State</th>
+                                <th>Progress</th>
+                            }
+                            @if (View.Area == "snapshots")
+                            {
+                                <th>Note</th>
+                            }
+                            <th class="num">Size</th>
+                            <th class="when">Modified</th>
+                            <th class="row-acts" aria-label="Actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in View.Entries)
+                        {
+                            <tr>
+                                <td class="check"><input type="checkbox" name="names" value="@entry.Name" data-bytes="@entry.Bytes" disabled="@(entry.InUse is not null)" aria-label="Select @entry.Name"></td>
+                                <td class="name">
+                                    @if (entry.Href is not null)
+                                    {
+                                        <a href="@entry.Href">@entry.Name@(entry.IsFolder ? "/" : null)</a>
+                                    }
+                                    else
+                                    {
+                                        @entry.Name
+                                    }
+                                    @if (entry.InUse is not null)
+                                    {
+                                        <span class="tag">@entry.InUse</span>
+                                    }
+                                </td>
+                                @if (View.HasJobs)
+                                {
+                                    <td class="@(entry.State == "failed" ? "state is-problem" : "state")">@entry.State</td>
+                                    <td class="detail">@entry.Detail</td>
+                                }
+                                @if (View.Area == "snapshots")
+                                {
+                                    <td class="detail">@entry.Detail</td>
+                                }
+                                <td class="num">@Readable.Size(entry.Bytes)</td>
+                                <td class="when"><time datetime="@Readable.MachineMoment(entry.Modified)">@Readable.Moment(entry.Modified)</time></td>
+                                <td class="row-acts">
+                                    <a class="act-link" href="@entry.DownloadHref">Download</a>
+                                    @if (View.Area == "jobs" && entry.IsRunning)
+                                    {
+                                        <button class="act-link" type="submit" formaction="/cancel" name="id" value="@entry.Name">Cancel</button>
+                                    }
+                                    <button class="act-link is-danger" type="submit" name="only" value="@entry.Name" data-confirm="one" data-bytes="@entry.Bytes" disabled="@(entry.InUse is not null)">Delete</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </form>
+    }
+</Shell>
+
+@code {
+    [Parameter, EditorRequired]
+    public BrowseView View { get; set; } = null!;
+}
