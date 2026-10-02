@@ -3,7 +3,19 @@
 # documentation toolchain. There is no bimonthly interval, so a cron names the months. Security updates do not wait for
 # it. Blender is pinned by version and SHA-256 in deploy/blender/Dockerfile, which Dependabot does not read, so it moves
 # by hand.
+#
+# The .NET SDK is pinned twice — in global.json and in the image the server is built in — and the two must move in one
+# pull request. global.json rolls forward over patches only, so an image on a newer feature band refuses the build: the
+# first push of this repository brought two pull requests, sdk:10.0.401 for the image and 10.0.401 for global.json, and
+# each failed alone with exit code 155. One multi-ecosystem group makes them one pull request.
 version: 2
+
+multi-ecosystem-groups:
+  dotnet-toolchain:
+    schedule:
+      interval: cron
+      cronjob: "0 6 1 1,3,5,7,9,11 *"
+
 updates:
   - package-ecosystem: github-actions
     directory: /
@@ -27,12 +39,16 @@ updates:
 
   - package-ecosystem: dotnet-sdk
     directory: /
-    schedule:
-      interval: cron
-      cronjob: "0 6 1 1,3,5,7,9,11 *"
+    patterns: ["*"]
+    multi-ecosystem-group: dotnet-toolchain
 
   - package-ecosystem: docker
-    directories: ["/deploy/blender", "/deploy/mcp"]
+    directory: /deploy/mcp
+    patterns: ["*"]
+    multi-ecosystem-group: dotnet-toolchain
+
+  - package-ecosystem: docker
+    directory: /deploy/blender
     schedule:
       interval: cron
       cronjob: "0 6 1 1,3,5,7,9,11 *"
