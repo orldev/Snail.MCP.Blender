@@ -71,6 +71,23 @@ public sealed class BridgeLiveTests : IAsyncLifetime
         Assert.Equal(35.0, named.Result!["lens_mm"]!.GetValue<double>(), 3);
     }
 
+    /// <summary>The refusal offers only the command's own parameters, the snake_case of a camelCase key first, and says where a timeout goes.</summary>
+    /// <remarks>Read from the production log: agents sent the typed tools' camelCase names in steps (resolutionX was answered "resolution_y or
+    /// resolution_x"), were offered 'agent' for 'image' and 'target' — a key the link adds and no caller should send — and sent timeout_seconds to
+    /// render commands four times without a word on where a timeout belongs.</remarks>
+    [BlenderFact]
+    public async Task Refusal_OffersTheCommandsOwnParameters_AndSaysWhereATimeoutGoes()
+    {
+        var camel = await _link.SendAsync(BridgeCommands.RenderSettings, new JsonObject { ["resolutionX"] = 64 });
+        var near = await _link.SendAsync(BridgeCommands.AddNode, new JsonObject { ["material"] = "Material", ["type"] = "Math", ["image"] = "x" });
+        var timed = await _link.SendAsync(BridgeCommands.RenderImage, new JsonObject { ["path"] = "/tmp/never.png", ["timeout_seconds"] = 5 });
+
+        Assert.Contains("'resolutionX' (did you mean 'resolution_x'", camel.Error!.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("agent", near.Error!.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("agent", near.Error.Details!["accepted"]!.ToJsonString(), StringComparison.Ordinal);
+        Assert.Contains("timeoutSeconds of blender_run, blender_program", timed.Error!.Message, StringComparison.Ordinal);
+    }
+
     [BlenderFact]
     public async Task Request_ThatIsNotAnObject_IsAnsweredAsBadRequest()
     {

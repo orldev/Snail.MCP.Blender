@@ -166,7 +166,6 @@
             "shift_x"
           ],
           "accepted": [
-            "agent",
             "aperture",
             "camera",
             "clip",
@@ -212,7 +211,7 @@
       "ok": false,
       "error": {
         "type": "NotFound",
-        "message": "no file at \u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-a9c2ccd7f78746ddb59fd976f25d551d/files/nothing/here.png\u0027",
+        "message": "no file at \u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-64b441451d2b40f4a57aab366fc1c099/files/nothing/here.png\u0027",
         "details": null
       },
       "volatile": [
@@ -248,7 +247,7 @@
       "ok": false,
       "error": {
         "type": "Leased",
-        "message": "\u0027Leased\u0027 is held by agent \u0027lighting\u0027 until 22:45:17",
+        "message": "\u0027Leased\u0027 is held by agent \u0027lighting\u0027 until 04:42:45",
         "details": {
           "agent": "lighting",
           "target": "Leased",
@@ -266,9 +265,9 @@
       "ok": false,
       "error": {
         "type": "Exists",
-        "message": "\u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-a9c2ccd7f78746ddb59fd976f25d551d/files/answers/twice.txt\u0027 already exists; pass overwrite to replace it",
+        "message": "\u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-64b441451d2b40f4a57aab366fc1c099/files/answers/twice.txt\u0027 already exists; pass overwrite to replace it",
         "details": {
-          "path": "/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-a9c2ccd7f78746ddb59fd976f25d551d/files/answers/twice.txt"
+          "path": "/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-64b441451d2b40f4a57aab366fc1c099/files/answers/twice.txt"
         }
       },
       "volatile": [
