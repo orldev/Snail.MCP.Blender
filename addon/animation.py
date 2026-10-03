@@ -108,9 +108,10 @@ def delete_keyframes(params):
         return {"name": item.name, "cleared": True}
     removed = 0
     for curve in _chosen_curves(item, params):
-        for point in list(curve.keyframe_points):
-            if params.get("frame") is None or int(point.co.x) == int(params["frame"]):
-                curve.keyframe_points.remove(point)
+        points = curve.keyframe_points
+        for index in reversed(range(len(points))):  # from the end: removing a key moves those after it, and a list taken first goes stale
+            if params.get("frame") is None or int(points[index].co.x) == int(params["frame"]):
+                points.remove(points[index])
                 removed += 1
     return {"name": item.name, "removed": removed, "keyframes": sum(len(curve.keyframe_points) for curve in _fcurves(item))}
 

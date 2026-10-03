@@ -158,6 +158,24 @@ public sealed class AnimationLiveTests : IAsyncLifetime
         Assert.Equal("Smile", markers["markers"]![0]!["name"]!.ToString());
     }
 
+    /// <summary>Every key of a channel goes in one call, however many there are on each curve.</summary>
+    /// <remarks>The keys were removed while walking a list taken before the first removal; removing one moves the rest, and the second removal
+    /// found its key gone and raised "Keyframe not in F-Curve". It surfaced twice on the production server.</remarks>
+    [BlenderFact]
+    public async Task Keyframes_ManyOnOneCurve_AreDeletedTogether()
+    {
+        await Send(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Busy" });
+        foreach (var frame in new[] { 1, 5, 10 })
+        {
+            await Send(BridgeCommands.InsertKeyframe, new JsonObject { ["name"] = "Busy", ["frame"] = frame, ["values"] = new JsonObject { ["location"] = new JsonArray(frame, 0, 0) } });
+        }
+
+        var deleted = await Send(BridgeCommands.DeleteKeyframes, new JsonObject { ["name"] = "Busy", ["channels"] = new JsonArray("location") });
+
+        Assert.Equal(9, deleted["removed"]!.GetValue<int>());
+        Assert.Equal(0, deleted["keyframes"]!.GetValue<int>());
+    }
+
     private async Task<JsonNode> Send(BridgeCommand command, JsonObject? parameters = null, TimeSpan? timeout = null)
     {
         var reply = await _link.SendAsync(command, parameters, timeout);
