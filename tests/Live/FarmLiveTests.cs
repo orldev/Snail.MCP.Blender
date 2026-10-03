@@ -80,6 +80,34 @@ public sealed class FarmLiveTests : IAsyncLifetime
         Assert.Contains(listed["jobs"]!.AsArray(), job => job!["id"]!.ToString() == id);
     }
 
+    /// <summary>A finished file name is refused with the template that writes it, and that template writes exactly the file that was meant.</summary>
+    /// <remarks>On the production server a job was given kb-19@2x_0001.png and wrote kb-19@2x_0001.png0001.png: Blender adds the frame number and
+    /// the extension itself when the path has no ####. Nothing is guessed: the refusal says what would have been written and what to pass instead.</remarks>
+    [BlenderFact]
+    public async Task RenderJob_GivenAFinishedFileName_IsRefusedWithTheTemplateThatWritesIt()
+    {
+        await Send(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "EEVEE", ["samples"] = 1 });
+        var jobs = Path.Combine(_workDirectory, "jobs");
+        var named = Path.Combine(_workDirectory, "named", "kb-19@2x_0001.png");
+
+        var refused = await _link.SendAsync(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = named, ["frames"] = "1", ["directory"] = jobs }, TimeSpan.FromSeconds(60));
+        var suggested = refused.Error?.Details?["suggested"]?.ToString();
+
+        Assert.Equal("BadRequest", refused.Error?.Type);
+        Assert.Equal(Path.Combine(_workDirectory, "named", "kb-19@2x_####.png"), suggested);
+
+        var started = await Send(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = suggested, ["frames"] = "1", ["directory"] = jobs, ["file_format"] = "PNG", ["resolution_x"] = 32, ["resolution_y"] = 32 }, TimeSpan.FromSeconds(120));
+        JsonNode status = started;
+        for (var attempt = 0; attempt < 90 && status["state"]!.ToString() is "queued" or "running"; attempt++)
+        {
+            await Task.Delay(1000);
+            status = await Send(BridgeCommands.RenderJobStatus, new JsonObject { ["id"] = started["id"]!.ToString(), ["directory"] = jobs });
+        }
+
+        Assert.Equal("finished", status["state"]!.ToString());
+        Assert.Equal(["kb-19@2x_0001.png"], Directory.GetFiles(Path.Combine(_workDirectory, "named")).Select(Path.GetFileName));
+    }
+
     /// <summary>Cancel leaves a marker the worker reads between frames and signals it to break: the job stops of its own accord, writes its own last status, and does not flap back to running.</summary>
     [BlenderFact]
     public async Task RenderJob_Cancelled_StopsAndKeepsWrittenFrames()

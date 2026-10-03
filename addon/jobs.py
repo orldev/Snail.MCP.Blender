@@ -16,7 +16,7 @@ import bpy
 
 from . import state
 from .core import _require, _scene, command
-from .rendering import ENGINES, MAX_RESOLUTION
+from .rendering import ENGINES, MAX_RESOLUTION, _refuse_a_finished_name
 from .server import CommandError
 
 JOBS = {}
@@ -89,6 +89,7 @@ def advance():
 def _validate_output(template):
     if not template:
         raise CommandError("BadRequest", "output_path is required: a path template such as /renders/{scene}_{camera}_####")
+    _refuse_a_finished_name(template)
     directory = os.path.dirname(template.replace("{scene}", "scene").replace("{camera}", "camera"))
     if directory:
         os.makedirs(directory, exist_ok=True)

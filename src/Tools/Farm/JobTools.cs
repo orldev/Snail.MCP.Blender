@@ -16,7 +16,7 @@ public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, RenderJ
     [McpServerTool(Name = "blender_render_job", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Jobs.Start)]
     public Task<CallToolResult> StartAsync(
-        [Description("Output path template: folder and prefix with #### for the frame number, {scene} and {camera} for their names, e.g. /renders/{scene}/{camera}_####.")] string outputPath,
+        [Description("Output path template: folder and prefix with #### for the frame number, {scene} and {camera} for their names, e.g. /renders/{scene}/{camera}_####. Blender adds the extension; a finished file name such as shot_0001.png is refused, pass shot_####.png.")] string outputPath,
         [Description(ToolDescriptions.Parameters.Frames)] string? frames = null,
         [Description("Cameras to render one after another, each into its own files through {camera}; the scene camera otherwise.")] string[]? cameras = null,
         [Description("View layers to render; every enabled layer otherwise.")] string[]? viewLayers = null,
