@@ -78,6 +78,34 @@ public sealed class MaterialsLiveTests : IAsyncLifetime
         Assert.Equal([0], stillWearingSteel);
     }
 
+    /// <summary>A Math node's three inputs are all called Value; the second and the third are reached by index or by identifier.</summary>
+    /// <remarks>Looked up by name alone, only the first could ever be set, and the node's summary reported the three as one. An agent asked for
+    /// input '1' three times on the production server and was refused each time. MULTIPLY_ADD is the operation that uses all three.</remarks>
+    [BlenderFact]
+    public async Task Node_InputsSharingAName_AreReachedByIndexAndByIdentifier()
+    {
+        await Send(BridgeCommands.CreateMaterial, new JsonObject { ["name"] = "Mathy" });
+        await Send(BridgeCommands.AddNode, new JsonObject { ["material"] = "Mathy", ["type"] = "Math", ["name"] = "Power" });
+
+        var set = await Send(BridgeCommands.SetNode, new JsonObject
+        {
+            ["material"] = "Mathy",
+            ["node"] = "Power",
+            ["properties"] = new JsonObject { ["operation"] = "MULTIPLY_ADD" },
+            ["inputs"] = new JsonObject { ["Value"] = 2.0, ["1"] = 0.25, ["Value_002"] = 0.75 },
+        });
+        var inputs = set["inputs"]!.AsObject();
+
+        Assert.Equal(2.0, inputs["Value"]!.GetValue<double>(), 3);
+        Assert.Equal(0.25, inputs["Value_001"]!.GetValue<double>(), 3);
+        Assert.Equal(0.75, inputs["Value_002"]!.GetValue<double>(), 3);
+
+        var refused = await _link.SendAsync(BridgeCommands.SetNode, new JsonObject { ["material"] = "Mathy", ["node"] = "Power", ["inputs"] = new JsonObject { ["7"] = 1.0 } });
+
+        Assert.Equal("UnknownParameter", refused.Error?.Type);
+        Assert.Contains("Value (Value_001)", refused.Error!.Details!.ToJsonString(), StringComparison.Ordinal);
+    }
+
     [BlenderFact]
     public async Task NodeGraph_NodeAddedRenamedLinkedAndRemoved_FollowsTheEdits()
     {

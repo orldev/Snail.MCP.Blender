@@ -3,6 +3,7 @@
 import bpy
 
 from .core import _require, command
+from .materials import _find_socket, _socket_names
 from .modeling import _apply_settings
 from .server import CommandError
 
@@ -52,11 +53,10 @@ def _compositor_node(tree, name):
 
 def _compositor_socket(node, name, outputs=False):
     sockets = node.outputs if outputs else node.inputs
-    socket = sockets.get(name)
-    if socket is None and name.isdigit():
-        socket = sockets[int(name)]
+    socket = _find_socket(sockets, name)
     if socket is None:
-        raise CommandError("UnknownParameter", f"node '{node.name}' has no {'output' if outputs else 'input'} '{name}'", {"sockets": [socket.name for socket in sockets if socket.enabled]})
+        raise CommandError("UnknownParameter", f"node '{node.name}' has no {'output' if outputs else 'input'} '{name}'; name one by its name, its identifier or its index",
+                           {"sockets": _socket_names([socket for socket in sockets if socket.enabled])})
     return socket
 
 

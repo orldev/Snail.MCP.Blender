@@ -71,10 +71,38 @@ def _principled(material):
     return node
 
 
-def _socket(node, name, fallback=None):
-    socket = node.inputs.get(name) or (node.inputs.get(fallback) if fallback else None)
+def _find_socket(sockets, key):
+    """A socket by its name, its identifier or its position, in that order.
+
+    A name is not always enough: the three inputs of a Math node are all called Value, so the second operand could
+    not be reached at all. Its identifier (Value_001) or its index (1) reaches it; a name still wins when it is unique.
+    """
+    key = str(key)
+    socket = sockets.get(key)
     if socket is None:
-        raise CommandError("UnknownParameter", f"node '{node.name}' has no input '{name}'", {"inputs": [socket.name for socket in node.inputs]})
+        socket = next((candidate for candidate in sockets if candidate.identifier == key), None)
+    if socket is None and key.isdigit() and int(key) < len(sockets):
+        socket = sockets[int(key)]
+    return socket
+
+
+def _socket_key(socket, sockets):
+    """The name a socket is reported under: its own, or its identifier when another socket shares the name — keyed by
+    name alone, the three Value inputs of a Math node reported as one."""
+    return socket.identifier if sum(other.name == socket.name for other in sockets) > 1 else socket.name
+
+
+def _socket_names(sockets):
+    """How to name each socket, with the identifier spelled out wherever a name is shared."""
+    shared = {socket.name for socket in sockets if sum(other.name == socket.name for other in sockets) > 1}
+    return [f"{socket.name} ({socket.identifier})" if socket.name in shared else socket.name for socket in sockets]
+
+
+def _socket(node, name, fallback=None):
+    socket = _find_socket(node.inputs, name) or (_find_socket(node.inputs, fallback) if fallback else None)
+    if socket is None:
+        raise CommandError("UnknownParameter", f"node '{node.name}' has no input '{name}'; name one by its name, its identifier or its index",
+                           {"inputs": _socket_names(node.inputs)})
     return socket
 
 
@@ -218,8 +246,8 @@ def _node_summary(node):
         "type": node.bl_idname,
         "label": node.label,
         "location": [round(node.location.x), round(node.location.y)],
-        "inputs": {socket.name: _socket_value(socket) for socket in node.inputs if socket.enabled},
-        "outputs": [socket.name for socket in node.outputs if socket.enabled],
+        "inputs": {_socket_key(socket, node.inputs): _socket_value(socket) for socket in node.inputs if socket.enabled},
+        "outputs": [_socket_key(socket, node.outputs) for socket in node.outputs if socket.enabled],
     }
 
 
@@ -287,11 +315,13 @@ def link_nodes(params):
 def _link(material, from_name, from_socket, to_name, to_socket):
     source = _node(material, from_name)
     target = _node(material, to_name)
-    output = source.outputs.get(from_socket)
+    output = _find_socket(source.outputs, from_socket)
     if output is None:
-        raise CommandError("UnknownParameter", f"node '{source.name}' has no output '{from_socket}'", {"outputs": [socket.name for socket in source.outputs]})
-    material.node_tree.links.new(output, _socket(target, to_socket))
-    return f"{source.name}.{output.name} -> {target.name}.{to_socket}"
+        raise CommandError("UnknownParameter", f"node '{source.name}' has no output '{from_socket}'; name one by its name, its identifier or its index",
+                           {"outputs": _socket_names(source.outputs)})
+    socket = _socket(target, to_socket)
+    material.node_tree.links.new(output, socket)
+    return f"{source.name}.{output.name} -> {target.name}.{socket.name}"
 
 
 @command("build_node_graph")
