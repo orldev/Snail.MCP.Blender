@@ -248,6 +248,20 @@ public sealed class BlenderLiveTests : IAsyncLifetime
         Assert.Equal(0.5, brighter["color"]![1]!.GetValue<double>(), 2);
     }
 
+    /// <summary>A file saved into a folder that does not exist yet lands there, the folder made on the way.</summary>
+    /// <remarks>Blender refuses with "Cannot open file …@ for writing", which names neither the folder nor the cure; an agent hit it twice on the
+    /// production server saving into site-models/. A render to a new folder always made it; a save did not.</remarks>
+    [BlenderFact]
+    public async Task File_SavedIntoAFolderThatDoesNotExist_MakesTheFolder()
+    {
+        var path = Path.Combine(_workDirectory, "not", "yet", "scene.blend");
+
+        var saved = await Send(BridgeCommands.SaveFile, new JsonObject { ["path"] = path, ["copy"] = true });
+
+        Assert.True(saved["saved"]!.GetValue<bool>());
+        Assert.True(File.Exists(path), $"{path} was not written");
+    }
+
     [BlenderFact]
     public async Task Files_SavedReopenedAndSteppedBack_ComeBackWithTheScene()
     {

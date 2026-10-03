@@ -37,6 +37,9 @@ def save_file(params):
     path = params.get("path") or bpy.data.filepath
     if not path:
         raise CommandError("BadRequest", "the file has never been saved; pass 'path'")
+    directory = os.path.dirname(path)
+    if directory:  # Blender reports a missing folder as "Cannot open file …@ for writing", which names neither the folder nor the cure
+        os.makedirs(directory, exist_ok=True)
     with _window_override():
         _save(path, bool(params.get("copy")))
     return {"path": path, "saved": True}
