@@ -76,7 +76,7 @@ reads, so the rule covers an export, a render output and an image loaded from di
 
 ## Sequences, not scripts
 
-`blender_run` sends a list of commands to the Blender that is already open, in one call. Each step is
+`run_tools` sends a list of commands to the Blender that is already open, in one call. Each step is
 dispatched as if it had been called on its own — with the bridge command's name and its params as the add-on reads
 them, the tool's parameter names in snake_case, so `set_cycles` takes `adaptive_threshold`, not `adaptiveThreshold`, and a
 key the command does not read fails the step with the name it was probably meant to be — so the lease guard refuses a step on another agent's object,
@@ -85,11 +85,11 @@ every step that ran. That is the difference from `blender_python`: a script of t
 guard and tells the journal nothing, which is why it appears there as `unguarded`. A set-up where agents must
 respect each other's work runs builds as sequences, and `SNAIL_MCP_BLENDER_PYTHON=fallback` refuses a script whose work
 the tools already do while leaving the API no tool reaches available — a `blender_python` call and a `python` step of
-`blender_run` or `blender_batch` alike, so a sequence is no way around it.
+`run_tools` or `blender_batch` alike, so a sequence is no way around it.
 
 ## Programs, when the steps are not known in advance
 
-`blender_run` carries a list decided before the call. `blender_program` carries a program that decides as it goes: a
+`run_tools` carries a list decided before the call. `run_program` carries a program that decides as it goes: a
 small JavaScript that calls the commands itself.
 
 ```js
@@ -107,9 +107,9 @@ of twenty of each, and a listing a program filters never reaches the conversatio
 it was given, by its memory, and by 200 commands; past that it stops and reports what it managed. It is not
 `blender_python`: it reaches the commands and nothing else — no files, no network, no `bpy`.
 
-When the tool for a step is not in the list, `blender_find_tool` searches the whole catalog by what the step
+When the tool for a step is not in the list, `find_tool` searches the whole catalog by what the step
 should do. Its answer carries each tool's command and every parameter it takes, which is enough to send it with
-`blender_program`; `enable` loads the skill instead, so the tools themselves join the tool list. Keeping the list
+`run_program`; `enable` loads the skill instead, so the tools themselves join the tool list. Keeping the list
 small is the point: it is sent to every client on every session, so the tools that are always there are the ones
 every session needs, and the rest arrive when they are asked for.
 
@@ -118,4 +118,4 @@ every session needs, and the rest arrive when they are asked for.
 `blender_snapshot` before a stage and after it; `blender_render_check` and `blender_render_budget`
 before a render; `blender_inspect_image` on the result. With several agents in one Blender, render
 only in the background — `blender_render_job`, or `blender_render_animation`, which does it by default when called as a
-tool; a `render_animation` step of `blender_run` renders in the open Blender — so a render never freezes the others.
+tool; a `render_animation` step of `run_tools` renders in the open Blender — so a render never freezes the others.

@@ -76,6 +76,7 @@ def start(port=None, token=None, host=LOOPBACK):
     _bridge = server.BridgeServer(host, port or preferences.port, core.dispatch, core.IMMEDIATE, state.token(preferences.token if token is None else token))
     _bridge.start()
     jobs.resume()
+    transfer.sweep_abandoned()
     return _bridge
 
 

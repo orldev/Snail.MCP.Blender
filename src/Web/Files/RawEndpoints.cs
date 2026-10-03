@@ -88,6 +88,11 @@ public static class RawEndpoints
             return Results.Problem(statusCode: StatusCodes.Status400BadRequest, detail: "offset is a byte position of 0 or more, and sha256 is 64 hexadecimal characters");
         }
 
+        if (overwrite == true && context.User.Identity?.AuthenticationType != WebAccess.LinkScheme && !context.User.HasClaim(WebAccess.ScopeClaim, Scopes.Delete))
+        {
+            return Results.Problem(statusCode: StatusCodes.Status403Forbidden, detail: "replacing a file that exists is delete work, and this key does not open it");
+        }
+
         var part = offset is null && last is null ? null : new UploadPart(offset ?? 0, last ?? true, sha256?.ToLowerInvariant());
 
         if (area != VolumeAreas.Files)

@@ -5,8 +5,8 @@ namespace Snail.MCP.Blender.Application.Discovery;
 
 /// <summary>What each command means, read at run time from the schema both sides share.</summary>
 /// <remarks>The guard tests read <c>addon/commands.json</c> to hold the tools' annotations to it; this reads the same file for the decisions
-/// that have to be made while the server runs. A tool's annotation answers for a tool, and three tools — <c>blender_run</c>,
-/// <c>blender_batch</c> and <c>blender_program</c> — carry commands they are handed, so their own annotation says nothing about the work
+/// that have to be made while the server runs. A tool's annotation answers for a tool, and three tools — <c>run_tools</c>,
+/// <c>blender_batch</c> and <c>run_program</c> — carry commands they are handed, so their own annotation says nothing about the work
 /// they are about to do. The schema does.
 /// <para>A file that cannot be read leaves every command unknown rather than stopping the server: the caller decides what an unknown command
 /// costs, and for the scopes that is the widest ordinary answer, never the narrowest.</para></remarks>

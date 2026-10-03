@@ -16,7 +16,7 @@ public class StdioContractTests
     /// <summary>A budget for the tool list every client reads before it can do anything: 38.3 KB measured for the 42 tools that are always
     /// there, and three to grow in.</summary>
     /// <remarks>Not a measurement to keep updating: this list goes to every client on every session and sits in front of whatever it caches, so
-    /// a new tool that would live here earns its place or moves behind a skill, where blender_find_tool carries it on demand.</remarks>
+    /// a new tool that would live here earns its place or moves behind a skill, where find_tool carries it on demand.</remarks>
     private const double MostKilobytesOfTools = 41.5;
 
     private static readonly TimeSpan Timeout = TimeSpan.FromSeconds(60);

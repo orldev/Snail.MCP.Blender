@@ -14,8 +14,6 @@ namespace Snail.MCP.Blender.Tests.Contracts;
 /// <summary>Prompt catalog guards: descriptions are hardcoded consts that drift silently as the code evolves; these tests catch drift at build time.</summary>
 public class ToolCatalogConventionTests
 {
-    private static readonly Regex ToolNamePattern = new("^blender_[a-z0-9_]+$", RegexOptions.Compiled);
-
     private static readonly Regex ToolReference = new(@"\bblender_[a-z0-9_]+", RegexOptions.Compiled);
 
     private static IReadOnlyList<MethodInfo> ToolMethods() =>
@@ -79,13 +77,18 @@ public class ToolCatalogConventionTests
         Assert.True(offenders.Count == 0, $"parameters without a description: {string.Join(", ", offenders)}");
     }
 
+    /// <summary>A tool named after Blender's work carries the prefix; a tool about the fleet's own machinery does not.</summary>
+    /// <remarks>The prefix tells this server's tools apart in a list that holds the tools of many servers. find_tool, run_tools and
+    /// run_program are not Blender: they are how any server of the fleet is asked what it has and how several of its tools are spent in one
+    /// call, Git and Roslyn spell them exactly so, and the platform addresses them as blender.run_tools — a prefix would read the server twice.</remarks>
     [Fact]
-    public void ToolNames_FollowThePrefixConvention_AndAreUnique()
+    public void A_tool_named_after_blender_carries_the_prefix_and_the_machinery_does_not()
     {
+        string[] machinery = ["find_tool", "run_tools", "run_program"];
         var names = ToolMethods().Select(ToolName).ToList();
 
-        Assert.NotEmpty(names);
-        Assert.All(names, name => Assert.Matches(ToolNamePattern, name));
+        Assert.All(names.Except(machinery), name => Assert.Matches("^blender_[a-z0-9_]+$", name));
+        Assert.Equal(machinery.Order(StringComparer.Ordinal), names.Intersect(machinery).Order(StringComparer.Ordinal));
         Assert.Equal(names.Count, names.Distinct(StringComparer.Ordinal).Count());
     }
 
@@ -119,7 +122,7 @@ public class ToolCatalogConventionTests
         Assert.True(dangling.Count == 0, $"guidance names tools that do not exist: {string.Join(", ", dangling)}");
     }
 
-    /// <summary>Every tool class has a family in the documentation generator, or its tools reach no page: blender_program was written, registered
+    /// <summary>Every tool class has a family in the documentation generator, or its tools reach no page: run_program was written, registered
     /// and tested before anyone noticed the reference had never heard of it.</summary>
     [Fact]
     public void EveryToolType_HasAFamilyInTheReference()
@@ -257,10 +260,10 @@ public class ToolCatalogConventionTests
         Assert.True(mismatched.Count == 0, $"destructive or open-world hint disagrees with the policy for: {string.Join(", ", mismatched)}");
     }
 
-    /// <summary>The commands a tool can send: the ones its source names, and for blender_program the whole catalog, since a program picks its
+    /// <summary>The commands a tool can send: the ones its source names, and for run_program the whole catalog, since a program picks its
     /// commands while it runs.</summary>
     private static IReadOnlyList<string> SendableBy(MethodInfo method) =>
-        ToolName(method) == "blender_program"
+        ToolName(method) == "run_program"
             ? [.. BridgeCommands.All.Select(command => command.Name)]
             : CommandsOf(method);
 

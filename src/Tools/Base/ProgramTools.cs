@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 [McpServerToolType]
 public sealed class ProgramTools(IProgramRunner programs, BridgeTraffic traffic)
 {
-    [McpServerTool(Name = "blender_program", Destructive = true, OpenWorld = true)]
+    [McpServerTool(Name = "run_program", Destructive = true, OpenWorld = true)]
     [Description(ToolDescriptions.Operators.Program)]
     public async Task<CallToolResult> ProgramAsync(
         [Description(ToolDescriptions.Parameters.ProgramCode)] string code,

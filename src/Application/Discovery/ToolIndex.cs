@@ -10,7 +10,7 @@ public sealed record ToolParameter(string Name, string Type, string? Description
 
 /// <summary>A tool as discovery sees it: the name the model would call, what the catalog says it does, the skill it arrives with, the command a
 /// program sends for it, and the parameters either takes.</summary>
-/// <remarks>The parameters travel with a search so that finding a tool is enough to call it: through blender_program by its command name, without
+/// <remarks>The parameters travel with a search so that finding a tool is enough to call it: through run_program by its command name, without
 /// loading the skill and so without changing the tool list, which a client would have to read again.</remarks>
 public sealed record ToolEntry(string Name, string Description, string? Skill, string? Command = null, IReadOnlyList<ToolParameter>? Parameters = null)
 {

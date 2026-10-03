@@ -12,7 +12,7 @@ public class ToolScopesTests
         .Answer(BridgeCommands.BatchJob, new JsonObject { ["id"] = "batch-1" })
         .Answer(BridgeCommands.AddPrimitive, new JsonObject { ["name"] = "Crate" });
 
-    /// <summary>blender_run is one tool with one annotation and carries whatever it is handed: a key without the Python scope used to run Python
+    /// <summary>run_tools is one tool with one annotation and carries whatever it is handed: a key without the Python scope used to run Python
     /// by sending it as a step.</summary>
     [Fact]
     public async Task Run_CarryingAPythonStep_IsRefusedForAKeyThatDoesNotOpenPython()

@@ -139,7 +139,7 @@ resources, `snail://renders/last` and `snail://journal`, hand the last picture a
 that read resources.
 
 Tools live in four layers, from most to least specific: the dedicated tools, found by intent with
-`blender_find_tool`, which opens the skill they live in; `blender_run`, which sends a list of them to the
+`find_tool`, which opens the skill they live in; `run_tools`, which sends a list of them to the
 open Blender in one call, so a build of hundreds of steps stays inside the guards instead of becoming a
 script; `blender_run_operator` for any of Blender's thousands of operators with `blender_describe_operator`
 for their properties; and `blender_python` for what none of them reaches. 42 tools are always on; the other

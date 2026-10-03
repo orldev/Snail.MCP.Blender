@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
+using Snail.MCP.Blender.Application.Access;
+using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Application.Transfer;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
@@ -9,7 +11,8 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Files between this machine and the one Blender runs on: what a remote Blender needs to see, and what it rendered.</summary>
 [McpServerToolType]
-public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, ServerConfig config, LocalProject project, ClientCommands commands) : BridgeToolBase(bridge)
+public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, ServerConfig config, LocalProject project, ClientCommands commands, ClientSessions clients)
+    : BridgeToolBase(bridge)
 {
     private TimeSpan Basis => TimeSpan.FromSeconds(config.Bridge.RequestTimeoutSeconds);
 
@@ -21,6 +24,11 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
         [Description("Replace files that already exist there.")] bool overwrite = false,
         CancellationToken cancellationToken = default)
     {
+        if (overwrite && !clients.Current.May(Scopes.Delete))
+        {
+            return ToolResponse.Failure(ToolScopes.Refusal("blender_upload with overwrite", Scopes.Delete, clients.Current.Name), Messages.ScopeHint);
+        }
+
         if (config.Transport is Transport.Http)
         {
             return UploadCommand(localPath, remotePath, overwrite);

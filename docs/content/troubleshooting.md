@@ -57,7 +57,7 @@ skill, which works on the mesh data directly and needs no viewport.
 
 ## "step N (command) failed" (`StepFailed`)
 
-One step of a `blender_run` sequence was refused; the error carries `steps` with every step that ran, its
+One step of a `run_tools` sequence was refused; the error carries `steps` with every step that ran, its
 result or its error, and `failed` with the indexes. The sequence stops there unless it was sent with
 `continueOnError`, in which case it runs to the end and fails as `N of M steps failed` with the same `steps` and
 `failed`; either way the scene holds the steps that succeeded. Fix the step the error names and send the rest.
@@ -68,14 +68,14 @@ as it does to a direct call.
 
 The command does not read that parameter, so it would have been dropped and the work left undone. The error names the
 parameter, suggests the one it was probably meant to be, and carries `accepted` with every parameter the command does
-take. This reaches you through every path — a tool, a step of `blender_run`, a call inside `blender_program`, a job in
+take. This reaches you through every path — a tool, a step of `run_tools`, a call inside `run_program`, a job in
 `blender_batch` — because the check lives in the add-on, where all of them arrive.
 
 It used to be silence: `blender_set_material` sent an `objects` list, answered ok and assigned nothing;
 `blender_render_animation` sent `frame_start` and `frame_end`, answered ok and rendered the whole scene range; optics
 sent for a camera named by `name` moved whichever camera the scene had. The reply said the work was done, so the fault
 was looked for in the scene. Where a parameter belongs to no command at all, the reference page for the tool lists the
-ones that do; `blender_find_tool` finds the tool for what you are trying to do.
+ones that do; `find_tool` finds the tool for what you are trying to do.
 
 ## A call answered ok and the scene did not change
 
@@ -93,9 +93,9 @@ named read as "clear" and took the compositor's chain down; it is now refused, a
 ## "this script does N things this server has tools for", or "Step N is a script that does…"
 
 The server is configured with `SNAIL_MCP_BLENDER_PYTHON=fallback`, which keeps `blender_python` for API no
-tool reaches, and reads a `python` step of `blender_run` or `blender_batch` the same way; a refused sequence or batch
+tool reaches, and reads a `python` step of `run_tools` or `blender_batch` the same way; a refused sequence or batch
 sends no step at all. The error's data names the tools that cover what the script did; call them, or send them as one
-`blender_run` sequence. `blender_find_tool` loads the skill they live in. An administrator relaxes this with
+`run_tools` sequence. `find_tool` loads the skill they live in. An administrator relaxes this with
 `SNAIL_MCP_BLENDER_PYTHON=allow`, where the same list comes back as `advice` beside a successful result.
 
 ## "blender_python is switched off by configuration on this server"
@@ -202,7 +202,7 @@ Docker Desktop on Windows cannot give a container OptiX; CUDA works. Set `BLENDE
 
 ## The tool I want is missing
 
-It lives in a skill. `blender_find_tool` searches the whole catalog by what you are trying to do and loads
+It lives in a skill. `find_tool` searches the whole catalog by what you are trying to do and loads
 the skill the match lives in; `blender_skills` lists them, `blender_enable_skill` loads one and the tools
 appear at once, and it stays loaded until `blender_disable_skill`. If tools do vanish on their own, the server was
 started with `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` set; `0`, the default, keeps skills loaded.

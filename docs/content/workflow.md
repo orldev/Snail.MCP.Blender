@@ -121,7 +121,7 @@ keeps its scene copy and log in `jobs/<job-id>/`.
    `blender_new_file` and `blender_save_file` into the twin (`project.twin` in `blender_diagnose`), still work.
 3. **Bring what it needs** — `blender_upload` with a path relative to the project (`textures`); it lands in the twin at
    the same place. Local work skips this step: Blender reads this machine's paths.
-4. **Build** — `blender_find_tool` for what each step needs, `blender_run` for many steps in one call.
+4. **Build** — `find_tool` for what each step needs, `run_tools` for many steps in one call.
    `blender_snapshot` before anything risky.
 5. **Look** — `blender_render_image` for short previews (it blocks Blender until it finishes and cannot be stopped);
    `blender_render_animation`, which renders as a background job by default, or `blender_render_job` for finals, with

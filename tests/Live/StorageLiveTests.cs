@@ -30,6 +30,48 @@ public sealed class StorageLiveTests : IAsyncLifetime
         _blender?.Dispose();
     }
 
+    /// <summary>The part of an upload nobody has written to for a day is removed when the next upload begins; a part still arriving stays.</summary>
+    /// <remarks>Parts are hidden from every listing because they are files on their way in, so one whose sender died stayed hidden for good: the
+    /// production server kept an 8 MB part of an upload that ran out of memory for eleven days, out of reach of the listing and the pages.</remarks>
+    [BlenderFact]
+    public async Task Upload_PartsAbandonedForADay_AreSweptWhenTheNextUploadBegins()
+    {
+        const string arrange = """
+            import os, sys, time
+            transfer = next(module for name, module in sys.modules.items() if name.endswith(".transfer") and hasattr(module, "sweep_abandoned"))
+            files = transfer.area_root("files")
+            os.makedirs(os.path.join(files, "swept"), exist_ok=True)
+            old, fresh = os.path.join(files, "swept", "old.bin.part"), os.path.join(files, "swept", "fresh.bin.part")
+            for path in (old, fresh):
+                open(path, "wb").write(b"half")
+            two_days_ago = time.time() - 2 * 24 * 3600
+            os.utime(old, (two_days_ago, two_days_ago))
+            transfer._SWEPT["at"] = 0.0
+            result = "arranged"
+            """;
+        const string look = """
+            import os, sys
+            transfer = next(module for name, module in sys.modules.items() if name.endswith(".transfer") and hasattr(module, "sweep_abandoned"))
+            folder = os.path.join(transfer.area_root("files"), "swept")
+            result = sorted(os.listdir(folder))
+            """;
+
+        var arranged = await _link.SendAsync(BridgeCommands.Python, new JsonObject { ["code"] = arrange });
+        var put = await _link.SendAsync(BridgeCommands.FilePut, new JsonObject
+        {
+            ["area"] = VolumeAreas.Files,
+            ["path"] = "swept/next.txt",
+            ["data"] = Convert.ToBase64String("next"u8.ToArray()),
+            ["offset"] = 0,
+            ["done"] = true,
+        });
+        var left = await _link.SendAsync(BridgeCommands.Python, new JsonObject { ["code"] = look });
+
+        Assert.True(arranged.IsOk, $"{arranged.Error?.Type}: {arranged.Error?.Message}");
+        Assert.True(put.IsOk, $"{put.Error?.Type}: {put.Error?.Message}");
+        Assert.Equal(["fresh.bin.part", "next.txt"], left.Result!["result"]!.AsArray().Select(name => name!.ToString()));
+    }
+
     /// <summary>A container starts Blender with its address, the token file both containers mount and the GPU backend; a request without that token is turned away.</summary>
     [BlenderFact]
     public async Task CommandLine_WithHostTokenFileAndBackend_ServesOnlyThatToken()

@@ -14,12 +14,12 @@ namespace Snail.MCP.Blender.Tools.Base;
 [McpServerToolType]
 public sealed class DiscoveryTools(ToolIndex index, SkillCatalog skills)
 {
-    [McpServerTool(Name = "blender_find_tool", Destructive = false, OpenWorld = false)]
+    [McpServerTool(Name = "find_tool", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Discovery.FindTool)]
     public async Task<CallToolResult> FindAsync(
         [Description("What you are trying to do, in English words: \"bevel the edges of a mesh\", \"warm key light on the subject\", \"render four frames in the background\".")] string intent,
         [Description("Most tools to return, 1 to 25; 8 by default.")] int limit = 8,
-        [Description("Load the skills the matches live in, so their tools join the tool list; false by default, because the answer already carries what it takes to call them through blender_program.")] bool enable = false,
+        [Description("Load the skills the matches live in, so their tools join the tool list; false by default, because the answer already carries what it takes to call them through run_program.")] bool enable = false,
         McpServer? server = null,
         CancellationToken cancellationToken = default)
     {

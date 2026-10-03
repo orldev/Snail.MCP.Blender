@@ -55,11 +55,11 @@ public static partial class ToolDescriptions
     /// <summary><c>DiscoveryTools</c>.</summary>
     public static class Discovery
     {
-        /// <summary><c>blender_find_tool</c></summary>
+        /// <summary><c>find_tool</c></summary>
         public const string FindTool =
             "Finds the tools for a task. Ask in plain English words for what you are about to do (\"bevel the edges\", \"warm key light\", " +
             "\"render four frames in the background\"); the answer names the tools with their descriptions, the skill each belongs to, the " +
-            "command each sends and every parameter it takes. That is enough to call them at once through blender_program, which needs no " +
+            "command each sends and every parameter it takes. That is enough to call them at once through run_program, which needs no " +
             "skill loaded; pass enable to put the tools themselves in the tool list instead. Most of this server's tools are not in the tool " +
             "list until their skill is enabled, so a tool you cannot see is not a tool that does not exist: ask here before reaching for " +
             "blender_python.";
@@ -96,7 +96,7 @@ public static partial class ToolDescriptions
     /// <summary><c>SequenceTools</c>.</summary>
     public static class Sequence
     {
-        /// <summary><c>blender_run</c></summary>
+        /// <summary><c>run_tools</c></summary>
         public const string Run =
             "Runs a list of bridge commands in this Blender, in order, in one call: what to use for a build that takes many steps. " +
             "A step is a command name and its params — the tool name without blender_, so add_primitive, transform_object, " +
@@ -286,12 +286,12 @@ public static partial class ToolDescriptions
         /// <summary><c>blender_python</c></summary>
         public const string Python =
             "Runs Python inside Blender with bpy available and returns stdout plus the value assigned to result. " +
-            "The last resort, and there is a procedure before it: blender_find_tool for what you are about to do, blender_run for a build " +
+            "The last resort, and there is a procedure before it: find_tool for what you are about to do, run_tools for a build " +
             "of many steps, blender_run_operator for a single operator. What a script does passes no validation, ignores the leases other " +
             "agents hold and lands in the journal as unguarded, so nobody can see which objects it touched; the reply names the tools that " +
             "already cover what it did. Blender's Python API is fully reachable, which is what this is for: what no tool of this server does.";
 
-        /// <summary><c>blender_program</c></summary>
+        /// <summary><c>run_program</c></summary>
         public const string Program =
             "Runs a small JavaScript program that calls the commands itself: blender.add_primitive({kind: \"cube\", name: \"Crate\"}) and so on for " +
             "every command of the catalog, with loops, conditions and the results in hand. Use it when a build takes many steps, when each step " +

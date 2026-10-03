@@ -51,7 +51,7 @@ public sealed class BridgeLiveTests : IAsyncLifetime
     /// <remarks>These were the quiet ones. set_camera_optics({"name": "Post", "lens": 35}) answered ok and moved whichever camera the scene
     /// had, so the next render came back changed and the fault was looked for in the scene; set_material({"objects": [...]}) answered ok and
     /// assigned nothing; render_animation({"frame_start": 1}) answered ok and rendered all two hundred and fifty frames. The gate lives inside
-    /// the add-on rather than in the server because a step of blender_run, a call from a program and a hand-written params never pass through
+    /// the add-on rather than in the server because a step of run_tools, a call from a program and a hand-written params never pass through
     /// a typed tool. The camera named by 'name' is the camera worked on, which is the other half of the same incident: the key was dropped,
     /// the scene's own camera was taken instead, and one camera's lens landed on another. Nothing expensive is asked for here on purpose:
     /// were the gate to go, the test would still have to be harmless.</remarks>
@@ -69,6 +69,23 @@ public sealed class BridgeLiveTests : IAsyncLifetime
         Assert.True(named.IsOk, $"{named.Error?.Type} {named.Error?.Message}");
         Assert.Equal("Camera", named.Result!["camera"]!.GetValue<string>());
         Assert.Equal(35.0, named.Result!["lens_mm"]!.GetValue<double>(), 3);
+    }
+
+    /// <summary>The refusal offers only the command's own parameters, the snake_case of a camelCase key first, and says where a timeout goes.</summary>
+    /// <remarks>Read from the production log: agents sent the typed tools' camelCase names in steps (resolutionX was answered "resolution_y or
+    /// resolution_x"), were offered 'agent' for 'image' and 'target' — a key the link adds and no caller should send — and sent timeout_seconds to
+    /// render commands four times without a word on where a timeout belongs.</remarks>
+    [BlenderFact]
+    public async Task Refusal_OffersTheCommandsOwnParameters_AndSaysWhereATimeoutGoes()
+    {
+        var camel = await _link.SendAsync(BridgeCommands.RenderSettings, new JsonObject { ["resolutionX"] = 64 });
+        var near = await _link.SendAsync(BridgeCommands.AddNode, new JsonObject { ["material"] = "Material", ["type"] = "Math", ["image"] = "x" });
+        var timed = await _link.SendAsync(BridgeCommands.RenderImage, new JsonObject { ["path"] = "/tmp/never.png", ["timeout_seconds"] = 5 });
+
+        Assert.Contains("'resolutionX' (did you mean 'resolution_x'", camel.Error!.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("agent", near.Error!.Message, StringComparison.Ordinal);
+        Assert.DoesNotContain("agent", near.Error.Details!["accepted"]!.ToJsonString(), StringComparison.Ordinal);
+        Assert.Contains("timeoutSeconds of run_tools, run_program", timed.Error!.Message, StringComparison.Ordinal);
     }
 
     [BlenderFact]

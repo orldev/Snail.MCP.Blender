@@ -26,9 +26,9 @@ connect to the server over HTTPS — see [Blender in Docker](docker.md).
    107 dedicated tools in nine groups, loaded with `blender_enable_skill` and staying loaded until
    `blender_disable_skill`, or until unused for `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` when that is set. A server over HTTP
    gives every client that names itself a tool list of its own, so a skill one loads is not loaded for the rest. The always-on catalog stays at 42 tools, small enough for a model to choose from.
-   Because the tool list holds only the loaded skills, `blender_find_tool` searches the whole catalog by
+   Because the tool list holds only the loaded skills, `find_tool` searches the whole catalog by
    what you are trying to do and opens the skill the match lives in.
-3. **Sequences** — `blender_run` sends a list of commands to the open Blender in one call, so a build of
+3. **Sequences** — `run_tools` sends a list of commands to the open Blender in one call, so a build of
    hundreds of steps costs one round trip and every step still passes validation, the lease guard and the
    journal. This is what a repetitive build uses instead of a script.
 4. **Python** — `blender_python` runs any code inside Blender when none of the three reaches the API.

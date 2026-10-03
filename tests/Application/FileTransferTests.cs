@@ -281,7 +281,7 @@ public sealed class FileTransferTests : IDisposable
     {
         var bridge = new ScriptedBridge();
         var config = new ServerConfig { Python = PythonAccess.Off };
-        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         var result = await tools.UploadAsync(Path.Combine(_root, "missing.py"), "C:/Program Files/Blender Foundation/startup.py");
 
@@ -304,7 +304,7 @@ public sealed class FileTransferTests : IDisposable
 
         var bridge = new ScriptedBridge().Answer(BridgeCommands.FilePut, parameters => new JsonObject { ["path"] = parameters!["path"]!.DeepClone() });
         var config = new ServerConfig { DataDirectory = _root, ProjectDirectory = _root };
-        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         await tools.UploadAsync(local, "huge.exr");
 
@@ -319,7 +319,7 @@ public sealed class FileTransferTests : IDisposable
             .Answer(BridgeCommands.FileList, new JsonObject { ["root"] = "C:/renders", ["kind"] = "file", ["files"] = new JsonArray(new JsonObject { ["path"] = "still.png" }) })
             .Answer(BridgeCommands.FileGet, new JsonObject { ["data"] = Convert.ToBase64String([7]), ["eof"] = true, ["sha256"] = Convert.ToHexStringLower(SHA256.HashData([7])) });
         var config = new ServerConfig { DataDirectory = _root, ProjectDirectory = ServerPaths.Home };
-        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         var answer = JsonNode.Parse((await tools.DownloadAsync("C:/renders/still.png")).Text())!["data"]!;
 
@@ -336,7 +336,7 @@ public sealed class FileTransferTests : IDisposable
             .Answer(BridgeCommands.FileList, new JsonObject { ["root"] = "C:/twin/snail-test/renders", ["kind"] = "file", ["files"] = new JsonArray(new JsonObject { ["path"] = "still.png" }) })
             .Answer(BridgeCommands.FileGet, new JsonObject { ["data"] = Convert.ToBase64String([7]), ["eof"] = true, ["sha256"] = Convert.ToHexStringLower(SHA256.HashData([7])) });
         var config = new ServerConfig { DataDirectory = _root, ProjectDirectory = project };
-        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         var answer = JsonNode.Parse((await tools.DownloadAsync("snail-test/renders/still.png")).Text())!["data"]!;
 
@@ -349,7 +349,7 @@ public sealed class FileTransferTests : IDisposable
     {
         var bridge = new ScriptedBridge();
         var config = HttpConfig();
-        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         var answer = JsonNode.Parse((await tools.UploadAsync("textures", "robot/textures")).Text())!["data"]!;
         var command = answer["command"]!.ToString();
@@ -366,7 +366,7 @@ public sealed class FileTransferTests : IDisposable
     public async Task UploadTool_OverHttpWithoutARemotePath_AsksWhereInTheProjectItGoes()
     {
         var config = HttpConfig();
-        var tools = new TransferTools(new ScriptedBridge(), new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(new ScriptedBridge(), new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         var result = await tools.UploadAsync("textures");
 
@@ -385,7 +385,7 @@ public sealed class FileTransferTests : IDisposable
             ["total_bytes"] = 2048,
         });
         var config = HttpConfig();
-        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config));
+        var tools = new TransferTools(bridge, new FileTransfer(), config, new LocalProject(config), Commands(config), Access.Sessions());
 
         var answer = JsonNode.Parse((await tools.DownloadAsync("robot/renders")).Text())!["data"]!;
 

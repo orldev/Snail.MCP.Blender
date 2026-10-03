@@ -53,7 +53,7 @@ public class DiscoveryToolsTests
     [Fact]
     public void Index_AToolThatSendsNoCommand_NamesNone()
     {
-        Assert.Null(Index.Named("blender_find_tool")!.Command);
+        Assert.Null(Index.Named("find_tool")!.Command);
         Assert.Equal("add_primitive", Index.Named("blender_add_primitive")!.Command);
     }
 
@@ -141,7 +141,7 @@ public class DiscoveryToolsTests
 
         Assert.True(result.Failed());
         Assert.Contains("blender_set_cycles", result.Text(), StringComparison.Ordinal);
-        Assert.Contains("blender_run", result.Text(), StringComparison.Ordinal);
+        Assert.Contains("run_tools", result.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
     }
 

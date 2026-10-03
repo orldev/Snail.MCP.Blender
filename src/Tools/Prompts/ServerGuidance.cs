@@ -5,18 +5,19 @@ public static class ServerGuidance
 {
     public const string Instructions =
         """
-        This server drives a running Blender through its Python add-on. Every tool is named blender_*.
+        This server drives a running Blender through its Python add-on. Every tool is named blender_*, except
+        find_tool, run_tools and run_program, which every server of the fleet spells alike.
         Start with blender_diagnose: it tells whether the add-on inside Blender answers. When it does not,
         blender_install_addon builds the zip and lists the steps; the user installs it in Blender. Over HTTP the add-on
         comes with the Blender image beside this server instead.
         Read before writing: blender_scene_info, then blender_object_info for the objects you will touch.
         Five layers, from most to least specific: the dedicated tools (blender_add_primitive, blender_transform_object,
-        blender_add_light and the rest), which blender_find_tool locates by what you are trying to do — its answer carries each
+        blender_add_light and the rest), which find_tool locates by what you are trying to do — its answer carries each
         tool's command and parameters, enough to call it straight away;
-        blender_program for a build of many steps or one that decides as it goes: a small JavaScript program that calls the
+        run_program for a build of many steps or one that decides as it goes: a small JavaScript program that calls the
         commands itself (blender.add_primitive({...})), with loops and the results in hand, so twenty steps cost one call and one
         reply instead of twenty of each, and only what it returns comes back;
-        blender_run to send a list of steps in one call when the list is known in advance
+        run_tools to send a list of steps in one call when the list is known in advance
         (a step names the bridge command and its params in snake_case, as the add-on reads them);
         blender_run_operator for any of Blender's operators, with blender_describe_operator for their properties;
         blender_python last, for the API none of those reaches: a script passes no validation, ignores leases and tells the
@@ -39,8 +40,8 @@ public static class ServerGuidance
         Several agents in one Blender: blender_journal shows who changed what, blender_lease claims objects for
         an agent, blender_batch runs command lists in a separate Blender; blender_snapshot before risky edits.
         blender_enable_skill loads a skill and its tools join the list at once; blender_skills shows the state, and the tool
-        list holds only the loaded ones, so ask blender_find_tool before concluding that something has no tool. A skill needs
-        loading only to call its tools by name: what blender_find_tool answers can be sent through blender_program as it is.
+        list holds only the loaded ones, so ask find_tool before concluding that something has no tool. A skill needs
+        loading only to call its tools by name: what find_tool answers can be sent through run_program as it is.
         Skills stay loaded until blender_disable_skill, unless the server is configured to unload idle ones; over HTTP every
         client of this server shares the loaded skills.
         Blender may run on another machine behind an SSH tunnel: every path you pass is a path there, blender_diagnose names

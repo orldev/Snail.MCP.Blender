@@ -26,7 +26,7 @@ section and a field.
 | `SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__REMOTE_PORT` | `9876` | The add-on's port on the other machine; `BRIDGE__PORT` is the local end of the tunnel |
 | `SNAIL_MCP_BLENDER_AGENT` | — | Name this server signs its requests with; the add-on's journal and leases tell agents apart |
 | `SNAIL_MCP_BLENDER_BRIDGE__AGENT` | `AGENT` | The name the link signs with, when it should differ from `AGENT` |
-| `SNAIL_MCP_BLENDER_PYTHON` | `allow` | Passed to Blender as well (`--python` in compose), so `off` holds even for a client that reaches the add-on another way. `fallback` runs only scripts whose work no tool covers, in `blender_run` and `blender_batch` steps as in `blender_python`; it reads the script as text, so it steers the agent towards the tools rather than guarding the door. `off` switches `blender_python` off together with the operators that run scripts or install code — the `script`, `console`, `preferences` and `extensions` modules, `text.run_script`, and anything asked to trust a file's own scripts — sequences and batches holding a `python` step, and uploads outside the add-on's `files` folder; the dedicated tools and the other operators stay |
+| `SNAIL_MCP_BLENDER_PYTHON` | `allow` | Passed to Blender as well (`--python` in compose), so `off` holds even for a client that reaches the add-on another way. `fallback` runs only scripts whose work no tool covers, in `run_tools` and `blender_batch` steps as in `blender_python`; it reads the script as text, so it steers the agent towards the tools rather than guarding the door. `off` switches `blender_python` off together with the operators that run scripts or install code — the `script`, `console`, `preferences` and `extensions` modules, `text.run_script`, and anything asked to trust a file's own scripts — sequences and batches holding a `python` step, and uploads outside the add-on's `files` folder; the dedicated tools and the other operators stay |
 | `SNAIL_MCP_BLENDER_OCIO_CONFIG` | — | OpenColorIO config background render jobs run under; the running Blender reads `OCIO` only at start-up |
 | `SNAIL_MCP_BLENDER_CONFIG` | — | Path of an explicit settings file |
 
@@ -71,12 +71,18 @@ record; the client cannot choose it (see [Agents](agents.md#journal-and-leases))
 | Scope | Opens |
 | --- | --- |
 | `read` | Reading the scene, the files and the diagnostics |
-| `write` | Changing the scene and writing files |
-| `delete` | Deleting objects and files, clearing another agent's lease, undoing |
+| `write` | Changing the scene and writing files, uploading included |
+| `delete` | Deleting objects and files, replacing a file that exists, clearing another agent's lease, undoing |
 | `python` | `blender_python` and `blender_run_operator`, which reach past every schema |
 | `farm` | Background renders and batches, which spend the machine after the call returns |
 
 A key minted without `--scope` gets `read`, `write`, `delete` and `farm`: Python is asked for by name.
+
+`run_tools` and `run_program` need no scope of their own: each command they carry is asked about by its own scope
+before any of them is sent, so a key with `read`, `write` and `farm` runs a program that builds a scene and is refused
+one that deletes from it. `blender_batch` needs `farm`, because it starts a second Blender, and then the same for every
+step. `blender_upload` is `write` work, and `delete` only with `overwrite`, which replaces a file that is there — the
+same over `/raw` with a key; a signed link was granted by the tool that issued it and needs no scope.
 
 `SNAIL_MCP_BLENDER_HTTP__TOKEN` still works and opens everything, so a server set up before keys existed keeps
 running and its clients move over one at a time. It is also the only key whose holder may still name itself with the
@@ -120,7 +126,7 @@ Environment variables win over the file.
 | Request size | 16 MB per JSON line to the add-on |
 | Reply size | 4 MB from the add-on; larger replies come back as an error asking for less |
 | Queued commands | 64 waiting for Blender's main thread; beyond that the add-on answers `Busy` |
-| Sequence | 500 steps per `blender_run`; step results leave the reply once it passes half a megabyte, each marked `omitted` |
+| Sequence | 500 steps per `run_tools`; step results leave the reply once it passes half a megabyte, each marked `omitted` |
 | Transfer chunk | 8 MB up, 2 MB down, the whole file checked by SHA-256 at the end |
 | Upload part over HTTP | 16 MB per request of the command `blender_upload` returns, so a proxy that reads a body for a minute never cuts one off |
 | Folder listing | 5,000 files per page; a download walks the pages, and past 20,000 files in all the folder is refused as `TooManyFiles` and comes down folder by folder. The HTTP archive still takes one listing |

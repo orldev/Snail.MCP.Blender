@@ -127,14 +127,14 @@ hundred calls, while the same work as a `blender_python` script is one — which
 its own cost writes the script, and why two thirds of the mutating commands in a real session were scripts
 even though every one of the things they did had a tool.
 
-`blender_run` closes that gap: a list of commands goes to the Blender that is already open, in one call, and
+`run_tools` closes that gap: a list of commands goes to the Blender that is already open, in one call, and
 the add-on dispatches each step through the same `core.dispatch` a direct call goes through. The lease guard
 refuses a step on another agent's object, the journal records each step under its own command name with the
 objects it touched, and a failed step stops the sequence and comes back as `StepFailed` with every step that
 ran. A script gets none of that, so the choice is no longer between correctness and cost.
 
 The other half of the gap is discovery: the tool list a client holds shows only the loaded skills, so a model
-that has not opened `modeling` cannot see that bevelling has a tool. `blender_find_tool` searches the whole
+that has not opened `modeling` cannot see that bevelling has a tool. `find_tool` searches the whole
 catalog — read from the same attributes the tools are registered from, so it cannot promise one that does not
 exist — and loads the skill the match lives in. What remains for Python is answered in-band: the server reads
 the script for the API it uses and names the tools that cover it, `SNAIL_MCP_BLENDER_PYTHON=fallback` refuses
@@ -219,7 +219,7 @@ Blender acts on another is what that check exists to catch.
 
 The parameter list is what lets the add-on refuse a parameter it does not read, instead of dropping it. `addon/parameters.py`
 registers that refusal as a gate, and a gate is the one check both kinds of command pass, so it covers a tool, a step of
-`blender_run`, a call inside `blender_program` and a job of `blender_batch` alike — which matters, because only the first of those
+`run_tools`, a call inside `run_program` and a job of `blender_batch` alike — which matters, because only the first of those
 goes through a typed tool where a wrong name could not be written in the first place. The list is a second copy of something the
 handlers already say, and a second copy drifts, so `tools/parameters_from_source.py` reads the keys back out of the Python and CI
 fails when the two disagree; the same tool writes the lists with `--write`.
@@ -252,7 +252,7 @@ walks through the set-up.
 
 A client that opens with `initialize` keeps a session, and the session carries `tools/list_changed` when a skill loads.
 A client of the sessionless protocol revision is served per request and holds no stream of its own, so the tools that
-load or unload a skill — `blender_enable_skill`, `blender_disable_skill`, `blender_find_tool` — also send the notice
+load or unload a skill — `blender_enable_skill`, `blender_disable_skill`, `find_tool` — also send the notice
 through the server bound to the request, into the reply the client is already reading. Either way every session gets options of its own from the SDK, and with them a client of its own here: a tool
 collection holding the always-on tools and nothing else, and a name.
 

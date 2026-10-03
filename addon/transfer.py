@@ -8,8 +8,10 @@ data directory and refuses absolute paths: that is how the HTTP server's pages a
 
 import base64
 import binascii
+import contextlib
 import hashlib
 import os
+import time
 
 from . import state
 from .core import immediate_command
@@ -21,10 +23,37 @@ PARTIAL_SUFFIX = ".part"
 
 
 AREAS = ("files", "jobs", "batches", "snapshots")
+ABANDONED_AFTER_SECONDS = 24 * 60 * 60
+SWEEP_EVERY_SECONDS = 60 * 60
+_SWEPT = {"at": 0.0}
 
 
 def files_root():
     return area_root("files")
+
+
+def sweep_abandoned(now=None):
+    """Removes the partial files of uploads nobody has written to for a day, at most once an hour.
+
+    A partial file is hidden from every listing because it is a file still arriving; one whose sender died stays hidden
+    for good. The server ran out of memory in the middle of an upload once, and its 8 MB part sat in the files area for
+    eleven days where neither a listing nor the pages could show it. An upload in flight writes its part every few
+    seconds, so nothing it is writing is ever a day old.
+    """
+    now = time.time() if now is None else now
+    if now - _SWEPT["at"] < SWEEP_EVERY_SECONDS:
+        return []
+    _SWEPT["at"] = now
+    removed = []
+    for directory, _, names in os.walk(area_root("files")):
+        for name in names:
+            path = os.path.join(directory, name)
+            if name.endswith(PARTIAL_SUFFIX):
+                with contextlib.suppress(OSError):
+                    if now - os.path.getmtime(path) > ABANDONED_AFTER_SECONDS:
+                        os.remove(path)
+                        removed.append(path)
+    return removed
 
 
 def area_root(area):
@@ -86,6 +115,7 @@ def file_put(bridge, params):
         raise CommandError("BadRequest", f"'data' is not base64: {error}") from error
     partial = target + PARTIAL_SUFFIX
     if offset == 0:
+        sweep_abandoned()
         if os.path.exists(target) and not params.get("overwrite"):
             raise CommandError("Exists", f"'{target}' already exists; pass overwrite to replace it", {"path": target})
         os.makedirs(os.path.dirname(target) or ".", exist_ok=True)

@@ -99,7 +99,7 @@ public static class Messages
         "An operator mints one with 'snail-mcp-blender clients add <name> --scope <scopes>'.";
 
     public const string PythonDisabledHint =
-        "Use the dedicated tools — blender_find_tool names them and loads their skill — or blender_run_operator, or send many commands at once with blender_run; " +
+        "Use the dedicated tools — find_tool names them and loads their skill — or blender_run_operator, or send many commands at once with run_tools; " +
         "an administrator enables Python with SNAIL_MCP_BLENDER_PYTHON=allow.";
 
     public const string ScriptOperatorDisabled = "Operators that run scripts are switched off together with blender_python on this server.";
@@ -151,10 +151,10 @@ public static class Messages
 
     public const string PythonAdviceNote =
         "These operations have dedicated tools. A tool validates its parameters, respects the leases other agents hold, and lands in the journal with the objects it touched, " +
-        "none of which a script does; blender_run sends many of them in one call.";
+        "none of which a script does; run_tools sends many of them in one call.";
 
     public const string PythonCoveredHint =
-        "Call the tools the data names — blender_find_tool loads the skills they live in — or send them as one blender_run sequence. " +
+        "Call the tools the data names — find_tool loads the skills they live in — or send them as one run_tools sequence. " +
         "blender_python stays open for API this server has no tool for; an administrator relaxes this with SNAIL_MCP_BLENDER_PYTHON=allow.";
 
     public const string NoToolForHint =

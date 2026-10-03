@@ -237,12 +237,33 @@ def _candidates(path):
         yield path + candidate
 
 
+STILL_EXTENSIONS = (".png", ".jpg", ".jpeg", ".exr", ".tif", ".tiff", ".webp", ".bmp", ".tga", ".hdr", ".jp2", ".dpx", ".cin", ".avif")
+
+
+def _refuse_a_finished_name(template):
+    """Frames are written from a template: Blender puts the frame number where #### is, or after everything when there is none.
+
+    A finished file name came back with both twice — kb-19@2x_0001.png was written as kb-19@2x_0001.png0001.png. With an image
+    extension and no #### the caller meant a file, so the refusal names the template that writes it; a movie keeps its file name.
+    """
+    stem, extension = os.path.splitext(template)
+    if extension.lower() not in STILL_EXTENSIONS or "#" in template:
+        return
+    numbered = re.sub(r"\d+$", lambda digits: "#" * len(digits.group(0)), stem)
+    suggested = (numbered if numbered != stem else f"{stem}_####") + extension
+    raise CommandError("BadRequest",
+                       f"output_path names a finished file, but frames are written from a template: '{os.path.basename(template)}' would become "
+                       f"'{os.path.basename(stem)}{extension}0001{extension}'; pass '{suggested}', where #### is the frame number",
+                       {"suggested": suggested})
+
+
 @command("render_animation")
 def render_animation(params):
     scene = _scene(params)
     if scene.camera is None:
         raise CommandError("BadRequest", "the scene has no camera; blender_add_camera adds one")
     output = _require(params, "output_path")
+    _refuse_a_finished_name(output)
     directory = os.path.dirname(output)
     if directory:
         os.makedirs(directory, exist_ok=True)

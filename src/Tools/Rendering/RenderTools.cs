@@ -55,7 +55,7 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
     [McpServerTool(Name = "blender_render_animation", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.Animation)]
     public async Task<CallToolResult> AnimationAsync(
-        [Description("Output path: a folder with a prefix for image sequences (/renders/shot_), a file for FFMPEG.")] string outputPath,
+        [Description("Output path: a folder with a prefix for image sequences (/renders/shot_ or /renders/shot_####), a file for FFMPEG. Blender adds the frame number and the extension; a finished file name such as shot_0001.png is refused, pass shot_####.png.")] string outputPath,
         [Description("First frame; the scene start otherwise.")] int? start = null,
         [Description("Last frame; the scene end otherwise.")] int? end = null,
         [Description("Render every nth frame.")] int? step = null,

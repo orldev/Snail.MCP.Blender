@@ -182,7 +182,7 @@ there. Every path a tool takes is a path on that machine.
 - **Renders.** `blender_render_animation` renders in a second Blender on the remote machine by default and returns a
   job id; `blender_render_job_status` follows it, `blender_render_job_cancel` stops it, and `blender_download` fetches
   the frames. Jobs, batches and snapshots live in the add-on's data directory there.
-- **Many steps.** Every call is a round trip over the tunnel, so builds belong in `blender_run`: one call for hundreds
+- **Many steps.** Every call is a round trip over the tunnel, so builds belong in `run_tools`: one call for hundreds
   of steps.
 
 On a machine other agents or people share, set `SNAIL_MCP_BLENDER_PYTHON=off`: Python is refused, and uploads may land

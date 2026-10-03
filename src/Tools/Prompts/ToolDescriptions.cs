@@ -49,7 +49,7 @@ public static partial class ToolDescriptions
 
         /// <summary>States <c>JavaScriptPrograms.MostCalls</c>; a guard test keeps the number equal.</summary>
         public const string ProgramCode =
-            "JavaScript. Call commands as blender.<command>({...}) — the names blender_find_tool reports, the tool name without blender_ — return a " +
+            "JavaScript. Call commands as blender.<command>({...}) — the names find_tool reports, the tool name without blender_ — return a " +
             "value, log(...) to add a line. Up to 200 commands, no files, no network, no bpy.";
 
         public const string MeshName = "Name of the mesh object.";

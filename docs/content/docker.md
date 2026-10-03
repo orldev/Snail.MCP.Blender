@@ -225,5 +225,5 @@ a `PATH` holding a copy of `docker.exe` without `docker-credential-wincred` besi
 - Files are served sandboxed (`Content-Security-Policy: sandbox`), so an SVG or HTML file from the volume runs no script
   in the pages' origin. Forms carry antiforgery tokens, and the session cookie is `HttpOnly`, `SameSite=Strict` and
   `Secure` behind an `https` address.
-- `PYTHON_ACCESS=Fallback` keeps `blender_python` for what no tool covers, and reads a `python` step of `blender_run` or
+- `PYTHON_ACCESS=Fallback` keeps `blender_python` for what no tool covers, and reads a `python` step of `run_tools` or
   `blender_batch` the same way; `Off` refuses Python altogether, the operators that run scripts included.

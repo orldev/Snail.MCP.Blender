@@ -9,8 +9,8 @@ namespace Snail.MCP.Blender.Application.Access;
 /// rather than from a list kept beside them: a new tool would be missing from a list, and a tool missing from a list is a tool nothing guards.
 /// Python and the operator by name come first because both reach past every schema; the farm next, because a queued render spends the machine
 /// long after the call returned.
-/// <para>A tool's own name is not enough for the three tools that carry commands they are handed. <c>blender_run</c>, <c>blender_batch</c> and
-/// <c>blender_program</c> are each one tool with one annotation, and what they do is whatever is inside them: a key without the Python scope
+/// <para>A tool's own name is not enough for the three tools that carry commands they are handed. <c>run_tools</c>, <c>blender_batch</c> and
+/// <c>run_program</c> are each one tool with one annotation, and what they do is whatever is inside them: a key without the Python scope
 /// was running Python by sending it as a step. Those three ask about every command they carry, which is what <see cref="Refused"/> is for.</para></remarks>
 public sealed class ToolScopes(CommandSemantics semantics)
 {
@@ -21,20 +21,39 @@ public sealed class ToolScopes(CommandSemantics semantics)
     /// against, so it belongs to the scope named for losing work rather than to the one for making it.</remarks>
     private static readonly string[] TakingFromOthers = ["lease"];
 
+    /// <summary>Tools that are only carriers: whatever they do is the commands inside them, and each of those is asked about on its own.</summary>
+    /// <remarks>Their annotation says destructive because a carrier can carry anything, and read as a scope it asked for delete before the first
+    /// command was looked at — a key with read, write and farm could not run a program that only read the scene. The batch is not here: it starts
+    /// a second Blender, which is farm work before any of its steps is.</remarks>
+    private static readonly string[] Carriers = ["run_tools", "run_program"];
+
+    /// <summary>Tools that destroy only when asked to: the upload replaces files with overwrite and otherwise only adds them.</summary>
+    private static readonly string[] DestructiveOnlyWhenAsked = ["upload"];
+
     /// <summary>The scope a call of this tool needs, when the tool is the whole of the work.</summary>
     public string For(McpServerTool tool)
     {
         var name = tool.ProtocolTool.Name;
         var command = name.StartsWith("blender_", StringComparison.Ordinal) ? name["blender_".Length..] : name;
 
-        if (semantics.IsKnown && Known(command) is { } known)
-        {
-            return known;
-        }
-
         if (Reaching(command) is { } reaching)
         {
             return reaching;
+        }
+
+        if (Carriers.Contains(command, StringComparer.Ordinal))
+        {
+            return Scopes.Read;
+        }
+
+        if (DestructiveOnlyWhenAsked.Contains(command, StringComparer.Ordinal))
+        {
+            return Scopes.Write;
+        }
+
+        if (semantics.IsKnown && Known(command) is { } known)
+        {
+            return known;
         }
 
         if (tool.ProtocolTool.Annotations?.DestructiveHint is true)

@@ -16,7 +16,7 @@ public static class MarkdownPages
             .AppendLine("# Tools")
             .AppendLine()
             .AppendLine($"{total} tools in {families.Count} families: {baseCount} always on, the rest in skills that load on demand — with")
-            .AppendLine("`blender_enable_skill`, or through `blender_find_tool` for the tools a search returns. A loaded skill stays loaded until")
+            .AppendLine("`blender_enable_skill`, or through `find_tool` for the tools a search returns. A loaded skill stays loaded until")
             .AppendLine("`blender_disable_skill`, unless `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` unloads idle ones; `farm` stays while a render job runs.")
             .AppendLine("The names, descriptions and schemas on the family pages are generated from the server itself, so they are exactly")
             .AppendLine("what the model receives in `tools/list`; the table shows the first sentence of each description.")
@@ -43,7 +43,7 @@ public static class MarkdownPages
 
         if (family.Skill is not null)
         {
-            page.AppendLine($"Part of the `{family.Skill}` skill: these tools appear once it is loaded — by `blender_enable_skill` with `{family.Skill}`, or by `blender_find_tool` when a search returns one of them.")
+            page.AppendLine($"Part of the `{family.Skill}` skill: these tools appear once it is loaded — by `blender_enable_skill` with `{family.Skill}`, or by `find_tool` when a search returns one of them.")
                 .AppendLine();
         }
 

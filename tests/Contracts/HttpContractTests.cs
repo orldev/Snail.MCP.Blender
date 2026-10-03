@@ -191,6 +191,46 @@ public class HttpContractTests
         Assert.NotEqual(HttpStatusCode.Forbidden, (await http.SendAsync(Signed(HttpMethod.Get, "/raw/files/shot.png", reader))).StatusCode);
     }
 
+    /// <summary>A key that reads, writes and queues renders may upload a file and run a sequence or a program, and is still refused what is
+    /// delete work inside them: a destroying command carried in a program, or an upload that replaces a file.</summary>
+    /// <remarks>The tools that carry commands are annotated destructive because they can carry anything, and that annotation used to be read
+    /// as the scope: such a key could not upload a scene or run a program that only read one, and its holder was asked for delete — the scope
+    /// that lets a key remove other people's objects and files — to do work that removes nothing. Each carried command is asked about on its own,
+    /// so the carrier itself needs no more than reading.</remarks>
+    [Fact]
+    public async Task Key_ThatReadsWritesAndRenders_Uploads_AndRunsCarriers_ButIsRefusedWhatDestroys()
+    {
+        await using var server = await HttpServerProcess.StartAsync(Token);
+        var keys = new ClientKeys(new ServerConfig { DataDirectory = server.DataDirectory }, TimeProvider.System);
+        var (_, secret) = keys.Mint("a", [Scopes.Read, Scopes.Write, Scopes.Farm]);
+        await using var client = await ClientAsync(server, agent: "a", key: secret);
+
+        static string Text(CallToolResult result) => result.Content.OfType<TextContentBlock>().First().Text;
+
+        var upload = await client.CallToolAsync("blender_upload", new Dictionary<string, object?> { ["localPath"] = "scene.blend", ["remotePath"] = "office/scene.blend" });
+        var replace = await client.CallToolAsync("blender_upload", new Dictionary<string, object?> { ["localPath"] = "scene.blend", ["remotePath"] = "office/scene.blend", ["overwrite"] = true });
+        var reading = await client.CallToolAsync("run_program", new Dictionary<string, object?> { ["code"] = "return blender.scene_info({});" });
+        var destroying = await client.CallToolAsync("run_program", new Dictionary<string, object?> { ["code"] = "return blender.delete_objects({names: ['Cube']});" });
+        var sequence = await client.CallToolAsync("run_tools", new Dictionary<string, object?>
+        {
+            ["commands"] = new JsonArray(new JsonObject { ["command"] = "scene_info", ["params"] = new JsonObject() }),
+        });
+
+        Assert.NotEqual(true, upload.IsError);
+        Assert.Contains("curl", Text(upload), StringComparison.Ordinal);
+        Assert.True(replace.IsError);
+        Assert.Contains("delete work", Text(replace), StringComparison.Ordinal);
+        Assert.DoesNotContain("does not open it", Text(reading), StringComparison.Ordinal);
+        Assert.DoesNotContain("does not open it", Text(sequence), StringComparison.Ordinal);
+        Assert.Contains("delete", Text(destroying), StringComparison.Ordinal);
+        Assert.Contains("does not open", Text(destroying), StringComparison.Ordinal);
+
+        using var http = new HttpClient { BaseAddress = server.Address };
+        var overwriting = Signed(HttpMethod.Put, "/raw/files/office/scene.blend?overwrite=true", secret);
+
+        Assert.Equal(HttpStatusCode.Forbidden, (await http.SendAsync(overwriting)).StatusCode);
+    }
+
     /// <summary>A container started without its secret would turn every client away while looking healthy, so it refuses to start and names the setting.</summary>
     [Fact]
     public async Task Server_OverHttpWithoutAToken_ExitsBeforeListening_NamingTheSetting()
