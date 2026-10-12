@@ -3,6 +3,7 @@
 *
 !.editorconfig
 !Directory.Build.props
+!Directory.Packages.props
 !README.md
 !LICENSE
 !.mcp/server.json

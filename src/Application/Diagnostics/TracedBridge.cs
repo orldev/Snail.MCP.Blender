@@ -22,9 +22,7 @@ public sealed class TracedBridge(IBlenderBridge link, BridgeTraffic traffic, ILo
         catch (OperationCanceledException)
         {
             traffic.Abandon(command);
-            logger.LogWarning(
-                "{Command} was cancelled after {ElapsedMs} ms; Blender is still running it — a command already on the main thread cannot be interrupted, and a render finishes whatever the caller does",
-                command.Name, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
+            Log.CommandCancelled(logger, command.Name, Stopwatch.GetElapsedTime(started).TotalMilliseconds);
 
             throw;
         }
@@ -34,15 +32,15 @@ public sealed class TracedBridge(IBlenderBridge link, BridgeTraffic traffic, ILo
 
         if (reply.IsOk)
         {
-            logger.LogDebug("{Command} answered in {ElapsedMs} ms", command.Name, elapsed.TotalMilliseconds);
+            Log.CommandAnswered(logger, command.Name, elapsed.TotalMilliseconds);
         }
         else if (reply.Error!.Type == "UnknownCommand")
         {
-            logger.LogWarning("{Command} is unknown to the add-on inside Blender, which is therefore older than this server; run blender_install_addon and reinstall the zip", command.Name);
+            Log.CommandUnknownToAddOn(logger, command.Name);
         }
         else
         {
-            logger.LogInformation("{Command} failed after {ElapsedMs} ms: {ErrorType}: {Message}", command.Name, elapsed.TotalMilliseconds, reply.Error.Type, reply.Error.Message);
+            Log.CommandFailed(logger, command.Name, elapsed.TotalMilliseconds, reply.Error.Type, reply.Error.Message);
         }
 
         return reply;

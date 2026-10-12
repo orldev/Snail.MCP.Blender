@@ -23,7 +23,7 @@ macOS, Windows and Linux are all supported.
 dotnet tool install -g Snail.MCP.Blender
 ```
 
-This gives you a `snail-mcp-blender` command. If the shell answers `command not found`, add the tools
+This gives you a `s3l-mcp-blender` command. If the shell answers `command not found`, add the tools
 folder to `PATH`: `~/.dotnet/tools` on macOS and Linux, `%USERPROFILE%\.dotnet\tools` on Windows. GUI
 clients do not always inherit the shell `PATH`; when one cannot start the server, put the absolute path in
 `command`.
@@ -58,7 +58,7 @@ Claude Code.
 ### Claude Code
 
 ```bash
-claude mcp add blender -- snail-mcp-blender
+claude mcp add blender -- s3l-mcp-blender
 ```
 
 ### Claude Desktop
@@ -68,7 +68,7 @@ In `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "blender": { "command": "snail-mcp-blender" }
+    "blender": { "command": "s3l-mcp-blender" }
   }
 }
 ```

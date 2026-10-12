@@ -2,7 +2,8 @@ name: CI
 
 # Every push to a branch runs it; there is no pull_request trigger, because a private repository pays for its minutes and
 # a pull request shows the checks of its head commit anyway. The release workflow calls it with full, which runs every
-# job whatever changed and leaves building the images to the release itself.
+# job whatever changed and leaves building the images to the release itself. The build and tests are the shared server
+# CI of Snail.Sdk; the add-on, the site, the live tests against a real Blender and the images are this server's own.
 on:
   push:
     branches: ["**"]
@@ -58,60 +59,16 @@ jobs:
           echo "code=$(touched '^(src|tests|addon|deploy/blender)/|^(global\.json|Directory\.Build\.props|\.editorconfig|Snail\.MCP\.Blender\.slnx|\.github/workflows/ci\.yml)$')" >> "$GITHUB_OUTPUT"
           echo "images=$(touched '^(src|addon|deploy)/|^(docs/theme/css/site\.css|\.mcp/server\.json|Directory\.Build\.props|\.editorconfig|README\.md|LICENSE|\.github/workflows/ci\.yml)$')" >> "$GITHUB_OUTPUT"
 
-  tests:
-    name: Build and test
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
-        with:
-          global-json-file: global.json
-
-      - name: Cache NuGet packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'Directory.Build.props', '**/*.csproj') }}
-          restore-keys: nuget-${{ runner.os }}-
-
-      - name: Restore
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build -c Release --no-restore
-
-      - name: Test
-        run: >-
-          dotnet test -c Release --no-build
-          --filter "FullyQualifiedName!~.Tests.Live."
-          --logger "trx;LogFileName=tests.trx"
-          --collect "XPlat Code Coverage"
-          --results-directory TestResults
-
-      - name: Test summary
-        if: success() || failure()
-        run: python3 .github/scripts/test_summary.py "Tests" "TestResults/**/*.trx"
-
-      - name: Coverage summary
-        if: success() || failure()
-        run: |
-          dotnet tool update --global dotnet-reportgenerator-globaltool --version 5.5.11
-          reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:coverage -reporttypes:MarkdownSummaryGithub
-          cat coverage/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Keep the results of a failed run
-        if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: test-results
-          path: TestResults
-          retention-days: 7
-          if-no-files-found: ignore
+  # The shared server CI of Snail.Sdk: the tests, the conformance check, the tool reference the build writes, and the
+  # framework-dependent publication asked over stdio. The live tests skip themselves there, as no Blender is installed.
+  ci:
+    uses: orldev/Snail.Sdk/.github/workflows/mcp-ci.yml@v1
+    with:
+      test-filter: FullyQualifiedName!~.Tests.Live.
+      name: Snail.MCP.Blender
+      project: src
+      native: false
+      contract-variable: SNAIL_BLENDER_SERVER
 
   addon:
     name: Lint the add-on
@@ -136,6 +93,8 @@ jobs:
       - name: The declared parameters are the ones the handlers read
         run: python tools/parameters_from_source.py
 
+  # The site as the release publishes it, built strictly on every push: a broken link fails here, not on the release tag.
+  # The tool reference it shows is committed, and the shared CI checks it is the one the build writes.
   docs:
     name: Documentation site
     runs-on: ubuntu-latest
@@ -145,27 +104,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
-        with:
-          global-json-file: global.json
-
-      - name: Cache NuGet packages
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'Directory.Build.props', '**/*.csproj') }}
-          restore-keys: nuget-${{ runner.os }}-
-
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.13"
           cache: pip
           cache-dependency-path: docs/requirements.txt
-
-      - name: Generate the tool reference
-        run: dotnet run -c Release --project docs/generator -- docs/content
 
       - name: Install MkDocs
         run: pip install -r docs/requirements.txt
@@ -193,7 +137,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'Directory.Build.props', '**/*.csproj') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('global.json', 'Directory.Build.props', 'Directory.Packages.props', '**/*.csproj') }}
           restore-keys: nuget-${{ runner.os }}-
 
       - name: Read the Blender the image uses

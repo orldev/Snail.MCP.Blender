@@ -10,7 +10,6 @@ public static class McpServerRegistrationExtensions
     {
         public HostApplicationBuilder ConfigureMcpServer()
         {
-            builder.UseStderrLogging();
             builder.AddServerConfiguration();
 
             builder.Services
@@ -18,15 +17,6 @@ public static class McpServerRegistrationExtensions
                 .AddSkills()
                 .AddIdleShutdownWatcher()
                 .AddMcpTransport();
-
-            return builder;
-        }
-
-        /// <summary>stdio carries JSON-RPC, so every log line must go to stderr.</summary>
-        internal HostApplicationBuilder UseStderrLogging()
-        {
-            builder.Logging.ClearProviders();
-            builder.Logging.AddConsole(options => options.LogToStandardErrorThreshold = LogLevel.Trace);
 
             return builder;
         }

@@ -46,7 +46,7 @@ dotnet tool install -g Snail.MCP.Blender
 {
   "mcpServers": {
     "blender": {
-      "command": "snail-mcp-blender"
+      "command": "s3l-mcp-blender"
     }
   }
 }

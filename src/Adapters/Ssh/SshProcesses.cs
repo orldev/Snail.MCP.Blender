@@ -93,12 +93,12 @@ public sealed class SshProcessLauncher(ILogger<SshProcessLauncher> logger) : ISs
 
             if (line.StartsWith("**", StringComparison.Ordinal))
             {
-                _logger.LogDebug("ssh: {Line}", line);
+                Log.SshDebug(_logger, line);
 
                 return;
             }
 
-            _logger.LogInformation("ssh: {Line}", line);
+            Log.SshSaid(_logger, line);
             Volatile.Write(ref _lastLine, line.Trim());
         }
     }

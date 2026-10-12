@@ -44,11 +44,14 @@ public partial class ToolchainContractTests
     private static string MajorMinor(string version) => string.Join('.', version.Split('.').Take(2));
 
     private static string? Group(string entry) =>
-        Regex.Match(entry, @"multi-ecosystem-group:\s*(?<name>[A-Za-z0-9_-]+)") is { Success: true } found ? found.Groups["name"].Value : null;
+        GroupEntry().Match(entry) is { Success: true } found ? found.Groups["name"].Value : null;
 
     [GeneratedRegex(@"^FROM mcr\.microsoft\.com/dotnet/sdk:(?<version>\d+\.\d+\.\d+)", RegexOptions.Multiline)]
     private static partial Regex SdkImage();
 
     [GeneratedRegex(@"^FROM mcr\.microsoft\.com/dotnet/aspnet:(?<version>\d+\.\d+\.\d+)", RegexOptions.Multiline)]
     private static partial Regex RuntimeImage();
+
+    [GeneratedRegex(@"multi-ecosystem-group:\s*(?<name>[A-Za-z0-9_-]+)")]
+    private static partial Regex GroupEntry();
 }

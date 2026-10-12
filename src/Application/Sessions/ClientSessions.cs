@@ -48,8 +48,10 @@ public sealed class ClientSession(string name, string? agent, SkillCatalog skill
 /// <summary>Every client this server is serving, one session each, and which of them the call in hand belongs to.</summary>
 /// <remarks>A stdio server serves one client and hands it the process's own session. Over HTTP each MCP session opens one of its own, and
 /// the call being served is found through the session's options, which the SDK hands back with every request. Everything downstream — the
-/// skills a tool sees, the agent a command is signed with — asks for the session in hand rather than for the process's one.</remarks>
-public sealed class ClientSessions
+/// skills a tool sees, the agent a command is signed with — asks for the session in hand rather than for the process's one.
+/// <para>The sessions of a server whose own tool collection is <paramref name="alwaysOn"/> and whose configured agent name, for a
+/// client that names none of its own, is <paramref name="agent"/>.</para></remarks>
+public sealed class ClientSessions(IReadOnlyList<Skill> skills, McpServerPrimitiveCollection<McpServerTool> alwaysOn, string? agent, IServiceProvider services, TimeProvider time)
 {
     /// <summary>Clients that may be told apart by name, which is the only way to recognise one that holds no session.</summary>
     public const int MostNamedClients = 64;
@@ -57,22 +59,12 @@ public sealed class ClientSessions
     private readonly ConditionalWeakTable<McpServerPrimitiveCollection<McpServerTool>, ClientSession> _sessions = [];
     private readonly ConcurrentDictionary<string, ClientSession> _named = new(StringComparer.OrdinalIgnoreCase);
     private readonly AsyncLocal<ClientSession?> _serving = new();
-    private readonly IReadOnlyList<Skill> _skills;
-    private readonly IServiceProvider _services;
-    private readonly TimeProvider _time;
-
-    /// <summary>The sessions of a server whose own tool collection is <paramref name="alwaysOn"/> and whose configured agent name, for a
-    /// client that names none of its own, is <paramref name="agent"/>.</summary>
-    public ClientSessions(IReadOnlyList<Skill> skills, McpServerPrimitiveCollection<McpServerTool> alwaysOn, string? agent, IServiceProvider services, TimeProvider time)
-    {
-        _skills = skills;
-        _services = services;
-        _time = time;
-        Default = new ClientSession("this server", Called(agent), new SkillCatalog(skills, alwaysOn, services, time));
-    }
+    private readonly IReadOnlyList<Skill> _skills = skills;
+    private readonly IServiceProvider _services = services;
+    private readonly TimeProvider _time = time;
 
     /// <summary>The session of a server that opened none: the stdio process, and any caller outside a request.</summary>
-    public ClientSession Default { get; }
+    public ClientSession Default { get; } = new ClientSession("this server", Called(agent), new SkillCatalog(skills, alwaysOn, services, time));
 
     /// <summary>Every session open now, the process's own among them.</summary>
     public IReadOnlyList<ClientSession> All => [Default, .. _sessions.Select(entry => entry.Value)];

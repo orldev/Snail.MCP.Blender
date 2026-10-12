@@ -164,7 +164,7 @@ public sealed class BlenderConnection(BlenderLinkOptions options, ILogger<Blende
 
             if (reply["id"]?.ToString() != id)
             {
-                logger.LogDebug("Skipping a stale reply {ReplyId} while waiting for {Id}", reply["id"], id);
+                Log.StaleReplySkipped(logger, reply["id"], id);
 
                 continue;
             }
@@ -285,7 +285,7 @@ public sealed class BlenderConnection(BlenderLinkOptions options, ILogger<Blende
         _reader = new StreamReader(stream, Utf8);
         _writer = stream;
 
-        logger.LogInformation("Connected to the Blender add-on on {Host}:{Port} with {TokenSource} token", options.Host, options.Port, TokenSource);
+        Log.AddOnConnected(logger, options.Host, options.Port, TokenSource);
 
         return null;
     }

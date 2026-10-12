@@ -64,13 +64,13 @@ as its argument.
 {
   "mcpServers": {
     "blender": {
-      "command": "snail-mcp-blender"
+      "command": "s3l-mcp-blender"
     }
   }
 }
 ```
 
-For Claude Code: `claude mcp add blender -- snail-mcp-blender`.
+For Claude Code: `claude mcp add blender -- s3l-mcp-blender`.
 
 For a server that runs in Docker beside Blender, register its address instead; nothing else is installed on the client,
 the add-on included, and step 3 is done on that machine:
@@ -170,7 +170,7 @@ One folder per concern:
 | `src/` | the server: `Configuration`, `Domain` with the command catalog in `Commands`, `Application`, `Adapters`, `Hosting`, `Web`, `Extensions`, and `Tools` — `Base` for the layer that is always on, one folder per skill, and `Prompts` for the descriptions, messages and prompts the model reads |
 | `addon/` | the Blender add-on, one Python module per area |
 | `tests/` | a folder per layer of `src`, `Contracts` for the guards, `Tools` and `Live` split by skill like the tools, `Support` for the fakes and the headless Blender |
-| `docs/` | the documentation site: `mkdocs.yml`, the pages in `content/`, the `theme/` the server's pages embed too, and the `generator/` of the tool reference |
+| `docs/` | the documentation site: `mkdocs.yml`, the pages in `content/`, the `theme/` the server's pages embed too, and `tools.json`, the families of the tool reference the build writes |
 | `deploy/` | the two images, each with its Dockerfile and its ignore file, the compose file with its `.env.example`, and the Traefik route |
 | `.mcp/` | the MCP registry entry the NuGet package carries |
 
@@ -181,7 +181,7 @@ the version.
 dotnet build
 dotnet test
 ruff check addon                   # the add-on's Python, configured by ruff.toml
-dotnet run --project docs/generator # regenerates docs/content/tools from the server itself
+dotnet build src -p:SnailReference=true # regenerates docs/content/tools from the server itself
 docker build -f deploy/blender/Dockerfile -t ghcr.io/orldev/s3l-blender:latest .
 docker build -f deploy/mcp/Dockerfile --build-arg VERSION=0.1.0 -t ghcr.io/orldev/s3l-blender-mcp:latest .
 pip install -r docs/requirements.txt

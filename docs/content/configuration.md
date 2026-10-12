@@ -54,7 +54,7 @@ network in Docker; point `SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE` at the same file
 A server reached over HTTP admits clients by key, one key each:
 
 ```console
-$ snail-mcp-blender clients add lighting --scope read,write,farm
+$ s3l-mcp-blender clients add lighting --scope read,write,farm
 lighting — read, write, farm
 l7m82DheQD9RO3z3RWjSgr0Gv87LgkjQfGvRwEDPhTk
 This is the only time the key is shown; give it to the client and keep no copy here.

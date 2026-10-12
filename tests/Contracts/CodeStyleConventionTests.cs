@@ -27,13 +27,14 @@ public class CodeStyleConventionTests
     private static List<string> Scan(Func<string, string, IEnumerable<string>> inspect)
     {
         var root = Repository.Root;
-
-        return [.. new[] { "src", Path.Combine("docs", "generator"), "tests" }
+        var folders = new[] { "src", "tests" }
             .Select(folder => Path.Combine(root, folder))
-            .Where(Directory.Exists)
+            .Where(Directory.Exists);
+        var files = folders
             .SelectMany(folder => Directory.EnumerateFiles(folder, "*.cs", SearchOption.AllDirectories))
-            .Where(IsHandWritten)
-            .SelectMany(file => inspect(Path.GetRelativePath(root, file), File.ReadAllText(file)))];
+            .Where(IsHandWritten);
+
+        return [.. files.SelectMany(file => inspect(Path.GetRelativePath(root, file), File.ReadAllText(file)))];
     }
 
     private static bool IsHandWritten(string file)

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using Jint;
 using Jint.Native;
 using Jint.Native.Object;
@@ -86,6 +87,7 @@ public sealed class JavaScriptPrograms(IBlenderBridge bridge, ServerConfig confi
         return catalog;
     }
 
+    [SuppressMessage("Usage", "VSTHRD002", Justification = "The engine calls a command as a plain function and cannot await it; the program runs on a pool thread of its own (RunAsync), and only that thread waits for the add-on.")]
     private JsValue Send(Engine engine, BridgeCommand command, JsValue[] arguments, List<ProgramCall> calls, Stopwatch running, TimeSpan timeout, CancellationToken cancellationToken)
     {
         if (calls.Count >= MostCalls)

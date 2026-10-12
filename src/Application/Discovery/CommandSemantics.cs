@@ -10,28 +10,23 @@ namespace Snail.MCP.Blender.Application.Discovery;
 /// they are about to do. The schema does.
 /// <para>A file that cannot be read leaves every command unknown rather than stopping the server: the caller decides what an unknown command
 /// costs, and for the scopes that is the widest ordinary answer, never the narrowest.</para></remarks>
-public sealed class CommandSemantics
+public sealed class CommandSemantics(string? addOnDirectory = null)
 {
-    private readonly IReadOnlyDictionary<string, JsonObject> _commands;
-
-    public CommandSemantics(string? addOnDirectory = null)
-    {
-        _commands = Read(Path.Combine(addOnDirectory ?? ServerPaths.BundledAddOnDirectory, "commands.json"));
-    }
+    private readonly IReadOnlyDictionary<string, JsonObject> _commands = Read(Path.Combine(addOnDirectory ?? ServerPaths.BundledAddOnDirectory, "commands.json"));
 
     /// <summary>Whether the schema was found at all; without it every answer here is a guess and the caller may want to say so.</summary>
     public bool IsKnown => _commands.Count > 0;
 
     /// <summary>Only reads, whatever it is asked to do; a command read-only for some of its actions only is not one of these.</summary>
-    public bool IsReadOnly(string command) => Flag(command, "read_only");
+    public bool IsReadOnly(string command) => IsFlagSet(command, "read_only");
 
     /// <summary>Can lose work: deletes, clears, replaces or undoes.</summary>
-    public bool IsDestructive(string command) => Flag(command, "destructive");
+    public bool IsDestructive(string command) => IsFlagSet(command, "destructive");
 
     /// <summary>Reaches past Blender: the file system, another process, the network.</summary>
-    public bool IsOpenWorld(string command) => Flag(command, "open_world");
+    public bool IsOpenWorld(string command) => IsFlagSet(command, "open_world");
 
-    private bool Flag(string command, string name) =>
+    private bool IsFlagSet(string command, string name) =>
         _commands.TryGetValue(command, out var meaning) && meaning[name] is JsonValue value && value.TryGetValue<bool>(out var set) && set;
 
     private static IReadOnlyDictionary<string, JsonObject> Read(string file)

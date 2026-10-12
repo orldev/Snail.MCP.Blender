@@ -428,10 +428,8 @@ ASALocalRun/
 # Python bytecode of the Blender add-on
 __pycache__/
 
-# MkDocs: build output and the generated tool reference
+# MkDocs: build output (the tool reference is committed: the build writes it)
 site/
-docs/content/tools/
-docs/content/schemas/
 
 # The linter's cache.
 .ruff_cache/

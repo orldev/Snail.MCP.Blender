@@ -133,7 +133,7 @@ public sealed class BridgeLiveTests : IAsyncLifetime
     {
         using var stuck = await ConnectAsync(receiveBuffer: 4096);
 
-        Assert.True(await FloodUntilClosedAsync(stuck.GetStream()), "the add-on neither answered nor dropped a client that never reads");
+        Assert.True(await TryFloodUntilClosedAsync(stuck.GetStream()), "the add-on neither answered nor dropped a client that never reads");
         var scene = await _link.SendAsync(BridgeCommands.SceneInfo);
 
         Assert.True(scene.IsOk, $"{scene.Error?.Type} {scene.Error?.Message}");
@@ -237,7 +237,7 @@ public sealed class BridgeLiveTests : IAsyncLifetime
     }
 
     /// <summary>Writes malformed lines, each drawing a refusal the client never reads, until the add-on closes the link and the write fails.</summary>
-    private static async Task<bool> FloodUntilClosedAsync(Stream stream)
+    private static async Task<bool> TryFloodUntilClosedAsync(Stream stream)
     {
         var lines = Encoding.ASCII.GetBytes(string.Concat(Enumerable.Repeat("x\n", 1000)));
         var giveUp = DateTime.UtcNow + TimeSpan.FromSeconds(60);

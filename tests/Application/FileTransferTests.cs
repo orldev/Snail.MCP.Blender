@@ -124,12 +124,12 @@ public sealed class FileTransferTests : IDisposable
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => new FileTransfer().DownloadAsync("/r/huge.exr", local, false,
             _ => Listing("/r", "file", "huge.exr"),
-            _ =>
+            async _ =>
             {
-                giveUp.Cancel();
+                await giveUp.CancelAsync();
                 giveUp.Token.ThrowIfCancellationRequested();
 
-                return Task.FromResult(BridgeReply.Ok(new JsonObject()));
+                return BridgeReply.Ok(new JsonObject());
             },
             giveUp.Token));
 

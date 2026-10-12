@@ -23,7 +23,7 @@ container beside it, outlives every client, and the client reaches it over HTTPS
 
 Which Blender a project works with is decided by which MCP entry named `blender` is in force:
 
-- **Local** — an entry named `blender` without a tunnel, such as `claude mcp add blender -- snail-mcp-blender`. The
+- **Local** — an entry named `blender` without a tunnel, such as `claude mcp add blender -- s3l-mcp-blender`. The
   repository's `.mcp.json` keeps such an entry for the Debug build, commented out; uncomment it to use it.
 - **Remote** — a local-scope entry of the same name, added with `claude mcp add blender --scope local` and the tunnel
   settings from [Blender on another machine](remote.md). A local-scope entry takes precedence over the project's, and it

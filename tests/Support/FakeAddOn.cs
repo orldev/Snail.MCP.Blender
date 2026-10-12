@@ -126,5 +126,8 @@ public sealed class FakeAddOn : IAsyncDisposable
         catch (OperationCanceledException)
         {
         }
+
+        _listener.Dispose();
+        _stopping.Dispose();
     }
 }

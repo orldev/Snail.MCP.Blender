@@ -5,7 +5,7 @@ using Snail.MCP.Blender.Application.Skills;
 namespace Snail.MCP.Blender.Tests.Contracts;
 
 /// <summary>Every command of the catalog is sent at least once against a real Blender; a command no live scenario touches is a command that can break without a test noticing.</summary>
-public class LiveCoverageContractTests
+public partial class LiveCoverageContractTests
 {
     /// <summary>These need Blender's interface — a 3D viewport or the Video Sequencer editor — which a headless Blender does not have, so they answer NoArea instead of working.</summary>
     private static readonly HashSet<string> NeedsTheInterface = new(StringComparer.Ordinal)
@@ -73,6 +73,6 @@ public class LiveCoverageContractTests
         return [.. CommandReference.Matches(sources).Select(match => match.Groups["constant"].Value)];
     }
 
-
-    private static readonly Regex CommandReference = new(@"BridgeCommands\.(?<constant>\w+)", RegexOptions.Compiled);
+    [GeneratedRegex(@"BridgeCommands\.(?<constant>\w+)")]
+    private static partial Regex CommandReference { get; }
 }

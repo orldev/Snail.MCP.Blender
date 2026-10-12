@@ -3,10 +3,8 @@ using System.Text.RegularExpressions;
 namespace Snail.MCP.Blender.Tests.Contracts;
 
 /// <summary>The C# command catalog and the add-on's registry are two copies of one contract, module by module: each partial of the catalog equals the registrations of the add-on file it names.</summary>
-public class BridgeCommandContractTests
+public partial class BridgeCommandContractTests
 {
-    private static readonly Regex Registration = new(@"^@(?:immediate_)?command\(""([a-z_]+)""\)", RegexOptions.Multiline | RegexOptions.Compiled);
-
     [Fact]
     public void CommandCatalog_EqualsTheAddOnRegistry()
     {
@@ -56,4 +54,7 @@ public class BridgeCommandContractTests
 
         return modules;
     }
+
+    [GeneratedRegex(@"^@(?:immediate_)?command\(""([a-z_]+)""\)", RegexOptions.Multiline)]
+    private static partial Regex Registration { get; }
 }

@@ -20,7 +20,7 @@
             <input type="hidden" name="path" value="@View.Path">
 
             <p class="tools">
-                <span class="lead">@View.Entries.Count @(View.Entries.Count == 1 ? "entry" : "entries") · @Readable.Size(View.Bytes)@(View.Truncated ? " · the first 2000 shown" : null)</span>
+                <span class="lead">@View.Entries.Count @(View.Entries.Count == 1 ? "entry" : "entries") · @Readable.Size(View.Bytes)@(View.IsTruncated ? " · the first 2000 shown" : null)</span>
                 @if (View.ZipHref is not null)
                 {
                     <a class="act-link" href="@View.ZipHref">Download .zip</a>

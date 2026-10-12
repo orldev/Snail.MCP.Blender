@@ -161,7 +161,7 @@ public class HttpContractTests
             Assert.NotEmpty(await admitted.ListToolsAsync());
         }
 
-        Assert.True(keys.Revoke("lighting"));
+        Assert.True(keys.TryRevoke("lighting"));
 
         using var http = new HttpClient { BaseAddress = server.Address };
         var refused = await http.SendAsync(new HttpRequestMessage(HttpMethod.Post, HttpServerRegistrationExtensions.McpPath)

@@ -1,0 +1,25 @@
+name: documentation
+
+# The site on GitHub Pages, on a release tag as before (a prerelease publishes none) and by hand: the shared docs workflow
+# of Snail.Sdk writes the tool reference again with the build, then MkDocs builds the site.
+#
+# GitHub creates the github-pages environment with a rule that deploys from the default branch only; add a rule for the
+# tags v* in Settings → Environments, or a run on a tag is refused.
+
+on:
+  push:
+    tags:
+      - "v*"
+      - "!v*-*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: orldev/Snail.Sdk/.github/workflows/docs.yml@v1

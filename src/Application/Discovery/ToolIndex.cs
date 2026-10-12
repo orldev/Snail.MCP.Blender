@@ -38,14 +38,19 @@ public sealed class ToolIndex(Assembly assembly)
     {
         var words = Vocabulary.Of(intent);
 
-        return words.Count == 0
-            ? []
-            : [.. _tools
-                .Select(tool => new ToolMatch(tool, Score(tool, words)))
-                .Where(match => match.Score > 0)
-                .OrderByDescending(match => match.Score)
-                .ThenBy(match => match.Tool.Name, StringComparer.Ordinal)
-                .Take(limit)];
+        if (words.Count == 0)
+        {
+            return [];
+        }
+
+        var matching = _tools
+            .Select(tool => new ToolMatch(tool, Score(tool, words)))
+            .Where(match => match.Score > 0);
+        var ranked = matching
+            .OrderByDescending(match => match.Score)
+            .ThenBy(match => match.Tool.Name, StringComparer.Ordinal);
+
+        return [.. ranked.Take(limit)];
     }
 
     /// <summary>The tool that covers a bpy operation such as <c>mesh.bevel</c>: every word of the operation stands in the tool's name, or nothing does.</summary>

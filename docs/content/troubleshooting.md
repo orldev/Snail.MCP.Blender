@@ -141,7 +141,7 @@ carries, so nothing was downloaded; download its folders one by one. A folder be
 ## `401` from `/mcp`, or the pages send me back to sign in
 
 The server beside Blender admits a client holding the token in `secrets/client.token` or a key minted with
-`snail-mcp-blender clients add`: Claude Code sends it as `Authorization: Bearer <key>` in the MCP entry, and the pages
+`s3l-mcp-blender clients add`: Claude Code sends it as `Authorization: Bearer <key>` in the MCP entry, and the pages
 take the same key at sign-in. A key copied with a trailing newline still works; one from an older copy of the file, or
 one that was revoked, does not — a revoked key ends the browser session it opened at the next request. A session on the pages lasts twelve hours, is
 renewed while the pages are in use, and survives a restart of the container, because its keys live in the `keys` volume.

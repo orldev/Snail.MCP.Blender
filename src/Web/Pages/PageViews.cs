@@ -70,7 +70,7 @@ public static class PageViews
             Path = path,
             Crumbs = Crumbs(area, path),
             Entries = entries,
-            Truncated = listing["truncated"]?.GetValue<bool>() == true,
+            IsTruncated = listing["truncated"]?.GetValue<bool>() == true,
             ZipHref = area == "snapshots" || entries.Count == 0 ? null : $"{Raw(area, path)}?format={FileLinks.ZipFormat}",
             Flash = flash,
             CanPrune = path.Length == 0 && area is "jobs" or "batches" && entries.Any(entry => JobStates.HasEnded(entry.State)),
@@ -114,7 +114,7 @@ public static class PageViews
         var traffic = report["traffic"] as JsonObject ?? [];
         var isReachable = blender["reachable"]?.GetValue<bool>() == true;
 
-        return
+        IReadOnlyList<StatusGroup> groups =
         [
             new StatusGroup("Blender",
             [
@@ -142,6 +142,8 @@ public static class PageViews
                 new StatusRow("File links", $"valid for {config.Http.LinkMinutes} min"),
             ]),
         ];
+
+        return groups;
     }
 
     private static EntryView Entry(string area, string folder, string directory, string? open, JsonObject entry)
@@ -155,7 +157,7 @@ public static class PageViews
         var state = job?["state"]?.GetValue<string>() ?? batch?["state"]?.GetValue<string>();
         var isOpen = open is not null && Contains($"{directory}/{name}", open);
 
-        return new EntryView
+        var view = new EntryView
         {
             Name = name,
             Href = kind == "snapshot" ? null : Page(area, path),
@@ -175,6 +177,8 @@ public static class PageViews
                 : snapshot?["note"]?.GetValue<string>() ?? snapshot?["saved_at"]?.GetValue<string>(),
             InUse = isOpen ? "open in Blender" : JobStates.IsActive(state) ? state : null,
         };
+
+        return view;
     }
 
     /// <summary>Whether a path on Blender's machine is, or holds, another; either separator, either case of a Windows drive.</summary>
@@ -219,10 +223,11 @@ public static class PageViews
 
     private static string JobCounts(JsonObject? jobs)
     {
-        var states = (jobs?["entries"] as JsonArray ?? [])
+        var known = (jobs?["entries"] as JsonArray ?? [])
             .OfType<JsonObject>()
             .Select(entry => entry["job"]?["state"]?.GetValue<string>())
-            .OfType<string>()
+            .OfType<string>();
+        var states = known
             .GroupBy(state => state, StringComparer.Ordinal)
             .OrderBy(group => group.Key, StringComparer.Ordinal)
             .Select(group => $"{group.Count()} {group.Key}")

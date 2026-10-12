@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Application.Storage;
 public sealed record VolumeFile(string Path, long Size, long Modified);
 
 /// <summary>What a path of an area holds: one file, or a folder and every file under it.</summary>
-public sealed record VolumeItem(bool IsFolder, IReadOnlyList<VolumeFile> Files, long Bytes, bool Truncated);
+public sealed record VolumeItem(bool IsFolder, IReadOnlyList<VolumeFile> Files, long Bytes, bool IsTruncated);
 
 /// <summary>A path of an area looked up: what it holds, or why it could not be read.</summary>
 public sealed record VolumeLookup(VolumeItem? Item, BridgeError? Error);

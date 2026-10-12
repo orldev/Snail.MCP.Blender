@@ -180,11 +180,15 @@ public sealed class SkillCatalog(
                 new McpServerToolCreateOptions { Services = services }));
 
     /// <summary>Skills declared in an assembly: every tool class carrying <see cref="SkillAttribute"/>, grouped by skill name.</summary>
-    public static IReadOnlyList<Skill> Discover(Assembly assembly) =>
-        [.. assembly.GetTypes()
+    public static IReadOnlyList<Skill> Discover(Assembly assembly)
+    {
+        var declared = assembly.GetTypes()
             .Select(type => (Type: type, Skill: type.GetCustomAttribute<SkillAttribute>()))
-            .Where(pair => pair.Skill is not null)
+            .Where(pair => pair.Skill is not null);
+        var skills = declared
             .GroupBy(pair => pair.Skill!.Name, StringComparer.Ordinal)
-            .Select(group => new Skill(group.Key, group.First().Skill!.Description, [.. group.Select(pair => pair.Type)]))
-            .OrderBy(skill => skill.Name, StringComparer.Ordinal)];
+            .Select(group => new Skill(group.Key, group.First().Skill!.Description, [.. group.Select(pair => pair.Type)]));
+
+        return [.. skills.OrderBy(skill => skill.Name, StringComparer.Ordinal)];
+    }
 }

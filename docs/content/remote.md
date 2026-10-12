@@ -118,7 +118,7 @@ claude mcp add blender --scope local \
   -e SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__REMOTE_PORT=9876 \
   -e SNAIL_MCP_BLENDER_BRIDGE__PORT=9877 \
   -e 'SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE=~/.snail-mcp-blender/remote/render-box.token' \
-  -- snail-mcp-blender
+  -- s3l-mcp-blender
 ```
 
 The local scope keeps this out of a shared `.mcp.json` and ties it to the folder you ran it in; with `--scope user`
@@ -155,7 +155,7 @@ ssh render-box cat ~/.snail-mcp-blender/state/token                  # Linux
 {
   "mcpServers": {
     "blender": {
-      "command": "snail-mcp-blender",
+      "command": "s3l-mcp-blender",
       "env": { "SNAIL_MCP_BLENDER_BRIDGE__TOKEN": "the value printed above" }
     }
   }

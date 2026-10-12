@@ -12,10 +12,8 @@ using Snail.MCP.Blender.Tools.Prompts;
 namespace Snail.MCP.Blender.Tests.Contracts;
 
 /// <summary>Prompt catalog guards: descriptions are hardcoded consts that drift silently as the code evolves; these tests catch drift at build time.</summary>
-public class ToolCatalogConventionTests
+public partial class ToolCatalogConventionTests
 {
-    private static readonly Regex ToolReference = new(@"\bblender_[a-z0-9_]+", RegexOptions.Compiled);
-
     private static IReadOnlyList<MethodInfo> ToolMethods() =>
         [.. typeof(ToolDescriptions).Assembly.GetTypes()
             .Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() is not null)
@@ -122,16 +120,17 @@ public class ToolCatalogConventionTests
         Assert.True(dangling.Count == 0, $"guidance names tools that do not exist: {string.Join(", ", dangling)}");
     }
 
-    /// <summary>Every tool class has a family in the documentation generator, or its tools reach no page: run_program was written, registered
-    /// and tested before anyone noticed the reference had never heard of it.</summary>
+    /// <summary>Every tool class has a family in docs/tools.json, the families of the reference the build writes, or its tools reach no page
+    /// of their own: run_program was written, registered and tested before anyone noticed the reference had never heard of it.</summary>
     [Fact]
     public void EveryToolType_HasAFamilyInTheReference()
     {
-        var families = File.ReadAllText(Path.Combine(Repository.Root, "docs", "generator", "ToolCatalog.cs"));
+        var settings = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "docs", "tools.json")))!;
+        var families = settings["families"]!.AsArray().Select(family => family!["type"]!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
         var missing = typeof(ToolResponse).Assembly.GetTypes()
             .Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() is not null)
             .Select(type => type.Name)
-            .Where(name => !families.Contains($"(\"{name}\"", StringComparison.Ordinal))
+            .Where(name => !families.Contains(name))
             .ToList();
 
         Assert.True(missing.Count == 0, $"tool types the reference does not list: {string.Join(", ", missing)}");
@@ -233,9 +232,10 @@ public class ToolCatalogConventionTests
     public void ReadOnlyAnnotations_AgreeWithTheCommandSchema()
     {
         var readOnly = CommandsWhere("read_only");
-        var mismatched = ToolMethods()
+        var sending = ToolMethods()
             .Select(method => (Tool: method.GetCustomAttribute<McpServerToolAttribute>()!, Commands: CommandsOf(method)))
-            .Where(pair => pair.Commands.Count > 0)
+            .Where(pair => pair.Commands.Count > 0);
+        var mismatched = sending
             .Where(pair => pair.Tool.ReadOnly != pair.Commands.All(readOnly.Contains))
             .Select(pair => pair.Tool.Name)
             .ToList();
@@ -250,9 +250,10 @@ public class ToolCatalogConventionTests
     {
         var destructive = CommandsWhere("destructive");
         var openWorld = CommandsWhere("open_world");
-        var mismatched = ToolMethods()
+        var changing = ToolMethods()
             .Select(method => (Tool: method.GetCustomAttribute<McpServerToolAttribute>()!, Commands: SendableBy(method)))
-            .Where(pair => !pair.Tool.ReadOnly)
+            .Where(pair => !pair.Tool.ReadOnly);
+        var mismatched = changing
             .Where(pair => pair.Tool.Destructive != pair.Commands.Any(destructive.Contains) || pair.Tool.OpenWorld != pair.Commands.Any(openWorld.Contains))
             .Select(pair => pair.Tool.Name)
             .ToList();
@@ -284,9 +285,9 @@ public class ToolCatalogConventionTests
         var source = SourceOf(method.DeclaringType!);
         var name = method.GetCustomAttribute<McpServerToolAttribute>()!.Name!;
         var start = source.IndexOf($"Name = \"{name}\"", StringComparison.Ordinal);
-        var next = Regex.Match(source[(start + 1)..], @"\[McpServerTool\(");
+        var next = ToolAttribute.Match(source[(start + 1)..]);
         var body = next.Success ? source[start..(start + 1 + next.Index)] : source[start..];
-        var fields = Regex.Matches(body, @"BridgeCommands\.(\w+)").Select(match => match.Groups[1].Value).Distinct();
+        var fields = CommandField.Matches(body).Select(match => match.Groups[1].Value).Distinct();
 
         return [.. fields.Select(field => ((BridgeCommand)typeof(BridgeCommands).GetField(field)!.GetValue(null)!).Name)];
     }
@@ -307,7 +308,6 @@ public class ToolCatalogConventionTests
             return text;
         }
     }
-
 
     private static IReadOnlyList<ParameterInfo> ParametersNamed(string name) =>
         [.. ToolMethods().SelectMany(method => method.GetParameters().Where(parameter => parameter.Name == name))];
@@ -399,4 +399,13 @@ public class ToolCatalogConventionTests
         Assert.All(Sequencer.StripKinds, kind => Assert.Contains(kind, DescriptionOf(strip)!, StringComparison.Ordinal));
         Assert.All(Sequencer.EffectTypes, kind => Assert.Contains(kind, DescriptionOf(effect)!, StringComparison.Ordinal));
     }
+
+    [GeneratedRegex(@"\bblender_[a-z0-9_]+")]
+    private static partial Regex ToolReference { get; }
+
+    [GeneratedRegex(@"\[McpServerTool\(")]
+    private static partial Regex ToolAttribute { get; }
+
+    [GeneratedRegex(@"BridgeCommands\.(\w+)")]
+    private static partial Regex CommandField { get; }
 }

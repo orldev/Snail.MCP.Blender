@@ -112,8 +112,8 @@ public sealed class AddOnFreshness(IAddOnPackager packager, ILogger<AddOnFreshne
         }
 
         _reported = digest;
-        logger.LogWarning(
-            "The add-on installed in Blender ({Installed}) is not the one this server ships ({Bundled}); run blender_install_addon and reinstall the zip. Commands it does not have: {Missing}",
+        Log.AddOnStale(
+            logger,
             digest,
             packager.Describe().Digest,
             report["missing"] is JsonArray missing && missing.Count > 0 ? string.Join(", ", missing.Select(name => name!.GetValue<string>())) : "none");

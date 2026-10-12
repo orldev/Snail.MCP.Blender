@@ -18,7 +18,7 @@ theme:
 plugins:
   - search
 
-# A page the generator writes but the nav does not list is a page nobody can reach:
+# A page the build writes but the nav does not list is a page nobody can reach:
 # with --strict this turns the omission into a failed build instead of a quiet INFO.
 validation:
   nav:

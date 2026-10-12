@@ -3,8 +3,9 @@ using Microsoft.Extensions.Hosting;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Hosting;
+using Snail.Sdk.Mcp.Hosting;
 
-if (ClientCommandLine.Asked(args))
+if (ClientCommandLine.IsAsked(args))
 {
     return ClientCommandLine.Run(args, Console.Out);
 }
@@ -20,7 +21,7 @@ if (ServerConfigExtensions.Peek().Transport is Transport.Http)
     return 0;
 }
 
-await Host.CreateApplicationBuilder(args)
+await McpHost.CreateBuilder(args)
     .ConfigureMcpServer()
     .Build()
     .RunAsync();

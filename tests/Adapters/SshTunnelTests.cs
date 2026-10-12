@@ -73,7 +73,7 @@ public sealed class SshTunnelTests
 
         await tunnel.StopAsync(CancellationToken.None);
 
-        Assert.True(launcher.Process(1).Killed);
+        Assert.True(launcher.Process(1).WasKilled);
         Assert.False(tunnel.Describe()!["up"]!.GetValue<bool>());
     }
 
@@ -140,14 +140,14 @@ public sealed class SshTunnelTests
 
         public string? LastLine => lastLine;
 
-        public bool Killed { get; private set; }
+        public bool WasKilled { get; private set; }
 
         public Task<int> WaitForExitAsync(CancellationToken cancellationToken) =>
             exitCode is { } code ? Task.FromResult(code) : _exit.Task.WaitAsync(cancellationToken);
 
         public void Kill()
         {
-            Killed = true;
+            WasKilled = true;
             _exit.TrySetResult(-1);
         }
 

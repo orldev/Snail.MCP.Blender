@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using ModelContextProtocol;
 using Snail.MCP.Blender.Application.Rendering;
 
@@ -25,19 +26,32 @@ public class RenderWatchTests
             .Then(new JsonObject { ["phase"] = "rendering", ["frame"] = 3, ["frames_done"] = 2, ["elapsed_s"] = 4.5, ["stats"] = "Mem: 12M" })
             .Then(new JsonObject { ["phase"] = "rendering", ["frame"] = 4, ["frames_done"] = 3, ["elapsed_s"] = 6.0 });
         var watch = new RenderWatch(monitor) { Interval = TimeSpan.FromMilliseconds(10) };
-        var reported = new List<ProgressNotificationValue>();
-        var progress = new Progress<ProgressNotificationValue>(reported.Add);
+        var reported = new ConcurrentQueue<ProgressNotificationValue>();
+        var progress = new Progress<ProgressNotificationValue>(reported.Enqueue);
         var render = new TaskCompletionSource<BridgeReply>();
 
         var following = watch.FollowAsync(render.Task, progress, 10, CancellationToken.None);
-        await Task.Delay(80);
+        await EventuallyAsync(() => monitor.Probes >= 2);
         render.SetResult(BridgeReply.Ok(new JsonObject { ["done"] = true }));
         var reply = await following;
-        await Task.Delay(20);
+        await EventuallyAsync(() => reported.Any(value => value.Progress == 2 && value.Total == 10 && value.Message!.Contains("Mem: 12M", StringComparison.Ordinal)));
 
         Assert.True(reply.IsOk);
         Assert.True(monitor.Probes >= 2);
-        Assert.Contains(reported, value => value.Progress == 2 && value.Total == 10 && value.Message!.Contains("Mem: 12M", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Waits for what a timer and the thread pool bring about, rather than for a fixed time: under a loaded suite two
+    /// probes 10 ms apart did not always fit into 80 ms, and a Progress callback did not always land within 20 ms.
+    /// </summary>
+    private static async Task EventuallyAsync(Func<bool> condition)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+
+        while (!condition() && DateTime.UtcNow < deadline)
+            await Task.Delay(5);
+
+        Assert.True(condition(), "the condition did not hold within 5 s");
     }
 
     [Fact]

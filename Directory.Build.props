@@ -1,11 +1,13 @@
 <Project>
 
+    <!-- The build — language, nullable, docs, analyzers, warnings as errors — is Snail.Sdk's (global.json). -->
     <PropertyGroup>
-        <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
-        <AnalysisLevel>latest</AnalysisLevel>
-        <AnalysisMode>Recommended</AnalysisMode>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <TargetFramework>net10.0</TargetFramework>
+    </PropertyGroup>
+
+    <!-- Migration debt (Toolkit/Snail.Sdk/docs/standard.md): CS1591, 845 public members of the server without XML docs.
+         Written member by member as the code is touched; the count here falls with each. -->
+    <PropertyGroup>
         <NoWarn>$(NoWarn);CS1591</NoWarn>
     </PropertyGroup>
 

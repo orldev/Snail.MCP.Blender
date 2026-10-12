@@ -8,7 +8,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0.302 AS build
 WORKDIR /source
 
 # .editorconfig sets the analyzers' severities; without it the build treats warnings the checkout never raises as errors.
-COPY .editorconfig Directory.Build.props README.md LICENSE global.json ./
+COPY .editorconfig Directory.Build.props Directory.Packages.props README.md LICENSE global.json ./
 COPY .mcp/server.json .mcp/server.json
 COPY docs/theme/css/site.css docs/theme/css/site.css
 COPY addon addon

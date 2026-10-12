@@ -30,7 +30,7 @@ public sealed class IdleShutdownWatcher(
 
                 if (idleFor < options.IdleTimeout) continue;
 
-                logger.LogWarning("No MCP tool has been called for {IdleFor}; the process looks orphaned, shutting down", idleFor);
+                Log.ShuttingDownOrphaned(logger, idleFor);
                 appLifetime.StopApplication();
 
                 return;

@@ -67,7 +67,7 @@ public sealed partial class PagesTests : IAsyncLifetime
         var signedIn = await PostAsync("/login", "/login", new() { ["token"] = secret, ["returnUrl"] = "/" });
         var admitted = await _browser.GetAsync("/");
 
-        Assert.True(keys.Revoke("lighting"));
+        Assert.True(keys.TryRevoke("lighting"));
 
         var afterwards = await _browser.GetAsync("/");
 

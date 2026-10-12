@@ -11,7 +11,7 @@ public static class ClientCommandLine
 {
     public const string Verb = "clients";
 
-    public static bool Asked(string[] args) => args.Length > 0 && args[0].Equals(Verb, StringComparison.OrdinalIgnoreCase);
+    public static bool IsAsked(string[] args) => args.Length > 0 && args[0].Equals(Verb, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Runs the command and returns the exit code; anything it has to say goes to <paramref name="output"/>, not to a log, and the
     /// keys are kept where <paramref name="settings"/> says — the server's own configuration unless a caller names another place.</summary>
@@ -82,7 +82,7 @@ public static class ClientCommandLine
 
     private static int Revoke(ClientKeys keys, string name, TextWriter output)
     {
-        if (!keys.Revoke(name))
+        if (!keys.TryRevoke(name))
         {
             output.WriteLine($"no client named '{name}' holds a key here");
 

@@ -48,10 +48,10 @@ public class ClientKeysTests : IDisposable
         var (_, revoked) = keys.Mint("lighting");
         var (_, kept) = keys.Mint("modeling");
 
-        Assert.True(keys.Revoke("lighting"));
+        Assert.True(keys.TryRevoke("lighting"));
         Assert.Null(keys.Holder(revoked));
         Assert.Equal("modeling", keys.Holder(kept)?.Name);
-        Assert.False(keys.Revoke("lighting"));
+        Assert.False(keys.TryRevoke("lighting"));
     }
 
     /// <summary>A server set up with one token keeps working, and that token opens everything, as it always did.</summary>

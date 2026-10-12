@@ -110,7 +110,7 @@ public sealed class ClientKeys
     }
 
     /// <summary>Stops admitting the key of a client; false when there was none to stop.</summary>
-    public bool Revoke(string name)
+    public bool TryRevoke(string name)
     {
         lock (_gate)
         {

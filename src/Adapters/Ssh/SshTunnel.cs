@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Hosting;
 using Snail.MCP.Blender.Configuration;
 
@@ -16,7 +17,10 @@ public sealed class SshTunnel(BlenderLinkOptions link, ISshProcessLauncher launc
     private static readonly TimeSpan Settled = TimeSpan.FromMinutes(1);
 
     private readonly Lock _gate = new();
+
+    [SuppressMessage("Usage", "CA2213", Justification = "Borrowed, not owned: RunOnceAsync starts each ssh, disposes it when it ends and clears this field, which the status report only reads meanwhile.")]
     private ISshProcess? _current;
+
     private DateTimeOffset? _upSince;
     private string? _lastError;
     private int _starts;
@@ -86,7 +90,7 @@ public sealed class SshTunnel(BlenderLinkOptions link, ISshProcessLauncher launc
             }
 
             retry = timeProvider.GetUtcNow() - started >= Settled ? FirstRetry : retry;
-            logger.LogWarning("The SSH tunnel to {Host} ended ({Reason}); reopening in {Retry}", link.Tunnel.Host, reason, retry);
+            Log.TunnelEnded(logger, link.Tunnel.Host, reason, retry);
 
             try
             {

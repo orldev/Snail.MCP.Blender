@@ -58,7 +58,7 @@ public sealed record BrowseView
 
     public IReadOnlyList<EntryView> Entries { get; init; } = [];
 
-    public bool Truncated { get; init; }
+    public bool IsTruncated { get; init; }
 
     public string? ZipHref { get; init; }
 

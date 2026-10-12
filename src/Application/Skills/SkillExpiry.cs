@@ -24,7 +24,7 @@ public sealed class SkillExpiry(ClientSessions clients, SkillExpiryOptions optio
 
                 if (expired.Count > 0)
                 {
-                    logger.LogInformation("Unloaded idle skills: {Skills}", string.Join(", ", expired));
+                    Log.SkillsUnloaded(logger, string.Join(", ", expired));
                 }
             }
         }

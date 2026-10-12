@@ -76,10 +76,10 @@ public class ClientCommandLineTests : IDisposable
     [Fact]
     public void Asked_IsOnlyTheClientsVerb()
     {
-        Assert.True(ClientCommandLine.Asked(["clients", "list"]));
-        Assert.True(ClientCommandLine.Asked(["CLIENTS"]));
-        Assert.False(ClientCommandLine.Asked([]));
-        Assert.False(ClientCommandLine.Asked(["--transport", "http"]));
+        Assert.True(ClientCommandLine.IsAsked(["clients", "list"]));
+        Assert.True(ClientCommandLine.IsAsked(["CLIENTS"]));
+        Assert.False(ClientCommandLine.IsAsked([]));
+        Assert.False(ClientCommandLine.IsAsked(["--transport", "http"]));
     }
 
     private string Run(params string[] args) => Run(args, expecting: 0);

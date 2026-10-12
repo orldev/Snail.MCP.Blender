@@ -2,9 +2,11 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 using ModelContextProtocol.Server;
+using Snail.MCP.Blender.Application.Skills;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Testing;
 
 namespace Snail.MCP.Blender.Tests.Contracts;
 
@@ -147,6 +149,46 @@ public class StdioContractTests
         Assert.False(text.GetProperty("data").GetProperty("preview").TryGetProperty("base64", out _));
     }
 
+    /// <summary>
+    /// The guard rules of every Snail server, on the list a model receives with every skill loaded: names in snake case and listed once,
+    /// the tool and every parameter described, read-only or destructive stated, every allowed value named, English.
+    /// </summary>
+    [Fact]
+    public async Task Tools_AsListedWithEverySkill_KeepTheGuardRules()
+    {
+        var dataDirectory = Path.Combine(Path.GetTempPath(), $"snail-blender-guards-{Guid.NewGuid().ToString("N")[..8]}");
+        var variables = new Dictionary<string, string?>
+        {
+            ["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory,
+            ["SNAIL_MCP_BLENDER_IDLE_TIMEOUT_MINUTES"] = "0",
+            ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = ClosedPort().ToString(),
+        };
+
+        try
+        {
+            await using var client = await ServerProgram.StartAsync("Snail.MCP.Blender", "SNAIL_BLENDER_SERVER", variables);
+
+            foreach (var skill in SkillCatalog.Discover(typeof(ToolDescriptions).Assembly))
+            {
+                var enabled = await client.CallToolAsync("blender_enable_skill", new Dictionary<string, object?> { ["name"] = skill.Name });
+
+                Assert.NotEqual(true, enabled.IsError);
+            }
+
+            var listed = await client.ListToolsAsync();
+
+            Assert.True(listed.Count > BaseToolNamesOfAssembly().Count, $"only {listed.Count} tools listed with every skill loaded");
+            Assert.Empty(ToolGuards.Problems(listed.Select(tool => tool.ProtocolTool)));
+        }
+        finally
+        {
+            if (Directory.Exists(dataDirectory))
+            {
+                Directory.Delete(dataDirectory, recursive: true);
+            }
+        }
+    }
+
     private static int ClosedPort()
     {
         var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
@@ -182,18 +224,18 @@ public class StdioContractTests
 
         public List<string> StdoutLines { get; } = [];
 
+        /// <summary>The dll beside the tests, or the publication <c>SNAIL_BLENDER_SERVER</c> names.</summary>
         public static Task<ServerSession> StartAsync(int? bridgePort = null)
         {
             var dataDirectory = Path.Combine(Path.GetTempPath(), $"snail-blender-stdio-{Guid.NewGuid().ToString("N")[..8]}");
-            var start = new ProcessStartInfo
+            var (command, arguments) = ServerProgram.Command("Snail.MCP.Blender", "SNAIL_BLENDER_SERVER");
+            var start = new ProcessStartInfo(command, arguments)
             {
-                FileName = "dotnet",
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
             };
 
-            start.ArgumentList.Add(Path.Combine(AppContext.BaseDirectory, "Snail.MCP.Blender.dll"));
             start.Environment["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory;
             start.Environment["SNAIL_MCP_BLENDER_IDLE_TIMEOUT_MINUTES"] = "0";
             start.Environment.Remove("SNAIL_MCP_BLENDER_BRIDGE__PORT");

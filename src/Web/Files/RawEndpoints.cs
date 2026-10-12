@@ -58,7 +58,7 @@ public static class RawEndpoints
                 download == true ? name : null);
         }
 
-        if (item.Truncated)
+        if (item.IsTruncated)
         {
             return Results.Problem(statusCode: StatusCodes.Status413PayloadTooLarge, detail: $"'{relative}' holds more files than one archive carries; download its folders one by one");
         }

@@ -5,20 +5,8 @@ using Snail.MCP.Blender.Configuration;
 namespace Snail.MCP.Blender.Tests.Contracts;
 
 /// <summary>The Python add-on is code this suite cannot execute, so its contract is checked from the text: the manifest Blender reads, the command registry the C# bridge relies on, and the bundling that puts it next to the binary.</summary>
-public class AddOnContractTests
+public partial class AddOnContractTests
 {
-    private static readonly Regex CommandRegistration = new(@"^@(?:immediate_)?command\(""([a-z_]+)""\)", RegexOptions.Multiline | RegexOptions.Compiled);
-
-    private static readonly Regex AddOnErrors = new(@"CommandError\(""([A-Za-z]+)""", RegexOptions.Compiled);
-
-    private static readonly Regex ScriptedErrors = new(@"new BridgeError\(""([A-Za-z]+)""", RegexOptions.Compiled);
-
-    private static readonly Regex ImmediateRegistration = new(@"^@immediate_command\(""([a-z_]+)""\)", RegexOptions.Multiline | RegexOptions.Compiled);
-
-    private static readonly Regex WireKey = new(@"\.With\(""([^""]+)""", RegexOptions.Compiled);
-
-    private static readonly Regex ManifestEntry = new(@"^(?<key>[a-z_]+)\s*=\s*""(?<value>[^""]*)""", RegexOptions.Multiline | RegexOptions.Compiled);
-
     [Fact]
     public void AddOn_IsBundled_NextToTheServerBinary()
     {
@@ -64,7 +52,7 @@ public class AddOnContractTests
     public void SocketThreads_NeverTouchBpy_OutsideTheImmediateHandlers()
     {
         var server = File.ReadAllText(Path.Combine(AddOnSource(), "server.py"));
-        var bpyUses = Regex.Count(server, @"\bbpy\.(?!app\.timers\b)[a-z_]");
+        var bpyUses = BpyUse.Count(server);
 
         Assert.Equal(0, bpyUses);
     }
@@ -177,10 +165,11 @@ public class AddOnContractTests
             .Append("agent")
             .ToHashSet(StringComparer.Ordinal);
 
-        var invented = Directory
+        var sources = Directory
             .EnumerateFiles(Path.Combine(Repository.Root, "src"), "*.cs", SearchOption.AllDirectories)
             .Where(file => !file.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
-                        && !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
+                        && !file.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal));
+        var invented = sources
             .SelectMany(file => WireKey.Matches(File.ReadAllText(file)).Select(match => (File: Path.GetFileName(file), Key: match.Groups[1].Value)))
             .Where(written => !declared.Contains(written.Key))
             .Distinct()
@@ -226,8 +215,8 @@ public class AddOnContractTests
     public void Protocol_AndCapabilities_AreTheSame_OnBothSides()
     {
         var diagnostics = File.ReadAllText(Path.Combine(AddOnSource(), "diagnostics.py"));
-        var spoken = int.Parse(Regex.Match(diagnostics, @"^PROTOCOL = (\d+)", RegexOptions.Multiline).Groups[1].Value, CultureInfo.InvariantCulture);
-        var able = Regex.Matches(Regex.Match(diagnostics, @"^CAPABILITIES = \(([^)]*)\)", RegexOptions.Multiline).Groups[1].Value, @"""([a-z-]+)""")
+        var spoken = int.Parse(ProtocolLine.Match(diagnostics).Groups[1].Value, CultureInfo.InvariantCulture);
+        var able = Capability.Matches(CapabilitiesLine.Match(diagnostics).Groups[1].Value)
             .Select(match => match.Groups[1].Value)
             .ToList();
 
@@ -273,7 +262,7 @@ public class AddOnContractTests
 
     /// <summary>The import may be one line or a parenthesised block, which is how an import sorter leaves it.</summary>
     private static IReadOnlyList<string> ImportedModules() =>
-        Regex.Match(File.ReadAllText(Path.Combine(AddOnSource(), "__init__.py")), @"^from \. import (?<modules>\([^)]*\)|[^\n]+)", RegexOptions.Multiline)
+        ModuleImport.Match(File.ReadAllText(Path.Combine(AddOnSource(), "__init__.py")))
             .Groups["modules"].Value
             .Trim('(', ')')
             .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -300,4 +289,37 @@ public class AddOnContractTests
 
         throw new DirectoryNotFoundException($"addon/{ServerPaths.AddOnManifestFileName} not found above {AppContext.BaseDirectory}");
     }
+
+    [GeneratedRegex(@"^@(?:immediate_)?command\(""([a-z_]+)""\)", RegexOptions.Multiline)]
+    private static partial Regex CommandRegistration { get; }
+
+    [GeneratedRegex(@"CommandError\(""([A-Za-z]+)""")]
+    private static partial Regex AddOnErrors { get; }
+
+    [GeneratedRegex(@"new BridgeError\(""([A-Za-z]+)""")]
+    private static partial Regex ScriptedErrors { get; }
+
+    [GeneratedRegex(@"^@immediate_command\(""([a-z_]+)""\)", RegexOptions.Multiline)]
+    private static partial Regex ImmediateRegistration { get; }
+
+    [GeneratedRegex(@"\.With\(""([^""]+)""")]
+    private static partial Regex WireKey { get; }
+
+    [GeneratedRegex(@"^(?<key>[a-z_]+)\s*=\s*""(?<value>[^""]*)""", RegexOptions.Multiline)]
+    private static partial Regex ManifestEntry { get; }
+
+    [GeneratedRegex(@"\bbpy\.(?!app\.timers\b)[a-z_]")]
+    private static partial Regex BpyUse { get; }
+
+    [GeneratedRegex(@"^PROTOCOL = (\d+)", RegexOptions.Multiline)]
+    private static partial Regex ProtocolLine { get; }
+
+    [GeneratedRegex(@"^CAPABILITIES = \(([^)]*)\)", RegexOptions.Multiline)]
+    private static partial Regex CapabilitiesLine { get; }
+
+    [GeneratedRegex(@"""([a-z-]+)""")]
+    private static partial Regex Capability { get; }
+
+    [GeneratedRegex(@"^from \. import (?<modules>\([^)]*\)|[^\n]+)", RegexOptions.Multiline)]
+    private static partial Regex ModuleImport { get; }
 }
