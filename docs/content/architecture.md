@@ -384,7 +384,7 @@ The guards live in `tests/Contracts`; the tests of the tools and the live scenar
 - The add-on's Python passes `ruff` on every push, which is also what keeps an undefined name — an import
   dropped from a module that still uses it — from reaching Blender.
 - A version is written only in the release tag. The csproj and the registry manifest both hold the placeholder
-  `0.0.0-dev`, which a test keeps equal, and the release writes the version of the tag into the assembly, the package,
+  `0.1.0`, which a test keeps equal, and the release writes the version of the tag into the assembly, the package,
   the manifest it carries and the image tags at once, so NuGet, GHCR and the registry cannot disagree; the assembly
   reports the same version in `blender_diagnose`.
 - CI builds the documentation site with `mkdocs --strict`, builds both images when their sources change, and fails the

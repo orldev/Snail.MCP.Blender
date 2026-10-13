@@ -1,16 +1,16 @@
 name: Release
 
-# A tag vX.Y.Z releases the server, and the tag is the only place its version is written: the checkout keeps 0.0.0-dev,
+# A tag vX.Y.Z releases the server, and the tag is the only place its version is written: the project keeps a placeholder,
 # and this workflow puts the version of the tag into the assembly, the NuGet package, the registry manifest the package
 # carries and the image tags. Every CI job runs in full first. The steps then go from what can be redone to what cannot:
 # both images to the GitHub Container Registry under their version, a smoke test that starts the pair and asks the server
-# whether Blender answers, the package to NuGet through the shared server release of Snail.Sdk, which never takes a
-# version back, and, once it is there, the GitHub Release and last of all the latest tag, which is what a host with no
-# version pinned pulls. The documentation site is docs.yml, on the same tag.
+# whether Blender answers, the package through the shared server release of Snail.Sdk and its push to NuGet, which never
+# takes a version back, and, once it is there, the GitHub Release and last of all the latest tag, which is what a host
+# with no version pinned pulls. The documentation site is docs.yml, on the same tag.
 on:
   push:
     tags:
-      - "v*"
+      - "v[0-9]+.[0-9]+.[0-9]+*"
 
 permissions:
   contents: read
@@ -181,28 +181,38 @@ jobs:
           docker logs mcp
           exit 1
 
-  # The shared server release of Snail.Sdk (docs/publishing.md): the tests, the framework-dependent tool package with the
-  # version of the tag in it and in its registry manifest, pushed to NuGet by trusted publishing.
+  # The shared server release of Snail.Sdk (its docs/workflows.md): the tests, the framework-dependent tool package with the
+  # version of the tag in it and in its registry manifest. It pushes nothing and holds no id-token.
   nuget:
-    name: Publish to NuGet
+    name: Pack for NuGet
     needs: [versions, smoke]
-    permissions:
-      contents: read
-      id-token: write
     uses: orldev/Snail.Sdk/.github/workflows/mcp-publish.yml@v1
     with:
       test-filter: FullyQualifiedName!~.Tests.Live.
-      name: Snail.MCP.Blender
       project: src
-      native: false
       contract-variable: SNAIL_BLENDER_SERVER
+      contract-filter: FullyQualifiedName~StdioContract
       version: ${{ needs.versions.outputs.version }}
       push: true
-    secrets: inherit
+
+  # The push by trusted publishing is a job of this file: nuget.org gives a key only to a job of the workflow file its
+  # policy names in this repository (job_workflow_ref), this publish.yml, with the secret NUGET_USER.
+  nuget-push:
+    name: Push to NuGet
+    needs: nuget
+    if: needs.nuget.outputs.push == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: orldev/Snail.Sdk/.github/actions/nuget-push@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
 
   latest:
     name: Move latest
-    needs: [versions, nuget]
+    needs: [versions, nuget, nuget-push]
     if: needs.versions.outputs.prerelease == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -232,7 +242,7 @@ jobs:
 
   release:
     name: GitHub Release
-    needs: [versions, nuget]
+    needs: [versions, nuget, nuget-push]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

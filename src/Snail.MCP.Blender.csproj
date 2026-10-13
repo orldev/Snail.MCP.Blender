@@ -16,7 +16,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-        <Version>0.0.0-dev</Version>
+        <Version>0.1.0</Version>
         <Description>MCP server that lets AI agents drive a running Blender through its Python add-on: scene, objects, modeling, materials, animation, physics, rendering, video editing and import/export. Runs over stdio for a Blender on this machine or behind an SSH tunnel, or over HTTP with a bearer token beside Blender in Docker.</Description>
         <PackageTags>mcp;mcp-server;modelcontextprotocol;ai;claude;blender;3d;dotnet-tool</PackageTags>
         <PackageProjectUrl>https://github.com/orldev/Snail.MCP.Blender</PackageProjectUrl>
@@ -38,7 +38,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Include="..\docs\theme\css\site.css" LogicalName="assets/site.css" Visible="false" />
+        <EmbeddedResource Include="$(SnailSiteTheme)css/site.css" LogicalName="assets/site.css" Visible="false" />
         <EmbeddedResource Include="Web\Pages\Assets\pages.css" LogicalName="assets/pages.css" />
         <EmbeddedResource Include="Web\Pages\Assets\pages.js" LogicalName="assets/pages.js" />
     </ItemGroup>

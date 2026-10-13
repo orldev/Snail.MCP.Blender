@@ -1,0 +1,32 @@
+name: server image
+
+# The server's image (deploy/mcp/Dockerfile), through the shared image workflow of Snail.Sdk, built on every push to a
+# branch that touches what the image is made of. It is never pushed from here: a release is publish.yml, which pushes it
+# beside the Blender image under the version of the tag, starts the pair, and moves latest only once the whole release
+# has gone through. The Blender image (deploy/blender/Dockerfile) is built by ci.yml.
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - src/**
+      - addon/**
+      - deploy/mcp/**
+      - .mcp/server.json
+      - global.json
+      - Directory.Build.props
+      - Directory.Packages.props
+      - .editorconfig
+      - README.md
+      - LICENSE
+      - .github/workflows/image.yml
+
+permissions:
+  contents: read
+
+jobs:
+  image:
+    permissions: { contents: read, packages: write }
+    uses: orldev/Snail.Sdk/.github/workflows/mcp-image.yml@v1
+    with:
+      dockerfile: deploy/mcp/Dockerfile

@@ -5,15 +5,19 @@ using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Hosting;
 using Snail.Sdk.Mcp.Hosting;
 
+ServerFolders.MoveFromSnailNames(ServerPaths.ShortName);
+
 if (ClientCommandLine.IsAsked(args))
 {
     return ClientCommandLine.Run(args, Console.Out);
 }
 
-if (ServerConfigExtensions.Peek().Transport is Transport.Http)
+var settings = ServerConfigExtensions.Settings();
+
+if (ServerConfigExtensions.Peek(settings).Transport is Transport.Http)
 {
     await WebApplication.CreateBuilder(args)
-        .ConfigureHttpServer()
+        .ConfigureHttpServer(settings)
         .Build()
         .UseHttpServer()
         .RunAsync();
@@ -22,7 +26,7 @@ if (ServerConfigExtensions.Peek().Transport is Transport.Http)
 }
 
 await McpHost.CreateBuilder(args)
-    .ConfigureMcpServer()
+    .ConfigureMcpServer(settings)
     .Build()
     .RunAsync();
 

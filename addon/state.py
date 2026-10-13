@@ -1,7 +1,8 @@
 """What survives a restart and is shared between Blender processes: small JSON files under the data directory.
 
 The directory comes from SNAIL_MCP_BLENDER_DATA_DIRECTORY, the same variable the server reads, so a worker
-Blender the add-on starts inherits it and writes into the same journal. Writes replace the file atomically;
+Blender the add-on starts inherits it and writes into the same journal. Without it the directory is ~/.s3l-mcp-blender
+when that folder exists and ~/.snail-mcp-blender otherwise, the folder of a server from before the rename. Writes replace the file atomically;
 a lock file guards read-modify-write sequences, because two processes may claim the same object at once.
 """
 
@@ -22,10 +23,17 @@ STALE_LOCK_SECONDS = 10.0
 
 
 def directory():
-    root = os.environ.get(VARIABLE) or os.path.join(os.path.expanduser("~"), ".snail-mcp-blender")
+    root = os.environ.get(VARIABLE) or _home_directory()
     path = os.path.join(root, "state")
     os.makedirs(path, exist_ok=True)
     return path
+
+
+def _home_directory():
+    """The server's folder in the home: under its s3l name when that exists, else under its snail name."""
+    home = os.path.expanduser("~")
+    current = os.path.join(home, ".s3l-mcp-blender")
+    return current if os.path.isdir(current) else os.path.join(home, ".snail-mcp-blender")
 
 
 def inherited():

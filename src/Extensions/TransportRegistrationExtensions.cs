@@ -11,6 +11,7 @@ using Snail.MCP.Blender.Tools;
 using Snail.MCP.Blender.Tools.Base;
 using Snail.MCP.Blender.Web.Access;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Extensions;
 
@@ -47,13 +48,13 @@ public static class TransportRegistrationExtensions
 
         /// <summary>The one server both transports carry: its name and version, the guidance, the base tools, the prompts, the resources and the
         /// activity filter.</summary>
-        /// <remarks>The server names itself with the informational version: left to the SDK, it reports the assembly version, which reads
-        /// 0.2.0.0 for the release 0.2.0 and drops the suffix of a prerelease, so a client would see another version than blender_diagnose.</remarks>
+        /// <remarks>The server names itself by its command and the informational version, as blender_diagnose does: left to the SDK, it reports
+        /// the assembly's name and version, which reads 0.2.0.0 for the release 0.2.0 and drops the suffix of a prerelease.</remarks>
         private IMcpServerBuilder AddMcpServerWithTools() =>
             services
                 .AddMcpServer(server =>
                 {
-                    server.ServerInfo = new Implementation { Name = ThisAssembly.Name, Version = ThisAssembly.InformationalVersion };
+                    server.ServerInfo = ServerIdentity.Of(typeof(ThisAssembly).Assembly);
                     server.ServerInstructions = ServerGuidance.Instructions;
                 })
                 .WithBaseTools()

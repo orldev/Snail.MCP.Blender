@@ -13,7 +13,7 @@ set-up puts the server beside Blender in Docker and the client reaches it over H
 | The MCP server | this machine | this machine | the GPU machine, container `s3l-blender-mcp`, behind a reverse proxy |
 | Blender with the add-on | this machine, with its window | the other machine, as a service without a window, or with a window over Remote Desktop | the GPU machine, container `s3l-blender`, without a window |
 | The link | `127.0.0.1:9876` | `127.0.0.1:9877` here, carried by the SSH tunnel the server opens, to `127.0.0.1:9876` there | `https://<address>/mcp` from the client; `blender:9876` on Docker's internal network from the server |
-| The token | the add-on writes it to `~/.snail-mcp-blender/state/token`, the server reads it | a copy in `~/.snail-mcp-blender/remote/<machine>.token`, named by `BRIDGE__TOKEN_FILE` | the client token as a bearer in the client's entry; the bridge token in `secrets/bridge.token`, which never leaves the machine |
+| The token | the add-on writes it to `~/.s3l-mcp-blender/state/token`, the server reads it | a copy in `~/.s3l-mcp-blender/remote/<machine>.token`, named by `BRIDGE__TOKEN_FILE` | the client token as a bearer in the client's entry; the bridge token in `secrets/bridge.token`, which never leaves the machine |
 
 Over stdio the server never moves: it runs next to the client, which starts it for a session and stops it at the end.
 Only Blender moves, and with it everything Blender touches. In Docker the server moves with Blender: it runs in its own
@@ -55,7 +55,7 @@ remote Blender.
 
 ## Where things are stored
 
-**On this machine**, in `~/.snail-mcp-blender`:
+**On this machine**, in `~/.s3l-mcp-blender`:
 
 | Folder | What |
 |---|---|
@@ -64,8 +64,9 @@ remote Blender.
 | `remote/` | token copies of remote Blenders, readable by you alone |
 | `files/`, `state/`, `jobs/`, `batches/`, `snapshots/` | the local Blender's add-on data, when the local Blender is the one in use: its projects and uploads, token, journal, render jobs, batches and snapshots |
 
-**On Blender's machine**, in the add-on's data directory — `C:\Users\<profile>\.snail-mcp-blender` on Windows,
-`~/.snail-mcp-blender` elsewhere; `blender_diagnose` shows it as `blender.machine.data_directory`:
+**On Blender's machine**, in the add-on's data directory — `C:\Users\<profile>\.s3l-mcp-blender` on Windows,
+`~/.s3l-mcp-blender` elsewhere, or `.snail-mcp-blender` in the same place while only a folder of that name, from before the
+rename, is there; `blender_diagnose` shows it as `blender.machine.data_directory`:
 
 | Folder | What |
 |---|---|
@@ -86,7 +87,7 @@ takes it as the project without being told, and `blender_diagnose` shows it unde
 machine is the add-on's `files\<the folder's name>`, and the two mirror each other:
 
 ```
-this machine: ~/Projects/lobby/                  Blender's machine: C:\Users\Artist\.snail-mcp-blender\files\lobby\
+this machine: ~/Projects/lobby/                  Blender's machine: C:\Users\Artist\.s3l-mcp-blender\files\lobby\
     textures/wood.png      -- blender_upload -->      textures\wood.png
     renders/turntable/     <-- blender_download --    renders\turntable\f_0001.png …
     lobby.blend            <-- blender_download --    lobby.blend
@@ -98,7 +99,7 @@ relative place in the project, and a file from anywhere else into the project un
 project stays where you work — versioned and backed up — and the other machine holds a working copy of it.
 
 Start the client in the project's folder for this to hold. Started in the home folder or at the root there is no
-project, and downloads go to `~/.snail-mcp-blender/downloads` as before; `SNAIL_MCP_BLENDER_PROJECT_DIRECTORY` names a
+project, and downloads go to `~/.s3l-mcp-blender/downloads` as before; `SNAIL_MCP_BLENDER_PROJECT_DIRECTORY` names a
 project folder explicitly. Started inside a source repository, renders land in the repository, next to its code.
 
 With Blender in Docker there is no project on the server's side: a server reached over HTTP sees none of the client's

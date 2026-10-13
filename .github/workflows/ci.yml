@@ -3,7 +3,8 @@ name: CI
 # Every push to a branch runs it; there is no pull_request trigger, because a private repository pays for its minutes and
 # a pull request shows the checks of its head commit anyway. The release workflow calls it with full, which runs every
 # job whatever changed and leaves building the images to the release itself. The build and tests are the shared server
-# CI of Snail.Sdk; the add-on, the site, the live tests against a real Blender and the images are this server's own.
+# CI of Snail.Sdk; the add-on, the site, the live tests against a real Blender and the Blender image are this server's
+# own. The server's image is image.yml, through the shared image workflow.
 on:
   push:
     branches: ["**"]
@@ -57,7 +58,7 @@ jobs:
           printf '%s\n' "$changed"
           touched() { if printf '%s\n' "$changed" | grep -qE "$1"; then echo true; else echo false; fi; }
           echo "code=$(touched '^(src|tests|addon|deploy/blender)/|^(global\.json|Directory\.Build\.props|\.editorconfig|Snail\.MCP\.Blender\.slnx|\.github/workflows/ci\.yml)$')" >> "$GITHUB_OUTPUT"
-          echo "images=$(touched '^(src|addon|deploy)/|^(docs/theme/css/site\.css|\.mcp/server\.json|Directory\.Build\.props|\.editorconfig|README\.md|LICENSE|\.github/workflows/ci\.yml)$')" >> "$GITHUB_OUTPUT"
+          echo "images=$(touched '^(src|addon|deploy)/|^(global\.json|\.mcp/server\.json|Directory\.Build\.props|\.editorconfig|README\.md|LICENSE|\.github/workflows/ci\.yml)$')" >> "$GITHUB_OUTPUT"
 
   # The shared server CI of Snail.Sdk: the tests, the conformance check, the tool reference the build writes, and the
   # framework-dependent publication asked over stdio. The live tests skip themselves there, as no Blender is installed.
@@ -65,10 +66,9 @@ jobs:
     uses: orldev/Snail.Sdk/.github/workflows/mcp-ci.yml@v1
     with:
       test-filter: FullyQualifiedName!~.Tests.Live.
-      name: Snail.MCP.Blender
       project: src
-      native: false
       contract-variable: SNAIL_BLENDER_SERVER
+      contract-filter: FullyQualifiedName~StdioContract
 
   addon:
     name: Lint the add-on
@@ -104,18 +104,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Setup Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+      - name: Setup .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6
         with:
-          python-version: "3.13"
-          cache: pip
-          cache-dependency-path: docs/requirements.txt
+          global-json-file: global.json
 
-      - name: Install MkDocs
-        run: pip install -r docs/requirements.txt
-
+      # The SnailSite target of Snail.Sdk: the theme and the MkDocs it carries, over docs/mkdocs.yml.
       - name: Build the site
-        run: mkdocs build --strict --config-file docs/mkdocs.yml
+        run: dotnet msbuild src/Snail.MCP.Blender.csproj -t:SnailSite -nologo
 
   live:
     name: Live tests against Blender
@@ -215,8 +211,6 @@ jobs:
         include:
           - image: s3l-blender
             dockerfile: deploy/blender/Dockerfile
-          - image: s3l-blender-mcp
-            dockerfile: deploy/mcp/Dockerfile
 
     steps:
       - name: Checkout

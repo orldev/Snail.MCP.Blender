@@ -1,9 +1,12 @@
+using Snail.Sdk.Mcp.Hosting;
+
 namespace Snail.MCP.Blender.Configuration;
 
-/// <summary>Paths where the server looks for its config, keeps its data and ships the add-on.</summary>
+/// <summary>Paths where the server keeps its data and ships the add-on; its settings file is found by Snail.Sdk's <see cref="ServerSettings"/>.</summary>
 public static class ServerPaths
 {
-    public const string DataDirectoryName = ".snail-mcp-blender";
+    /// <summary>The server's short name, which names its folders: ~/.s3l-mcp-blender and ~/.config/s3l-mcp-blender.</summary>
+    public const string ShortName = "blender";
 
     public const string AddOnFolderName = "addon";
 
@@ -13,36 +16,11 @@ public static class ServerPaths
         Environment.SpecialFolder.UserProfile,
         Environment.SpecialFolderOption.DoNotVerify);
 
-    public static string DefaultDataDirectory => Path.Combine(Home, DataDirectoryName);
+    /// <summary><c>~/.s3l-mcp-blender</c>, moved there from <c>~/.snail-mcp-blender</c> when only that one exists.</summary>
+    public static string DefaultDataDirectory => ServerFolders.DataDirectory(ShortName);
 
     /// <summary>The Blender extension shipped next to the server binary; installed into Blender by the user from a zip.</summary>
     public static string BundledAddOnDirectory => Path.Combine(AppContext.BaseDirectory, AddOnFolderName);
 
     public static string BundledAddOnManifest => Path.Combine(BundledAddOnDirectory, AddOnManifestFileName);
-
-    /// <summary>Config lookup chain, highest priority first; a named path is the only candidate, so naming one that does not exist reads no file.</summary>
-    public static IEnumerable<string> ConfigCandidates(string? named = null)
-    {
-        var fromEnvironment = named ?? Environment.GetEnvironmentVariable(EnvironmentSettings.ConfigPathVariable);
-
-        if (!string.IsNullOrWhiteSpace(fromEnvironment))
-        {
-            yield return fromEnvironment;
-
-            yield break;
-        }
-
-        var cwd = Directory.GetCurrentDirectory();
-
-        yield return Path.Combine(cwd, ".snail-mcp-blender.json");
-
-        yield return Path.Combine(cwd, "snail-mcp-blender.json");
-
-        yield return Path.Combine(Home, ".config", "snail-mcp-blender", "config.json");
-
-        yield return Path.Combine(Home, ".snail-mcp-blender.json");
-    }
-
-    /// <summary>First existing file from <see cref="ConfigCandidates"/>, or <c>null</c>.</summary>
-    public static string? FindConfigFile(string? named = null) => ConfigCandidates(named).FirstOrDefault(File.Exists);
 }

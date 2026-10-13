@@ -39,7 +39,7 @@ public class StdioContractTests
         var result = initialize.GetProperty("result");
         var serverInfo = result.GetProperty("serverInfo");
 
-        Assert.Equal("Snail.MCP.Blender", serverInfo.GetProperty("name").GetString());
+        Assert.Equal("s3l-mcp-blender", serverInfo.GetProperty("name").GetString());
         Assert.Equal(ThisAssembly.InformationalVersion, serverInfo.GetProperty("version").GetString());
         Assert.Equal(ServerGuidance.Instructions, result.GetProperty("instructions").GetString());
 
@@ -239,7 +239,7 @@ public class StdioContractTests
             start.Environment["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory;
             start.Environment["SNAIL_MCP_BLENDER_IDLE_TIMEOUT_MINUTES"] = "0";
             start.Environment.Remove("SNAIL_MCP_BLENDER_BRIDGE__PORT");
-            start.Environment.Remove("SNAIL_MCP_BLENDER_CONFIG");
+            start.Environment["SNAIL_MCP_BLENDER_CONFIG"] = ServerProgram.NoSettingsFile;
 
             if (bridgePort is { } port)
             {

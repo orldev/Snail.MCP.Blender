@@ -8,7 +8,7 @@ public sealed class ServerConfig
 {
     public const string SectionName = "Snail";
 
-    /// <summary>This server's own data root: the add-on zip, downloads from a remote Blender and, when Blender runs here, the token file; defaults to <c>~/.snail-mcp-blender</c>.
+    /// <summary>This server's own data root: the add-on zip, downloads from a remote Blender and, when Blender runs here, the token file; defaults to <c>~/.s3l-mcp-blender</c>.
     /// Render jobs, batches and snapshots live in the add-on's data directory instead, on the machine Blender runs on.</summary>
     public string DataDirectory { get; set; } = ServerPaths.DefaultDataDirectory;
 

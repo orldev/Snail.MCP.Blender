@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Snail.MCP.Blender.Configuration;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Tests.Contracts;
 
@@ -17,7 +18,7 @@ public partial class RegistryManifestContractTests
             .ToDictionary(variable => variable!["name"]!.ToString(), variable => variable!["default"]?.ToString(), StringComparer.Ordinal);
         var settings = Settings(new ServerConfig(), []).ToDictionary(setting => setting.Variable, setting => setting.Default, StringComparer.Ordinal);
 
-        Assert.Equal(settings.Keys.Append(EnvironmentSettings.ConfigPathVariable).Order(StringComparer.Ordinal), listed.Keys.Order(StringComparer.Ordinal));
+        Assert.Equal(settings.Keys.Append(ServerSettings.FileVariableOf(ServerPaths.ShortName)).Order(StringComparer.Ordinal), listed.Keys.Order(StringComparer.Ordinal));
         Assert.All(listed.Where(variable => variable.Value is not null), variable => Assert.Equal(settings[variable.Key], variable.Value, ignoreCase: true));
     }
 
@@ -54,7 +55,7 @@ public partial class RegistryManifestContractTests
                 continue;
             }
 
-            yield return ($"{EnvironmentSettings.Prefix}{string.Join("__", segments)}", value?.ToString());
+            yield return ($"{ServerSettings.PrefixOf(ServerPaths.ShortName)}{string.Join("__", segments)}", value?.ToString());
         }
     }
 

@@ -17,9 +17,14 @@ public static class HttpServerRegistrationExtensions
 
     extension(WebApplicationBuilder builder)
     {
+        /// <summary>Binds the server to <paramref name="settings"/>, or to this machine's when none are given, and hands the same settings to the host's
+        /// configuration, where the stdio host's builder puts them itself; the full builder's other sources stay out of the server's settings.</summary>
         public WebApplicationBuilder ConfigureHttpServer(IConfiguration? settings = null)
         {
-            builder.AddServerConfiguration(settings ?? ServerConfigExtensions.Settings());
+            settings ??= ServerConfigExtensions.Settings();
+
+            builder.Configuration.AddConfiguration(settings);
+            builder.AddServerConfiguration(settings);
 
             builder.Services
                 .AddBlenderBridge()

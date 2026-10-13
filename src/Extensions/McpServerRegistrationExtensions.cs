@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Snail.MCP.Blender.Configuration;
 
@@ -8,9 +9,10 @@ public static class McpServerRegistrationExtensions
 {
     extension(HostApplicationBuilder builder)
     {
-        public HostApplicationBuilder ConfigureMcpServer()
+        /// <summary>Binds the server to <paramref name="settings"/>, the ones the transport was chosen from, or to this machine's when none are given.</summary>
+        public HostApplicationBuilder ConfigureMcpServer(IConfiguration? settings = null)
         {
-            builder.AddServerConfiguration();
+            builder.AddServerConfiguration(settings ?? ServerConfigExtensions.Settings());
 
             builder.Services
                 .AddBlenderBridge()

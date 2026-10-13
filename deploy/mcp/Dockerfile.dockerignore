@@ -1,5 +1,6 @@
 # Paths are relative to the repository root, the build context. The server image needs its source, the add-on it
-# bundles, the stylesheet its pages embed and the files the package carries; build output from a checkout stays out.
+# bundles and the files the package carries (the stylesheet its pages embed comes with Snail.Sdk.Mcp); build output
+# from a checkout stays out.
 *
 !.editorconfig
 !Directory.Build.props
@@ -8,7 +9,6 @@
 !LICENSE
 !.mcp/server.json
 !global.json
-!docs/theme/css/site.css
 !addon
 !src
 **/bin

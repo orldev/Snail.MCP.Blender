@@ -5,7 +5,7 @@ section and a field.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SNAIL_MCP_BLENDER_DATA_DIRECTORY` | `~/.snail-mcp-blender` | This server's own files: the add-on zip, downloads when there is no project and, when Blender runs here, the token. The add-on reads the same variable for its journal, leases, render jobs, batches and snapshots, which live on the machine Blender runs on |
+| `SNAIL_MCP_BLENDER_DATA_DIRECTORY` | `~/.s3l-mcp-blender` | This server's own files: the add-on zip, downloads when there is no project and, when Blender runs here, the token. The add-on reads the same variable for its journal, leases, render jobs, batches and snapshots, which live on the machine Blender runs on |
 | `SNAIL_MCP_BLENDER_PROJECT_DIRECTORY` | the folder the client starts the server in | Over stdio, the project on this machine: `blender_download` brings files into it, relative `blender_upload` paths are read from it, and its twin on Blender's machine is the add-on's `files/<its name>`. The home folder and the root count as no project. A server over HTTP sees none of the client's folders and ignores it; `blender_open_project` names the project there |
 | `SNAIL_MCP_BLENDER_TRANSPORT` | `Stdio` | `Stdio` when the client starts the server; `Http` when it runs on its own beside Blender, in a container, and clients connect to it — [Blender in Docker](docker.md) |
 | `SNAIL_MCP_BLENDER_HTTP__URL` | `http://127.0.0.1:8080` | Over HTTP: the address to listen on; the image sets `http://0.0.0.0:8080` |
@@ -28,7 +28,7 @@ section and a field.
 | `SNAIL_MCP_BLENDER_BRIDGE__AGENT` | `AGENT` | The name the link signs with, when it should differ from `AGENT` |
 | `SNAIL_MCP_BLENDER_PYTHON` | `allow` | Passed to Blender as well (`--python` in compose), so `off` holds even for a client that reaches the add-on another way. `fallback` runs only scripts whose work no tool covers, in `run_tools` and `blender_batch` steps as in `blender_python`; it reads the script as text, so it steers the agent towards the tools rather than guarding the door. `off` switches `blender_python` off together with the operators that run scripts or install code — the `script`, `console`, `preferences` and `extensions` modules, `text.run_script`, and anything asked to trust a file's own scripts — sequences and batches holding a `python` step, and uploads outside the add-on's `files` folder; the dedicated tools and the other operators stay |
 | `SNAIL_MCP_BLENDER_OCIO_CONFIG` | — | OpenColorIO config background render jobs run under; the running Blender reads `OCIO` only at start-up |
-| `SNAIL_MCP_BLENDER_CONFIG` | — | Path of an explicit settings file |
+| `SNAIL_MCP_BLENDER_CONFIG` | — | Path of the settings file, the only one read when it is set, and none when it does not exist; a leading `~/` is expanded |
 
 Every range lives as an attribute on the setting it constrains, and the server checks them all while the host
 starts: a port outside 1 to 65535, a timeout of zero or less, negative minutes, link minutes outside 1 to 1440. The
@@ -95,27 +95,33 @@ The add-on writes what must outlive a Blender session under `<data directory>/st
 queues to pick up after a restart). Worker Blenders started for batches and render jobs inherit the data
 directory, so their commands land in the same journal and respect the same leases. The add-on reads
 `SNAIL_MCP_BLENDER_DATA_DIRECTORY` from Blender's own environment; when Blender is started from a launcher
-without it, the default `~/.snail-mcp-blender` applies, which is also the server's default. Next to `state/` it keeps
+without it, the default `~/.s3l-mcp-blender` applies, which is also the server's default — or `~/.snail-mcp-blender`
+while only a folder of that name, from before the rename, is there. Next to `state/` it keeps
 `jobs/`, `batches/`, `snapshots/` and `files/`, all on the machine Blender runs on; [the working
 order](workflow.md#where-things-are-stored) maps them.
 
 ## Settings file
 
-The same keys as a JSON file, under a `Snail` section, looked up in this order, and only the first that exists is read:
-`SNAIL_MCP_BLENDER_CONFIG`,
-`.snail-mcp-blender.json` and `snail-mcp-blender.json` in the working directory,
-`~/.config/snail-mcp-blender/config.json`, `~/.snail-mcp-blender.json`.
+The same keys as a JSON file, under a `Snail` section. The chain is Snail.Sdk's, the same for every Snail server. A file
+named in `SNAIL_MCP_BLENDER_CONFIG` is the only one read, and when it does not exist no file is. Without that variable
+only the first file that exists is read: `.s3l-mcp-blender.json` and `s3l-mcp-blender.json` in the working directory,
+`~/.config/s3l-mcp-blender/config.json`, `~/.s3l-mcp-blender.json`. The names from before the rename are not read.
 
 ```json
 {
   "Snail": {
-    "Bridge": { "Port": 9876, "RequestTimeoutSeconds": 45 },
+    "Bridge": { "Port": 9876, "RequestTimeoutSeconds": 45, "Token": "the add-on's token" },
     "IdleTimeoutMinutes": 0
   }
 }
 ```
 
-Environment variables win over the file.
+Environment variables win over the file, setting by setting.
+
+A setting of this machine — a token above all, `Bridge.Token` or `Http.Token` — belongs in
+`~/.config/s3l-mcp-blender/config.json`, readable by you alone (`chmod 600`), never in a launchd job or in a client's
+registration: those travel wherever the file is copied, and the settings file serves every client and a server over
+HTTP alike.
 
 ## Limits
 

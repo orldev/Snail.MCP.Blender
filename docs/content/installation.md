@@ -79,7 +79,7 @@ A server that runs beside Blender in Docker is reached over HTTP instead of star
 
 ```bash
 claude mcp add --transport http --scope user blender https://blender.example.com/mcp \
-  --header "Authorization: Bearer $(cat ~/.snail-mcp-blender/remote/docker.token)"
+  --header "Authorization: Bearer $(cat ~/.s3l-mcp-blender/remote/docker.token)"
 ```
 
 Nothing else is installed on the client, the add-on included; [Blender in Docker](docker.md) sets up the machine.
@@ -91,7 +91,7 @@ The same `command` in the client's MCP settings; the key is `mcpServers` or `ser
 ## Step 3 — install the add-on in Blender
 
 Ask the agent to call `blender_install_addon`, or run it yourself from the client's tool list. It writes
-`snail_bridge-<version>.zip` into the data directory (`~/.snail-mcp-blender/addon`) and lists the steps:
+`snail_bridge-<version>.zip` into the data directory (`~/.s3l-mcp-blender/addon`) and lists the steps:
 
 1. In Blender open **Edit → Preferences → Get Extensions**.
 2. Open the drop-down arrow in the top-right corner and choose **Install from Disk**.
@@ -100,7 +100,7 @@ Ask the agent to call `blender_install_addon`, or run it yourself from the clien
 
 The add-on starts with Blender from then on. Its preferences (**Edit → Preferences → Get Extensions →
 Snail Bridge**) hold the port, the autostart switch and the token. Leave the token empty: the add-on
-generates one into `~/.snail-mcp-blender/state/token`, readable by you only, and the server reads it from
+generates one into `~/.s3l-mcp-blender/state/token`, readable by you only, and the server reads it from
 there, so a single-user machine needs nothing typed on either side.
 
 ## Step 4 — check
@@ -126,4 +126,5 @@ answer.
 dotnet tool uninstall -g Snail.MCP.Blender
 ```
 
-Remove the extension in Blender's preferences and delete `~/.snail-mcp-blender`.
+Remove the extension in Blender's preferences and delete `~/.s3l-mcp-blender`, and `~/.snail-mcp-blender` too when it is there:
+a link the server left at the old name when it moved the folder.

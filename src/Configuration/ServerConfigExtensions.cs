@@ -1,11 +1,13 @@
+using System.Collections;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Configuration;
 
-/// <summary>Builds <see cref="ServerConfig"/>: defaults → JSON file → environment variables, validated before the server answers anything.</summary>
+/// <summary>Builds <see cref="ServerConfig"/>: defaults → settings file → environment variables, validated before the server answers anything.</summary>
 public static class ServerConfigExtensions
 {
     /// <summary>Adds the configuration sources and binds them through the options pipeline; what a consumer injects is the bound <see cref="ServerConfig"/> itself.</summary>
@@ -15,7 +17,7 @@ public static class ServerConfigExtensions
     public static IHostApplicationBuilder AddServerConfiguration(this IHostApplicationBuilder builder) =>
         builder.AddServerConfiguration(Settings());
 
-    /// <summary>The same, from settings a test hands over instead of this machine's.</summary>
+    /// <summary>The same, from settings read already: those the transport was chosen from, or a test's instead of this machine's.</summary>
     internal static IHostApplicationBuilder AddServerConfiguration(this IHostApplicationBuilder builder, IConfiguration settings)
     {
         builder.Services
@@ -32,23 +34,16 @@ public static class ServerConfigExtensions
         return builder;
     }
 
-    /// <summary>What this server reads, and nothing else: the config file and the SNAIL_MCP_BLENDER_ variables.</summary>
+    /// <summary>What this server reads, and nothing else: its settings file, found by the chain every Snail server shares, and the
+    /// SNAIL_MCP_BLENDER_ variables, which win over the file.</summary>
     /// <remarks>The host's own configuration is left out on purpose. Bound as well, it brought in every unprefixed variable, an appsettings.json
     /// in whatever folder the client started the server in, and the command line: TRANSPORT=Http in an unrelated environment turned a stdio
     /// server's transport into http while the process still spoke over stdio, because the transport is chosen from these sources alone.</remarks>
-    public static IConfiguration Settings(System.Collections.IDictionary? variables = null)
-    {
-        var sources = new ConfigurationBuilder();
-        var read = EnvironmentSettings.Read(variables ?? Environment.GetEnvironmentVariables()).ToList();
-        var named = read.FirstOrDefault(setting => setting.Key == EnvironmentSettings.ConfigKey).Value;
+    public static IConfiguration Settings() => ServerSettings.Read(ServerPaths.ShortName);
 
-        if (ServerPaths.FindConfigFile(named) is { } configFile)
-        {
-            sources.AddJsonFile(configFile, optional: true, reloadOnChange: false);
-        }
-
-        return sources.AddInMemoryCollection(read).Build();
-    }
+    /// <summary>The same from a settings file named outright and the variables a caller hands over; a named file that does not exist reads none.</summary>
+    public static IConfiguration Settings(string? file, IDictionary variables) =>
+        new ConfigurationBuilder().AddServerSettings(ServerPaths.ShortName, file, variables).Build();
 
     /// <summary>The settings as a host would bind them, read before one is built: stdio and HTTP need different hosts.</summary>
     public static ServerConfig Peek(IConfiguration? configuration = null)

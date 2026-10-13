@@ -107,9 +107,9 @@ batches with a `python` step, and uploads outside the add-on's `files` folder. U
 ## `Unauthorized` through an SSH tunnel
 
 The add-on generated its token into the data directory of its own machine, and the server looked for it in its own.
-Read it there (`type %USERPROFILE%\.snail-mcp-blender\state\token` on Windows, `cat ~/.snail-mcp-blender/state/token`
-elsewhere), save it into a file readable by you alone and point `SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE` at it — or put
-the value itself in `SNAIL_MCP_BLENDER_BRIDGE__TOKEN`; [Blender on another machine](remote.md) has the whole set-up.
+Read it there (`type %USERPROFILE%\.s3l-mcp-blender\state\token` on Windows, `cat ~/.s3l-mcp-blender/state/token`
+elsewhere; `.snail-mcp-blender` instead where only a folder of that name is there, `blender_diagnose` names it), save it into a file readable by you alone and point `SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE` at it — or put
+the value itself under `Bridge.Token` in `~/.config/s3l-mcp-blender/config.json`; [Blender on another machine](remote.md) has the whole set-up.
 
 ## `blender_diagnose` says the tunnel is not up
 
@@ -125,7 +125,7 @@ local port — often a tunnel an earlier server left behind when it was killed; 
 Blender runs on another machine and every path is read there. `blender_diagnose` shows that machine under `blender.machine`;
 send the file with `blender_upload` and pass the path it returns.
 
-## Downloads land in `~/.snail-mcp-blender/downloads`, not in my folder
+## Downloads land in `~/.s3l-mcp-blender/downloads`, not in my folder
 
 The client was started in the home folder or at the root, and neither counts as a project, so downloads went to the
 server's own folder instead of scattering across your home. Start the client in the project's folder, or set

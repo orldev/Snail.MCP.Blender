@@ -3,21 +3,22 @@
 # Built from the repository root: docker build -f deploy/mcp/Dockerfile .
 
 # Pinned to the band global.json asks for: on the floating tag a newer feature band would refuse the build, and the image and the NuGet package
-# of one release would come from different toolchains.
+# of one release would come from different toolchains. The server is framework-dependent, as the Razor pages and the reflection they run on keep
+# it out of Native AOT: -p:PublishAot=false, onto the ASP.NET runtime of the same .NET, its patch named and moved by Dependabot with
+# global.json (tests/Contracts/ToolchainContractTests.cs).
 FROM mcr.microsoft.com/dotnet/sdk:10.0.302 AS build
 WORKDIR /source
 
 # .editorconfig sets the analyzers' severities; without it the build treats warnings the checkout never raises as errors.
 COPY .editorconfig Directory.Build.props Directory.Packages.props README.md LICENSE global.json ./
 COPY .mcp/server.json .mcp/server.json
-COPY docs/theme/css/site.css docs/theme/css/site.css
 COPY addon addon
 COPY src src
 
 # The checkout holds a placeholder version; a release passes the one of its tag, which blender_diagnose then reports.
 ARG VERSION=0.0.0-dev
 
-RUN dotnet publish src/Snail.MCP.Blender.csproj -c Release -o /app -p:UseAppHost=false -p:Version="$VERSION"
+RUN dotnet publish src/Snail.MCP.Blender.csproj -c Release -o /app -p:UseAppHost=false -p:PublishAot=false -p:Version="$VERSION"
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0.11
 

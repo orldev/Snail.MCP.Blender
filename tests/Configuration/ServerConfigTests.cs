@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Snail.MCP.Blender.Configuration;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Tests.Configuration;
 
@@ -24,7 +25,7 @@ public class ServerConfigTests
     {
         var config = new ServerConfig();
 
-        Assert.EndsWith(ServerPaths.DataDirectoryName, config.DataDirectory);
+        Assert.Equal(Snail.Sdk.Mcp.Hosting.ServerFolders.DataDirectory(ServerPaths.ShortName), config.DataDirectory);
     }
 
     [Fact]
@@ -94,7 +95,7 @@ public class ServerConfigTests
             ["SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__HOST"] = "artist@203.0.113.42",
             ["SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__KEY"] = "~/.ssh/id_ed25519",
             ["SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__REMOTE_PORT"] = "9876",
-            ["SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE"] = "~/.snail-mcp-blender/remote/win-main.token",
+            ["SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE"] = "~/.s3l-mcp-blender/remote/win-main.token",
             ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = "9877",
         });
 
@@ -102,7 +103,7 @@ public class ServerConfigTests
 
         Assert.True(link.Tunnel.IsEnabled);
         Assert.Equal(Path.Combine(ServerPaths.Home, ".ssh", "id_ed25519"), link.Tunnel.Key);
-        Assert.Equal(Path.Combine(ServerPaths.Home, ".snail-mcp-blender", "remote", "win-main.token"), link.TokenFile);
+        Assert.Equal(Path.Combine(ServerPaths.Home, ".s3l-mcp-blender", "remote", "win-main.token"), link.TokenFile);
         Assert.Equal(9876, link.Tunnel.RemotePort);
         Assert.Equal(9877, link.Port);
     }
@@ -190,24 +191,66 @@ public class ServerConfigTests
 
     /// <summary>A host configured from these variables alone, without touching the environment of the test process, which the tests running
     /// beside this one share.</summary>
-    private static ServiceProvider WithVariables(Dictionary<string, string?> variables)
+    private static ServiceProvider WithVariables(Dictionary<string, string?> variables) => WithSettings(null, variables);
+
+    /// <summary>A host configured from a settings file named outright and these variables; no file at all when none is named.</summary>
+    private static ServiceProvider WithSettings(string? file, Dictionary<string, string?> variables)
     {
         var builder = Host.CreateEmptyApplicationBuilder(null);
-        builder.AddServerConfiguration(ServerConfigExtensions.Settings(Named(variables)));
+        builder.AddServerConfiguration(ServerConfigExtensions.Settings(file, new Hashtable(variables)));
 
         return builder.Services.BuildServiceProvider();
     }
 
-    private static Hashtable Named(Dictionary<string, string?> variables)
+    /// <summary>The token belongs in the settings file; a variable of the server still wins over the file, setting by setting.</summary>
+    [Fact]
+    public void Configuration_TheSettingsFile_ReachesTheOptions_AndTheServersVariableWins()
     {
-        var named = new Hashtable { [EnvironmentSettings.ConfigPathVariable] = Path.Combine(Path.GetTempPath(), $"snail-no-config-{Guid.NewGuid():N}.json") };
+        var file = TemporarySettings("""{ "Bridge": { "Host": "10.0.0.5", "Port": 9911 }, "Http": { "Token": "from-the-file" } }""");
 
-        foreach (var (key, value) in variables)
+        try
         {
-            named[key] = value;
-        }
+            using var provider = WithSettings(file, new Dictionary<string, string?> { ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = "9922" });
 
-        return named;
+            var config = provider.GetRequiredService<ServerConfig>();
+
+            Assert.Equal("10.0.0.5", config.Bridge.Host);
+            Assert.Equal(9922, config.Bridge.Port);
+            Assert.Equal("from-the-file", config.Http.Token);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    /// <summary>The variable that names the settings file is the first place of the chain, and the transport is peeked from that file too.</summary>
+    [Fact]
+    public void Settings_TheFileTheVariableNames_IsWhatThePeekReads()
+    {
+        var file = TemporarySettings("""{ "Snail": { "Transport": "Http", "Agent": "lighting" } }""");
+
+        try
+        {
+            var peeked = RunWithEnvironment(
+                new Dictionary<string, string?> { [ServerSettings.FileVariableOf(ServerPaths.ShortName)] = file },
+                () => ServerConfigExtensions.Peek(ServerConfigExtensions.Settings()));
+
+            Assert.Equal(Transport.Http, peeked.Transport);
+            Assert.Equal("lighting", peeked.Agent);
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    private static string TemporarySettings(string json)
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"s3l-mcp-blender-test-{Guid.NewGuid():N}.json");
+        File.WriteAllText(file, json);
+
+        return file;
     }
 
     [Fact]
@@ -250,9 +293,7 @@ public class ServerConfigTests
             ["PATH"] = "/usr/bin",
         };
 
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(EnvironmentSettings.Read(variables))
-            .Build();
+        var configuration = ServerConfigExtensions.Settings(null, variables);
         var config = new ServerConfig();
         configuration.Bind(config);
         ServerConfigExtensions.Normalize(config);
@@ -261,18 +302,6 @@ public class ServerConfigTests
         Assert.Equal(5, config.Bridge.ConnectTimeoutSeconds);
         Assert.Equal(0, config.SkillIdleMinutes);
         Assert.Null(configuration["PATH"]);
-    }
-
-    /// <summary>A named config file is the whole chain: naming one that does not exist reads no file, rather than falling back to whatever
-    /// happens to sit in the home folder of whoever runs the server.</summary>
-    [Fact]
-    public void ConfigCandidates_ANamedFile_IsTheOnlyOne_AndTheDefaultChainIsTheUsualPlaces()
-    {
-        var named = ServerPaths.ConfigCandidates("/tmp/snail-mcp-blender-explicit.json").ToList();
-        var usual = ServerPaths.ConfigCandidates().ToList();
-
-        Assert.Equal(["/tmp/snail-mcp-blender-explicit.json"], named);
-        Assert.Contains(usual, candidate => candidate.EndsWith(".snail-mcp-blender.json", StringComparison.Ordinal));
     }
 
     /// <summary>The server reads its own variables and its own file, and nothing else: bound to the host's configuration as well, an unprefixed

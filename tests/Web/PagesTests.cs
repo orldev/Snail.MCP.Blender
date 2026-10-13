@@ -1,6 +1,7 @@
 using Snail.MCP.Blender.Application.Access;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Builder;
 
@@ -161,12 +162,13 @@ public sealed partial class PagesTests : IAsyncLifetime
         Assert.Contains("files/robot/notes.txt", _volume.Files.Keys);
     }
 
-    /// <summary>The pages wear the documentation's own stylesheet, embedded at build time, so the two cannot drift apart.</summary>
+    /// <summary>The pages wear the documentation's own stylesheet, the one Snail.Sdk carries, embedded at build time, so the two cannot drift apart.</summary>
     [Fact]
     public async Task Assets_ServeTheDocumentationsStylesheet_WithoutASession()
     {
+        var theme = typeof(PagesTests).Assembly.GetCustomAttributes<AssemblyMetadataAttribute>().Single(metadata => metadata.Key == "SnailSiteTheme").Value!;
         var stylesheet = await _browser.GetStringAsync("/assets/site.css");
-        var documentation = await File.ReadAllTextAsync(Path.Combine(Repository.Root, "docs", "theme", "css", "site.css"));
+        var documentation = await File.ReadAllTextAsync(Path.Combine(theme, "css", "site.css"));
 
         Assert.Equal(documentation, stylesheet);
     }

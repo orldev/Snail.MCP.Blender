@@ -6,15 +6,6 @@ repo_name: orldev/Snail.MCP.Blender
 edit_uri: ""
 docs_dir: content
 
-theme:
-  name: null
-  custom_dir: theme
-  # A template with no page of its own is rendered only if it is listed here.
-  # mkdocs_theme.yml would be the usual place, but MkDocs reads that file only
-  # for a named theme — with name: null it is never opened.
-  static_templates:
-    - 404.html
-
 plugins:
   - search
 

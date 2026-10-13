@@ -153,10 +153,10 @@ The token goes into the client's MCP entry. In user scope the tools are there in
 
 ```bash
 claude mcp add --transport http --scope user blender https://blender.example.com/mcp \
-  --header "Authorization: Bearer $(cat ~/.snail-mcp-blender/remote/docker.token)"
+  --header "Authorization: Bearer $(cat ~/.s3l-mcp-blender/remote/docker.token)"
 ```
 
-Copy `secrets/client.token` from the machine to `~/.snail-mcp-blender/remote/docker.token` on the client, readable by you
+Copy `secrets/client.token` from the machine to `~/.s3l-mcp-blender/remote/docker.token` on the client, readable by you
 alone (`chmod 600`). `blender_diagnose` then reports `transport.kind: http` with the public address and the link minutes,
 the add-on as `current` and Blender's machine as `linux`.
 

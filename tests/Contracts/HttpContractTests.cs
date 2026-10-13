@@ -9,6 +9,7 @@ using Snail.MCP.Blender.Application.Access;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Testing;
 
 namespace Snail.MCP.Blender.Tests.Contracts;
 
@@ -316,6 +317,7 @@ public class HttpContractTests
             start.Environment["SNAIL_MCP_BLENDER_HTTP__URL"] = address.ToString();
             start.Environment["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory;
             start.Environment["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = FreePort().ToString();
+            start.Environment["SNAIL_MCP_BLENDER_CONFIG"] = ServerProgram.NoSettingsFile;
 
             if (token is not null)
             {

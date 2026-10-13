@@ -25,7 +25,7 @@ Install the add-on without opening Blender. `blender_install_addon` builds the z
 it over and let Blender install it from the command line:
 
 ```bash
-scp ~/.snail-mcp-blender/addon/snail_bridge-0.1.0.zip artist@render-box:C:/Users/artist/Downloads/
+scp ~/.s3l-mcp-blender/addon/snail_bridge-0.1.0.zip artist@render-box:C:/Users/artist/Downloads/
 ssh artist@render-box "\"C:\Program Files\Blender Foundation\Blender 5.2\blender.exe\" --command extension install-file -r user_default -e C:\Users\artist\Downloads\snail_bridge-0.1.0.zip"
 ```
 
@@ -109,17 +109,20 @@ it after a drop and closes it on exit, so nothing stays open in between. Everyth
 MCP entry, and none of it is a secret — the token is read from a file:
 
 ```bash
-ssh -i ~/.ssh/id_ed25519 artist@203.0.113.42 "type %USERPROFILE%\.snail-mcp-blender\state\token" > ~/.snail-mcp-blender/remote/render-box.token
-chmod 600 ~/.snail-mcp-blender/remote/render-box.token
+ssh -i ~/.ssh/id_ed25519 artist@203.0.113.42 "type %USERPROFILE%\.s3l-mcp-blender\state\token" > ~/.s3l-mcp-blender/remote/render-box.token
+chmod 600 ~/.s3l-mcp-blender/remote/render-box.token
 
 claude mcp add blender --scope local \
   -e SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__HOST=artist@203.0.113.42 \
   -e 'SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__KEY=~/.ssh/id_ed25519' \
   -e SNAIL_MCP_BLENDER_BRIDGE__TUNNEL__REMOTE_PORT=9876 \
   -e SNAIL_MCP_BLENDER_BRIDGE__PORT=9877 \
-  -e 'SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE=~/.snail-mcp-blender/remote/render-box.token' \
+  -e 'SNAIL_MCP_BLENDER_BRIDGE__TOKEN_FILE=~/.s3l-mcp-blender/remote/render-box.token' \
   -- s3l-mcp-blender
 ```
+
+An add-on that finds no `.s3l-mcp-blender` folder on its machine keeps using `.snail-mcp-blender`, the name from before the
+rename; `blender_diagnose` names the folder in use as `blender.machine.data_directory`.
 
 The local scope keeps this out of a shared `.mcp.json` and ties it to the folder you ran it in; with `--scope user`
 it follows you into every folder, and each folder you start the client in becomes the project. `BRIDGE__PORT` is the local end — 9877 here, so a Blender on your
@@ -147,17 +150,17 @@ For this way too the token has to come across: the add-on writes it into the dat
 server cannot read it, so pass it explicitly:
 
 ```bash
-ssh render-box type %USERPROFILE%\.snail-mcp-blender\state\token     # Windows
-ssh render-box cat ~/.snail-mcp-blender/state/token                  # Linux
+ssh render-box type %USERPROFILE%\.s3l-mcp-blender\state\token     # Windows
+ssh render-box cat ~/.s3l-mcp-blender/state/token                  # Linux
 ```
+
+Keep it in the settings file, `~/.config/s3l-mcp-blender/config.json`, readable by you alone (`chmod 600`), rather than
+in the client's registration, which travels wherever it is copied:
 
 ```json
 {
-  "mcpServers": {
-    "blender": {
-      "command": "s3l-mcp-blender",
-      "env": { "SNAIL_MCP_BLENDER_BRIDGE__TOKEN": "the value printed above" }
-    }
+  "Snail": {
+    "Bridge": { "Token": "the value printed above" }
   }
 }
 ```

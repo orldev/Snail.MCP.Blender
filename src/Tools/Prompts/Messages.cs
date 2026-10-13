@@ -96,7 +96,7 @@ public static class Messages
 
     public const string ScopeHint =
         "This is about the key, not the scene: the same call with a key that opens this kind of work will go through. " +
-        "An operator mints one with 'snail-mcp-blender clients add <name> --scope <scopes>'.";
+        "An operator mints one with 's3l-mcp-blender clients add <name> --scope <scopes>'.";
 
     public const string PythonDisabledHint =
         "Use the dedicated tools — find_tool names them and loads their skill — or blender_run_operator, or send many commands at once with run_tools; " +

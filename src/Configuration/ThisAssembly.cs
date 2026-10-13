@@ -1,15 +1,13 @@
-using System.Reflection;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Configuration;
 
-/// <summary>Assembly name and version, computed once at startup.</summary>
+/// <summary>The name and version this server announces, the same in initialize and in blender_diagnose, computed once at startup.</summary>
 internal static class ThisAssembly
 {
-    public static string Name { get; } = typeof(ThisAssembly).Assembly.GetName().Name ?? "Snail.MCP.Blender";
+    /// <summary>The server's command, the name a client knows it by in <c>initialize</c>.</summary>
+    public static string Name { get; } = ServerIdentity.NameOf(typeof(ThisAssembly).Assembly);
 
-    public static string InformationalVersion { get; } =
-        typeof(ThisAssembly).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-            .InformationalVersion.Split('+')[0]
-        ?? "0.0.0";
+    /// <summary>The version of the build that is running, without the commit a build may append.</summary>
+    public static string InformationalVersion { get; } = ServerIdentity.VersionOf(typeof(ThisAssembly).Assembly);
 }

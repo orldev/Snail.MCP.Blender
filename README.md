@@ -77,7 +77,7 @@ the add-on included, and step 3 is done on that machine:
 
 ```bash
 claude mcp add --transport http --scope user blender https://blender.example.com/mcp \
-  --header "Authorization: Bearer $(cat ~/.snail-mcp-blender/remote/docker.token)"
+  --header "Authorization: Bearer $(cat ~/.s3l-mcp-blender/remote/docker.token)"
 ```
 
 [docs/content/docker.md](docs/content/docker.md) sets up the machine.
@@ -85,7 +85,7 @@ claude mcp add --transport http --scope user blender https://blender.example.com
 ### 3. The add-on in Blender
 
 Ask the agent to run `blender_install_addon`. It builds `snail_bridge-<version>.zip` in
-`~/.snail-mcp-blender/addon` and lists the steps: **Edit → Preferences → Get Extensions → Install from
+`~/.s3l-mcp-blender/addon` and lists the steps: **Edit → Preferences → Get Extensions → Install from
 Disk**, pick the zip. The **Snail** tab in the 3D viewport sidebar (**N**) then says *listening on port 9876*.
 
 ### 4. Check
@@ -98,7 +98,7 @@ Environment variables, all optional:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SNAIL_MCP_BLENDER_DATA_DIRECTORY` | `~/.snail-mcp-blender` | This server's files: the add-on zip, downloads without a project, the token of a local Blender |
+| `SNAIL_MCP_BLENDER_DATA_DIRECTORY` | `~/.s3l-mcp-blender` | This server's files: the add-on zip, downloads without a project, the token of a local Blender |
 | `SNAIL_MCP_BLENDER_PROJECT_DIRECTORY` | the folder the client starts the server in | Over stdio, the project: downloads land in it, relative uploads are read from it. A server over HTTP has none |
 | `SNAIL_MCP_BLENDER_BRIDGE__PORT` | `9876` | Port the add-on listens on |
 | `SNAIL_MCP_BLENDER_BRIDGE__REQUEST_TIMEOUT_SECONDS` | `30` | Timeout for one add-on reply |
@@ -114,9 +114,13 @@ Environment variables, all optional:
 | `SNAIL_MCP_BLENDER_PYTHON` | `allow` | `fallback` refuses a script whose work the tools already do, in a sequence or a batch too; `off` switches `blender_python` off together with the operators that run scripts, sequences and batches holding a script, and uploads outside the add-on's `files` folder |
 | `SNAIL_MCP_BLENDER_OCIO_CONFIG` | — | OpenColorIO config background render jobs run under |
 
-A JSON file works too: `.snail-mcp-blender.json` in the working directory or
-`~/.config/snail-mcp-blender/config.json`, with the same keys under a `Snail` section. The whole list is in
-[docs/content/configuration.md](docs/content/configuration.md).
+The same keys go into a settings file, under a `Snail` section, and the variables win over it. The file is the one
+`SNAIL_MCP_BLENDER_CONFIG` names, the only one read when it is set, or else the first that exists of the chain every
+Snail server shares: `.s3l-mcp-blender.json` and `s3l-mcp-blender.json` in the working directory,
+`~/.config/s3l-mcp-blender/config.json`, `~/.s3l-mcp-blender.json`. A token belongs in
+`~/.config/s3l-mcp-blender/config.json`, made readable by you alone with `chmod 600` — never in a launchd job or a
+client's registration, which travel wherever they are copied.
+The whole list is in [docs/content/configuration.md](docs/content/configuration.md).
 
 ## How it works
 
@@ -125,7 +129,7 @@ one JSON line per request. Its socket threads leave the scene alone: they queue 
 runs it — through a `bpy.app.timers` callback with the interface open, or the loop of `blender -b -c snail_bridge`
 without one — and writes one JSON line back. `ping`, `progress`, the file transfers and the storage commands are
 answered from the socket thread, so a busy Blender still reports what it is doing and still moves files. Every request carries a token — the add-on generates one into
-`~/.snail-mcp-blender/state/token` and the server reads it from there, so a fresh install needs nothing
+`~/.s3l-mcp-blender/state/token` and the server reads it from there, so a fresh install needs nothing
 typed; a remote add-on's token is copied into a file `BRIDGE__TOKEN_FILE` names. A failure comes back as data with a type, a message and details, and the server adds a hint that
 fits the type. A call that outlives its timeout resets the link so a late reply can never be mistaken for
 the next answer.
@@ -170,7 +174,7 @@ One folder per concern:
 | `src/` | the server: `Configuration`, `Domain` with the command catalog in `Commands`, `Application`, `Adapters`, `Hosting`, `Web`, `Extensions`, and `Tools` — `Base` for the layer that is always on, one folder per skill, and `Prompts` for the descriptions, messages and prompts the model reads |
 | `addon/` | the Blender add-on, one Python module per area |
 | `tests/` | a folder per layer of `src`, `Contracts` for the guards, `Tools` and `Live` split by skill like the tools, `Support` for the fakes and the headless Blender |
-| `docs/` | the documentation site: `mkdocs.yml`, the pages in `content/`, the `theme/` the server's pages embed too, and `tools.json`, the families of the tool reference the build writes |
+| `docs/` | the documentation site: `mkdocs.yml` and the pages in `content/` — the theme, which the server's pages wear too, comes with Snail.Sdk — and `tools.json`, the families of the tool reference the build writes |
 | `deploy/` | the two images, each with its Dockerfile and its ignore file, the compose file with its `.env.example`, and the Traefik route |
 | `.mcp/` | the MCP registry entry the NuGet package carries |
 
@@ -184,14 +188,13 @@ ruff check addon                   # the add-on's Python, configured by ruff.tom
 dotnet build src -p:SnailReference=true # regenerates docs/content/tools from the server itself
 docker build -f deploy/blender/Dockerfile -t ghcr.io/orldev/s3l-blender:latest .
 docker build -f deploy/mcp/Dockerfile --build-arg VERSION=0.1.0 -t ghcr.io/orldev/s3l-blender-mcp:latest .
-pip install -r docs/requirements.txt
-mkdocs serve -f docs/mkdocs.yml    # the documentation site, with its own theme in docs/theme/
+dotnet msbuild src/Snail.MCP.Blender.csproj -t:SnailSite -p:SnailSiteServe=true   # the documentation site, in the Snail.Sdk theme
 ```
 
 GitHub Actions: `ci.yml` builds and tests every push, lints the add-on, builds the site, runs the live tests against
 Blender 5.2.1 and builds both images when their sources change. A release is a tag, `git tag v0.2.0 && git push --tags`,
-and no file holds its version: the checkout builds as `0.0.0-dev`, and `release.yml` writes the version of the tag into
-the assembly, the package and its registry manifest and the image tags. It repeats the whole CI, pushes both images to
+and the checkout holds only a placeholder version, `0.1.0` in the project and `.mcp/server.json`: `publish.yml` writes
+the version of the tag into the assembly, the package and its registry manifest and the image tags. It repeats the whole CI, pushes both images to
 GHCR under their version, starts the pair to see that the server reaches Blender, then sends the package to NuGet, and
 only then creates the GitHub Release, publishes the documentation site and moves `latest` — the last two for a tag
 without a suffix. Dependabot proposes updates every two months.

@@ -18,6 +18,11 @@
         <ProjectReference Include="..\src\Snail.MCP.Blender.csproj"/>
     </ItemGroup>
 
+    <!-- The theme the server's pages embed, so a test compares the stylesheet with the one the SDK carries. -->
+    <ItemGroup>
+        <AssemblyMetadata Include="SnailSiteTheme" Value="$(SnailSiteTheme)" />
+    </ItemGroup>
+
     <ItemGroup>
         <Content Include="Support\headless_driver.py" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
