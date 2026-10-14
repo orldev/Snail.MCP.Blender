@@ -27,6 +27,15 @@ A failure comes back as data, never as a dropped connection:
 The server turns it into a tool response with `ok: false`, the message, a hint that fits the error type,
 and the details under `data`.
 
+One failure is not data from Blender but the absence of Blender: `Dropped`, the link closing while a command was
+running, which is what a process that died looks like from here. The next call reconnects by itself, and that is the
+trap — it reconnects to a Blender that started from the file on disk, so everything since the last save is gone while
+every answer still looks healthy. The process says which run it is: `ping` carries `machine.pid`, `machine.uptime_s`
+and `machine.crash_report`, the newest `*.crash.txt` Blender's own handler left in the temp folder, found once when the
+add-on starts because nothing else is in a position to find it. The server compares the pid of each ping with the one
+before — the health check pings on its own schedule, so a restart is noticed between tool calls — and `blender_diagnose`
+then carries a `blender.restarted` block with both pids, the moment it was seen, that crash report and what it cost.
+
 ## The main thread
 
 Blender's Python API is not thread-safe. The add-on's socket threads only parse requests and put them in
@@ -183,7 +192,9 @@ exist. `ping` reports the machine: platform, home, data directory and the `files
 Files move through three commands answered from the socket thread, like `ping`, so a transfer neither waits for a
 render nor holds one up. Chunks are sized by the line limits — 16 MB a request and 4 MB a reply, both base64 — so a
 chunk carries 8 MB up and 2 MB down, and a file lands under a partial name and takes its own only when the SHA-256 computed at the far end matches, so an
-interrupted transfer leaves nothing that looks whole. A relative path resolves inside `files` and cannot climb out.
+interrupted transfer leaves nothing that looks whole. A relative path resolves inside `files` and cannot climb out — in a
+transfer and in every command that takes a path, so a render sent to `renders/shot.png` lands where the volume keeps it, not
+in Blender's working folder; a path starting with `//` stays Blender's own, relative to the `.blend`.
 
 The folder the client starts the server in is the project, and its twin on Blender's machine is the add-on's
 `files/<its name>`: an upload from the project lands in the twin at the same relative path, and a download from the

@@ -12,7 +12,9 @@ public class DiagnosticsToolsTests
     private static ServerConfig Config() => new() { DataDirectory = Path.Combine(Path.GetTempPath(), "snail-blender-tests", Guid.NewGuid().ToString("N")) };
 
     private static ServerHealth Health(SilentMonitor monitor, BridgeTraffic traffic, ITunnel? tunnel = null) =>
-        new(Config(), monitor, traffic, new AddOnFreshness(new AddOnPackager(Config()), NullLogger<AddOnFreshness>.Instance), tunnel ?? new FakeTunnel(), new LocalProject(Config()));
+        new(Config(), monitor, traffic, new AddOnFreshness(new AddOnPackager(Config()), NullLogger<AddOnFreshness>.Instance), Lifetime(), tunnel ?? new FakeTunnel(), new LocalProject(Config()));
+
+    private static BlenderLifetime Lifetime() => new(TimeProvider.System, NullLogger<BlenderLifetime>.Instance);
 
     private static string BundledDigest() => new AddOnPackager(Config()).Describe().Digest;
 
@@ -124,7 +126,7 @@ public class DiagnosticsToolsTests
     public async Task Diagnose_OverHttp_NamesTheTransport_AndPointsAtOpeningAProject()
     {
         var config = new ServerConfig { Transport = Transport.Http, Http = { PublicUrl = "https://blender.example.com" } };
-        var health = new ServerHealth(config, new SilentMonitor(), new BridgeTraffic(), new AddOnFreshness(new AddOnPackager(config), NullLogger<AddOnFreshness>.Instance), new FakeTunnel(), new LocalProject(config));
+        var health = new ServerHealth(config, new SilentMonitor(), new BridgeTraffic(), new AddOnFreshness(new AddOnPackager(config), NullLogger<AddOnFreshness>.Instance), Lifetime(), new FakeTunnel(), new LocalProject(config));
 
         var report = JsonNode.Parse((await new DiagnosticsTools(health, new AddOnPackager(config)).DiagnoseAsync()).Text())!["data"]!;
 
@@ -290,4 +292,32 @@ public class DiagnosticsToolsTests
         Assert.Equal("OBJECT", response["data"]!["mode"]!.ToString());
         Assert.Contains("area=VIEW_3D", response["hint"]!.ToString(), StringComparison.Ordinal);
     }
+    /// <summary>A Blender that crashed and came back answers every call like the one that died; the report is where a client learns the scene is
+    /// not the one it was building, so it must name both processes and what the new one started from.</summary>
+    [Fact]
+    public async Task Diagnose_AfterBlenderCameBackAsAnotherProcess_NamesTheRestartAndTheCrashReport()
+    {
+        var config = Config();
+        var monitor = new SilentMonitor().Answering(Process(7));
+        var health = new ServerHealth(config, monitor, new BridgeTraffic(), new AddOnFreshness(new AddOnPackager(config), NullLogger<AddOnFreshness>.Instance), Lifetime(), new FakeTunnel(), new LocalProject(config));
+        var tools = new DiagnosticsTools(health, new AddOnPackager(config));
+
+        await tools.DiagnoseAsync();
+        monitor.Answering(Process(9, new JsonObject { ["path"] = "/tmp/00-serdce.crash.txt", ["written_at"] = "2026-10-14 02:41:39", ["age_s"] = 21.0 }));
+
+        var blender = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["blender"]!;
+
+        Assert.Equal(7, blender["restarted"]!["previousPid"]!.GetValue<int>());
+        Assert.Equal(9, blender["restarted"]!["pid"]!.GetValue<int>());
+        Assert.Equal("/tmp/00-serdce.crash.txt", blender["restarted"]!["crashReport"]!["path"]!.ToString());
+        Assert.Contains("came from the file on disk", blender["restarted"]!["note"]!.ToString(), StringComparison.Ordinal);
+    }
+
+    private static JsonObject Process(int pid, JsonObject? crash = null) =>
+        new()
+        {
+            ["blender"] = "5.2.1",
+            ["busy"] = false,
+            ["machine"] = new JsonObject { ["platform"] = "linux", ["background"] = true, ["pid"] = pid, ["uptime_s"] = 3.0, ["crash_report"] = crash },
+        };
 }

@@ -58,10 +58,10 @@ public sealed class LocalProjectTests
     [Fact]
     public void Describe_NamesTheTwinTheWayBlendersMachineWritesIt()
     {
-        var state = Project().Describe("C:\\Users\\Def\\.snail-mcp-blender\\files");
+        var state = Project().Describe("C:\\Users\\Def\\.s3l-mcp-blender\\files");
 
         Assert.Equal("snail-test", state["name"]!.ToString());
-        Assert.Equal("C:\\Users\\Def\\.snail-mcp-blender\\files\\snail-test", state["twin"]!.ToString());
+        Assert.Equal("C:\\Users\\Def\\.s3l-mcp-blender\\files\\snail-test", state["twin"]!.ToString());
         Assert.Equal(Root, state["downloads"]!.ToString());
     }
 }

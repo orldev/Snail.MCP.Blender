@@ -1,13 +1,15 @@
 # Snail.MCP.Blender beside a GPU: Blender without an interface and the MCP server in front of it.
 # Put this file, .env and secrets/ in one folder on the machine with the GPU, then: docker compose up -d
 # Traefik reaches the server through traefik/s3l-blender.yml; docs/content/docker.md walks through all of it.
+# STACK_NAME names the project, its volumes and its containers, so a second copy of this folder with its own .env runs a
+# second stack beside the first that shares nothing with it.
 
-name: s3l-blender
+name: ${STACK_NAME:-s3l-blender}
 
 services:
   blender:
     image: ghcr.io/orldev/s3l-blender:${BLENDER_TAG:-latest}
-    container_name: s3l-blender
+    container_name: ${STACK_NAME:-s3l-blender}
     # The Python setting goes to both: the server refuses a script before it is sent, and Blender refuses one that reaches it another way.
     command: ["--host", "0.0.0.0", "--port", "9876", "--token-file", "/run/secrets/bridge_token", "--backend", "${BLENDER_BACKEND:-OPTIX}", "--python", "${PYTHON_ACCESS:-Fallback}"]
     # Render jobs start a second Blender; an init reaps it when it ends.
@@ -17,7 +19,7 @@ services:
       # compute alone leaves OptiX out: its library comes with the graphics capability.
       NVIDIA_DRIVER_CAPABILITIES: all
     volumes:
-      - data:/home/blender/.snail-mcp-blender
+      - data:/home/blender/.s3l-mcp-blender
       - cache:/home/blender/.cache
     secrets:
       - bridge_token
@@ -38,7 +40,7 @@ services:
 
   mcp:
     image: ghcr.io/orldev/s3l-blender-mcp:${MCP_TAG:-latest}
-    container_name: s3l-blender-mcp
+    container_name: ${STACK_NAME:-s3l-blender}-mcp
     restart: unless-stopped
     depends_on:
       - blender
@@ -55,7 +57,7 @@ services:
       - keys:/home/app/.aspnet/DataProtection-Keys
       # The keys clients are admitted by live here. Without this the file is in the container's own layer, and every recreation — every
       # update of this stack — turns away every client an operator had minted a key for.
-      - server:/home/app/.snail-mcp-blender
+      - server:/home/app/.s3l-mcp-blender
     deploy:
       resources:
         # The server holds a chunk of a transfer at a time and nothing else large; past this something is wrong with it

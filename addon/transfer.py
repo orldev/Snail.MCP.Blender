@@ -13,8 +13,8 @@ import hashlib
 import os
 import time
 
-from . import state
-from .core import immediate_command
+from . import catalog, state
+from .core import GATES, immediate_command
 from .server import CommandError
 
 MAX_CHUNK_BYTES = 2 * 1024 * 1024
@@ -93,6 +93,22 @@ def _resolve(path, area=None):
     if os.path.commonpath([root, resolved]) != root:
         raise CommandError("BadRequest", f"'{path}' climbs out of the add-on's files directory; pass an absolute path instead")
     return resolved
+
+
+def anchor(name, params, agent=None):
+    """The gate that reads a relative path where every command means it: inside the files area.
+
+    Handlers pass a path to Blender as they get it, and Blender reads a relative one against its working folder — in a container,
+    a folder outside the data volume, where a render lands and is lost with the container while the policy, which reads the same
+    path inside the files area, has already let it through. Resolved here, once, for every parameter commands.json marks as a path:
+    a path with an area of its own is left to the command, and one starting with // stays Blender's own, relative to the .blend.
+    """
+    if not isinstance(params, dict) or params.get("area"):
+        return
+    for key in catalog.paths_of(name):
+        value = params.get(key)
+        if isinstance(value, str) and value.strip() and not value.startswith("//") and not os.path.isabs(os.path.expanduser(value.strip())):
+            params[key] = _resolve(value)
 
 
 def _digest(path):
@@ -190,3 +206,7 @@ def file_list(bridge, params):
 
 def _entry(root, path):
     return {"path": os.path.relpath(path, root).replace(os.sep, "/"), "size": os.path.getsize(path), "modified": round(os.path.getmtime(path))}
+
+
+if anchor not in GATES:
+    GATES.insert(0, anchor)

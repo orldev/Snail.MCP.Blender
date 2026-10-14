@@ -40,9 +40,9 @@ RUN mkdir -p /tmp/extension \
  && /opt/blender/blender -b --factory-startup --command extension build --source-dir /tmp/snail_bridge --output-dir /tmp/extension \
  && /opt/blender/blender -b --command extension install-file -r user_default -e /tmp/extension/snail_bridge-*.zip \
  && rm -rf /tmp/snail_bridge /tmp/extension \
- && mkdir -p /home/blender/.snail-mcp-blender /home/blender/.cache
+ && mkdir -p /home/blender/.s3l-mcp-blender /home/blender/.cache
 
-VOLUME ["/home/blender/.snail-mcp-blender", "/home/blender/.cache"]
+VOLUME ["/home/blender/.s3l-mcp-blender", "/home/blender/.cache"]
 
 EXPOSE 9876
 

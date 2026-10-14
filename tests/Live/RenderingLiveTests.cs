@@ -51,6 +51,39 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         Assert.Null(inspected["preview"]);
     }
 
+    /// <summary>Cycles registers as an add-on's engine, which the engine property does not list: render_settings refused it in every
+    /// Blender that has it, and set_cycles was the only way in.</summary>
+    [BlenderFact]
+    public async Task RenderSettings_Cycles_IsAccepted_AndAnUnknownEngineListsIt()
+    {
+        var settings = await Send(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "CYCLES", ["resolution_x"] = 32, ["resolution_y"] = 32 });
+
+        Assert.Equal("CYCLES", settings["engine"]!.ToString());
+
+        var refused = await _link.SendAsync(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "NO_SUCH_ENGINE" });
+
+        Assert.False(refused.IsOk);
+        Assert.Equal("BadRequest", refused.Error!.Type);
+        Assert.Contains("CYCLES", refused.Error.Details!.ToJsonString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>A relative path is read inside the files area, where the policy already read it: Blender itself read it against its
+    /// working folder, which in a container lies outside the data volume, and the render was lost with the container.</summary>
+    [BlenderFact]
+    public async Task RenderImage_ToARelativePath_LandsInTheFilesArea_AndCannotClimbOutOfIt()
+    {
+        await Send(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "EEVEE", ["resolution_x"] = 32, ["resolution_y"] = 32, ["samples"] = 1 });
+
+        var rendered = await Send(BridgeCommands.RenderImage, new JsonObject { ["path"] = "anchored/still.png", ["preview"] = false }, TimeSpan.FromSeconds(120));
+
+        Assert.True(File.Exists(Path.Combine(_blender.DataDirectory, "files", "anchored", "still.png")), rendered["path"]!.ToString());
+
+        var climbing = await _link.SendAsync(BridgeCommands.RenderImage, new JsonObject { ["path"] = "../escaped.png", ["preview"] = false }, TimeSpan.FromSeconds(120));
+
+        Assert.False(climbing.IsOk);
+        Assert.Equal("BadRequest", climbing.Error!.Type);
+    }
+
     [BlenderFact]
     public async Task Progress_OnTheMonitorLink_ReportsFramesWhileTheMainLinkRenders()
     {

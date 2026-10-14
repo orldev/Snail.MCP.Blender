@@ -18,6 +18,21 @@ Blender; the next call reconnects. Pass a longer `timeoutSeconds` for imports. A
 going — see [I stopped the agent and Blender keeps rendering](#i-stopped-the-agent-and-blender-keeps-rendering) — and
 the next one that long belongs in a background job.
 
+## "Blender went down while the command was running" (`Dropped`)
+
+Blender's process no longer exists: it crashed, was killed, or was stopped from outside. The next call reconnects by
+itself, but to a Blender that starts from the file on disk, so treat the scene as unknown and read it again rather than
+carrying on from what it was — everything since the last save went with the process.
+
+- `blender_diagnose` names the new run under `blender.restarted`: both pids, when the server first saw the new one, and
+  `crashReport` — the `*.crash.txt` Blender's own handler wrote, with its path on Blender's machine and the moment it
+  was written. Read that file for the backtrace; an empty Python backtrace under a live C stack means the crash was
+  inside Blender, not in the script that called it.
+- `blender_journal` shows what the dead process had run, with the `pid` on every entry, so the boundary between the two
+  runs is visible.
+- In Docker the container is restarted for you and `docker inspect` says `RestartCount`; `OOMKilled` tells a scene that
+  outgrew `BLENDER_MEMORY` from a crash, which is a different fault with a different fix.
+
 ## "the add-on expects the token set in its preferences" (`Unauthorized`)
 
 The add-on has a token in its preferences (Edit → Preferences → Get Extensions → Snail Bridge → Token) and

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Application.Diagnostics;
 /// <remarks>The ping goes over the monitor link, which the add-on answers from its socket thread: on the control link the report would wait
 /// for a running render to finish, and a busy Blender would look like a dead one. The agent named is the asking client's, which over HTTP is
 /// not the server's: it is the name the add-on's leases and journal will show this client under.</remarks>
-public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, BridgeTraffic traffic, AddOnFreshness freshness, ITunnel tunnel, LocalProject project, ClientSessions? clients = null)
+public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, BridgeTraffic traffic, AddOnFreshness freshness, BlenderLifetime lifetime, ITunnel tunnel, LocalProject project, ClientSessions? clients = null)
 {
     /// <summary>Seconds without a tick of Blender's queue, while nothing runs, after which the dispatcher is called stalled rather than idle.</summary>
     public const int StalledAfterSeconds = 60;
@@ -17,6 +17,7 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
     public async Task<JsonObject> ReportAsync(CancellationToken cancellationToken)
     {
         var ping = await monitor.PingAsync(new JsonObject { ["commands"] = true }, cancellationToken).ConfigureAwait(false);
+        lifetime.Seen(ping);
 
         var report = new JsonObject
         {
@@ -25,7 +26,7 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
                 ["name"] = ThisAssembly.Name,
                 ["version"] = ThisAssembly.InformationalVersion,
             },
-            ["blender"] = Describe(ping),
+            ["blender"] = Describe(ping, lifetime.Describe()),
             ["bridge"] = new JsonObject
             {
                 ["host"] = config.Bridge.Host,
@@ -55,6 +56,7 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
     public async Task<JsonObject> LivenessAsync(CancellationToken cancellationToken)
     {
         var ping = await monitor.PingAsync(cancellationToken: cancellationToken).ConfigureAwait(false);
+        lifetime.Seen(ping);
 
         return new JsonObject { ["status"] = "ok", ["blender"] = Alive(ping) };
     }
@@ -114,7 +116,8 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
     private static string TokenSource(BlenderLinkOptions link) =>
         !string.IsNullOrWhiteSpace(link.Token) ? "configured" : File.Exists(link.TokenFile) ? "file" : "none";
 
-    private static JsonObject Describe(BridgeReply ping)
+    /// <summary>What the add-on answers about its Blender, plus the restart this server saw, which the answer itself cannot show.</summary>
+    private static JsonObject Describe(BridgeReply ping, JsonObject? restart)
     {
         if (ping.IsOk)
         {
@@ -124,6 +127,11 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
             if (answer["busy"]?.GetValue<bool>() == true && answer["executing"]?.GetValue<string>() is { } running)
             {
                 answer["note"] = Messages.BusyWith(running);
+            }
+
+            if (restart is not null)
+            {
+                answer["restarted"] = restart;
             }
 
             return answer;

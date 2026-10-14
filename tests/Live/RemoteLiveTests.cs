@@ -76,6 +76,24 @@ public sealed class RemoteLiveTests : IAsyncLifetime
         Assert.True(machine["background"]!.GetValue<bool>());
     }
 
+    /// <summary>A Blender that crashed and came back is indistinguishable from the one that died unless the process says who it is: the pid and
+    /// the uptime are what the server compares across pings, and the crash report is the only trace the dead process left.</summary>
+    [BlenderFact]
+    public async Task Ping_NamesTheProcess_SoARestartCanBeSeen()
+    {
+        var machine = (await _link.SendAsync(BridgeCommands.Ping)).Result!["machine"]!;
+
+        Assert.True(machine["pid"]!.GetValue<int>() > 0);
+        Assert.True(machine["uptime_s"]!.GetValue<double>() >= 0);
+        Assert.True(machine.AsObject().ContainsKey("crash_report"));
+
+        if (machine["crash_report"] is JsonObject report)
+        {
+            Assert.EndsWith(".crash.txt", report["path"]!.ToString(), StringComparison.Ordinal);
+            Assert.True(report["age_s"]!.GetValue<double>() >= 0);
+        }
+    }
+
     [BlenderFact]
     public async Task Cycles_BackendNone_UsesTheCpu_AndAnUnknownBackendNamesWhatThisMachineHas()
     {

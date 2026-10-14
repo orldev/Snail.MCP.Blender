@@ -28,14 +28,14 @@ COPY --from=build /app .
 # Every request at Information buries what matters in a container's log; the server's own warnings and failures stay.
 ENV SNAIL_MCP_BLENDER_TRANSPORT=Http \
     SNAIL_MCP_BLENDER_HTTP__URL=http://0.0.0.0:8080 \
-    SNAIL_MCP_BLENDER_DATA_DIRECTORY=/home/app/.snail-mcp-blender \
+    SNAIL_MCP_BLENDER_DATA_DIRECTORY=/home/app/.s3l-mcp-blender \
     Logging__LogLevel__Default=Information \
     Logging__LogLevel__Microsoft.AspNetCore=Warning \
     Logging__LogLevel__ModelContextProtocol=Warning
 
 # The keys that sign sessions and form tokens live in a volume, so a recreated container does not sign everyone out.
-RUN mkdir -p /home/app/.aspnet/DataProtection-Keys /home/app/.snail-mcp-blender \
- && chown -R app:app /home/app/.aspnet /home/app/.snail-mcp-blender
+RUN mkdir -p /home/app/.aspnet/DataProtection-Keys /home/app/.s3l-mcp-blender \
+ && chown -R app:app /home/app/.aspnet /home/app/.s3l-mcp-blender
 
 USER app
 EXPOSE 8080

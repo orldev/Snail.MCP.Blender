@@ -28,7 +28,7 @@ public sealed class FileTransferTests : IDisposable
         {
             sent.Add(chunk);
 
-            return Task.FromResult(BridgeReply.Ok(new JsonObject { ["path"] = "C:\\Users\\artist\\.snail-mcp-blender\\files\\hdri\\studio.exr" }));
+            return Task.FromResult(BridgeReply.Ok(new JsonObject { ["path"] = "C:\\Users\\artist\\.s3l-mcp-blender\\files\\hdri\\studio.exr" }));
         }, CancellationToken.None);
 
         Assert.Null(outcome.Error);

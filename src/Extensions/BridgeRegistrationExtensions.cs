@@ -34,6 +34,7 @@ public static class BridgeRegistrationExtensions
             services.AddSingleton<IProgramRunner, JavaScriptPrograms>();
             services.AddSingleton<IAddOnPackager, AddOnPackager>();
             services.AddSingleton<AddOnFreshness>();
+            services.AddSingleton<BlenderLifetime>();
             services.AddSingleton<ServerHealth>();
             services.AddSingleton<FileTransfer>();
             services.AddSingleton<ClientToken>();

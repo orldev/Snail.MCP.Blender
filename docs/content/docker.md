@@ -73,6 +73,7 @@ foreach ($name in 'bridge', 'client') {
 
 | Setting | Default | Meaning |
 |---|---|---|
+| `STACK_NAME` | `s3l-blender` | The compose project, and with it the names of the volumes and the containers (`<name>` and `<name>-mcp`); see [A second stack](#a-second-stack-on-the-same-machine) |
 | `BLENDER_TAG` | `latest` | The Blender image: `latest`, or a release as `5.2.1-X.Y.Z` |
 | `MCP_TAG` | `latest` | The server image: `latest`, or a release as `X.Y.Z`; pin both to the same release |
 | `BLENDER_BACKEND` | `OPTIX` | The Cycles compute backend Blender enables at start: `OPTIX`, `CUDA`, `NONE` for the CPU; `CUDA` on Docker Desktop. A scene renders on it once its device is GPU |
@@ -214,6 +215,28 @@ to Windows.
 so `docker pull` and `docker build` fail with `A specified logon session does not exist`. Give that session a Docker
 configuration without a credential helper — an empty `config.json` in a folder of its own named by `DOCKER_CONFIG`, and
 a `PATH` holding a copy of `docker.exe` without `docker-credential-wincred` beside it.
+
+## A second stack on the same machine
+
+One Blender holds one scene, and every key the server admits works in it: a second client sees what the first has open,
+reads its files, its journal and its render jobs, and with the Python scope reads anything Blender's process can. Keys
+divide what a client may do, not what it may see. Two people who must not see each other's work need a stack each.
+
+A second stack is a second folder: a copy of `compose.yml`, its own `.env` and its own `secrets/`. In `.env` it takes a
+`STACK_NAME`, a `PUBLISH_PORT` and a `PUBLIC_URL` of its own:
+
+```text
+STACK_NAME=s3l-blender-own
+PUBLIC_URL=https://blender-own.example.com
+PUBLISH_PORT=8811
+BLENDER_MEMORY=16g
+```
+
+The name gives it volumes of its own — `s3l-blender-own_data` and the rest — so nothing either Blender writes reaches the
+other, and new tokens in `secrets/` keep each server's clients its own. The proxy needs a second route, to the second
+port. The two share the machine: the GPU and its memory, and the memory of the host, so give `BLENDER_MEMORY` values
+that fit together, with room for the system. Both run the same images, so an update pulls once and is then brought up
+in each folder.
 
 ## Security
 

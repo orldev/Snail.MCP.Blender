@@ -155,6 +155,17 @@ def _render_summary(scene):
     return summary
 
 
+def _engines():
+    """The engines this Blender can render with: its own, and those an add-on registers — Cycles among them.
+
+    The engine property describes only the first kind; an add-on's engine joins the list when it registers, so asking the property
+    alone refused Cycles in every Blender that has it.
+    """
+    built_in = [item.identifier for item in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
+    registered = [engine.bl_idname for engine in bpy.types.RenderEngine.__subclasses__() if getattr(engine, "bl_idname", None)]
+    return list(dict.fromkeys(built_in + registered))
+
+
 @command("render_settings")
 def render_settings(params):
     scene = _scene(params)
@@ -162,7 +173,7 @@ def render_settings(params):
     if params.get("engine"):
         wanted = params["engine"].upper()
         engine = ENGINES.get(wanted, wanted)
-        known = [item.identifier for item in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]
+        known = _engines()
         if engine == "BLENDER_EEVEE_NEXT" and engine not in known and "BLENDER_EEVEE" in known:
             engine = "BLENDER_EEVEE"
         if engine not in known:

@@ -42,4 +42,7 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = "Unloaded idle skills: {Skills}")]
     internal static partial void SkillsUnloaded(ILogger logger, string skills);
+
+    [LoggerMessage(EventId = 13, Level = LogLevel.Warning, Message = "Blender answers from a different process than before ({Previous} → {Pid}): it restarted, its scene came back from the file on disk, and anything unsaved is gone. Crash report: {CrashReport}")]
+    internal static partial void BlenderRestarted(ILogger logger, int previous, int pid, string crashReport);
 }

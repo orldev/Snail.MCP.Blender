@@ -31,7 +31,16 @@ public static class Messages
     private static bool HoldsBlender(Domain.BridgeError error) =>
         error.Details?["command"]?.GetValue<string>() is { } command && Uninterruptible.Contains(command);
 
-    public const string DroppedHint = "The add-on closed the connection; the next call reconnects on its own.";
+    public const string DroppedHint =
+        "Blender went down while the command was running: the process that answered no longer exists. The next call reconnects by itself, " +
+        "but to a Blender that starts from the file on disk, so everything since the last save is gone — treat the scene as unknown and read it " +
+        "again rather than carrying on from what it was. blender_diagnose names the new process and the crash report Blender left behind, and " +
+        "blender_journal shows which commands the dead process had run.";
+
+    /// <summary>Said where the server notices that Blender is a different process than the one a client was working with.</summary>
+    public const string BlenderRestartedNote =
+        "Blender restarted since this server first spoke to it: the scene it has now came from the file on disk, and anything the previous " +
+        "process held and had not saved is gone. Read the scene again before building on it.";
 
     public const string MalformedHint = "Update the add-on in Blender to the version bundled with this server.";
 

@@ -76,7 +76,7 @@ rename, is there; `blender_diagnose` shows it as `blender.machine.data_directory
 | `snapshots/` | `<name>.blend` with `<name>.json` saying where it came from and why |
 | `state/` | `token`, `journal.jsonl`, `leases.json`, `jobs.json` |
 
-**In Docker**, the add-on's data directory is `/home/blender/.snail-mcp-blender` in the `s3l-blender` container, kept in
+**In Docker**, the add-on's data directory is `/home/blender/.s3l-mcp-blender` in the `s3l-blender` container, kept in
 the volume `s3l-blender_data`, with the same folders.
 
 Nothing in `jobs/` and `batches/` is removed on its own; clear old ones by hand when the disk asks for it, or, with
