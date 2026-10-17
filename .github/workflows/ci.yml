@@ -84,11 +84,16 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install ruff
-        run: pip install ruff==0.16.6
+      - name: Install ruff and pytest
+        run: pip install ruff==0.16.6 pytest==8.4.2
 
       - name: Lint
-        run: ruff check addon tools
+        run: ruff check addon tools tests/addon
+
+      # The add-on is otherwise proven only by the live tests against a real Blender, which take forty minutes; what touches no
+      # bpy is tested here in a second, and the memory a render budget is built on is exactly that kind of code.
+      - name: Test what the add-on does without Blender
+        run: python -m pytest tests/addon -q
 
       - name: The declared parameters are the ones the handlers read
         run: python tools/parameters_from_source.py

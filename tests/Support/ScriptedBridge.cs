@@ -5,6 +5,8 @@ public sealed class ScriptedBridge : IBlenderBridge
 {
     private readonly Dictionary<string, Func<JsonObject?, BridgeReply>> _answers = new(StringComparer.Ordinal);
 
+    private Func<JsonObject?, BridgeReply>? _anything;
+
     public List<(BridgeCommand Command, JsonObject? Parameters, TimeSpan? Timeout)> Sent { get; } = [];
 
     public bool IsConnected { get; set; } = true;
@@ -23,6 +25,14 @@ public sealed class ScriptedBridge : IBlenderBridge
         return this;
     }
 
+    /// <summary>Answers every command the same way, for a test that cares about what was sent rather than what came back.</summary>
+    public ScriptedBridge AnswerAnything(JsonNode? result)
+    {
+        _anything = _ => BridgeReply.Ok(result?.DeepClone());
+
+        return this;
+    }
+
     public ScriptedBridge Fail(BridgeCommand command, BridgeError error)
     {
         _answers[command.Name] = _ => BridgeReply.Failed(error);
@@ -34,7 +44,8 @@ public sealed class ScriptedBridge : IBlenderBridge
     {
         Sent.Add((command, parameters, timeout));
 
-        var reply = _answers.TryGetValue(command.Name, out var answer)
+        var answer = _answers.TryGetValue(command.Name, out var scripted) ? scripted : _anything;
+        var reply = answer is not null
             ? answer(parameters)
             : BridgeReply.Failed(new BridgeError("Unscripted", $"no scripted answer for '{command.Name}'"));
 

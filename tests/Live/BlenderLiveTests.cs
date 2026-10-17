@@ -21,8 +21,7 @@ public sealed class BlenderLiveTests : IAsyncLifetime
 
         _blender = await HeadlessBlender.StartAsync();
         _link = new BlenderConnection(_blender.Link, NullLogger<BlenderConnection>.Instance);
-        _workDirectory = Path.Combine(Path.GetTempPath(), "snail-blender-live", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_workDirectory);
+        _workDirectory = TestFolder.Create();
     }
 
     public async Task DisposeAsync()

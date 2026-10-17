@@ -19,8 +19,7 @@ public sealed class FarmLiveTests : IAsyncLifetime
 
         _blender = await HeadlessBlender.StartAsync();
         _link = new BlenderConnection(_blender.Link, NullLogger<BlenderConnection>.Instance);
-        _workDirectory = Path.Combine(Path.GetTempPath(), "snail-blender-live", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_workDirectory);
+        _workDirectory = TestFolder.Create();
     }
 
     public async Task DisposeAsync()
@@ -200,6 +199,8 @@ public sealed class FarmLiveTests : IAsyncLifetime
         }, TimeSpan.FromSeconds(120));
 
         Assert.Equal("fits", budget["verdict"]!.ToString());
+        Assert.Contains(budget["memory_from"]!.ToString(), new[] { "the machine", "the cgroup this Blender runs in" });
+        Assert.True(budget["memory_limit_mb"]!.GetValue<int>() <= budget["system_memory_mb"]!.GetValue<int>());
         Assert.Equal(6, budget["geometry"]!["polygons_render"]!.GetValue<int>());
         Assert.Equal("2048", budget["applied"]!["texture_limit"]!.ToString());
         Assert.True(budget["probe"]!["seconds_per_frame_estimate"]!.GetValue<double>() >= 0);

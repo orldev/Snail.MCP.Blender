@@ -5,3 +5,4 @@ global using Snail.MCP.Blender.Domain;
 global using Snail.MCP.Blender.Domain.Commands;
 global using Snail.MCP.Blender.Tests.Support;
 global using Xunit;
+global using TestFolder = Snail.Sdk.Mcp.Testing.TestFolder;

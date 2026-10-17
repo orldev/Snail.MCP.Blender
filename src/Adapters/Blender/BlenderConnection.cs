@@ -358,18 +358,22 @@ public sealed class BlenderConnection(BlenderLinkOptions options, ILogger<Blende
     /// <summary>Closes the link once the call in flight has let go of it, so the last request of a shutdown fails like any other.</summary>
     /// <remarks>Disposing under a running request tore the socket out from beneath it and then disposed the semaphore it was about to
     /// release: what came back was an ObjectDisposedException out of a finally block rather than the reply the caller was waiting for. A
-    /// render longer than the idle timeout is enough to reach it.</remarks>
+    /// render longer than the idle timeout is enough to reach it.
+    /// <para>A call that has not let go within the wait keeps the turnstile: the socket is closed under it either way, which is what ends
+    /// it, but the semaphore it is about to release is left alone. One that is never disposed costs nothing here — nothing waits on its
+    /// handle — while disposing it throws out of a finally block the caller cannot see.</para></remarks>
     public async ValueTask DisposeAsync()
     {
         var mine = await _turn.WaitAsync(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
 
         Drop();
 
-        if (mine)
+        if (!mine)
         {
-            _turn.Release();
+            return;
         }
 
+        _turn.Release();
         _turn.Dispose();
     }
 }

@@ -1,3 +1,4 @@
+using System.Reflection;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Discovery;
 using Snail.MCP.Blender.Application.Sessions;
@@ -29,6 +30,9 @@ public sealed class ToolScopes(CommandSemantics semantics)
 
     /// <summary>Tools that destroy only when asked to: the upload replaces files with overwrite and otherwise only adds them.</summary>
     private static readonly string[] DestructiveOnlyWhenAsked = ["upload"];
+
+    /// <summary>What each command's own tool is annotated as, read once from this assembly; the answer when the schema cannot be read.</summary>
+    private static readonly IReadOnlyDictionary<string, string> Annotated = AnnotationsOf(typeof(ToolScopes).Assembly);
 
     /// <summary>The scope a call of this tool needs, when the tool is the whole of the work.</summary>
     public string For(McpServerTool tool)
@@ -65,7 +69,12 @@ public sealed class ToolScopes(CommandSemantics semantics)
     }
 
     /// <summary>The scope one command needs, for a tool that carries commands rather than being one.</summary>
-    public string For(string command) => Known(command) ?? Reaching(command) ?? Scopes.Write;
+    /// <remarks>The schema decides while it can be read. Without it the answer is the annotation of the tool of the same name, which is
+    /// compiled into this assembly and cannot go missing the way a file beside it can: a command then costs the same whether it arrives as a
+    /// tool or as a step of <c>run_tools</c>. It used to fall to the widest ordinary answer instead, and a key minted to build but not to
+    /// destroy deleted objects by sending <c>delete_objects</c> as a step. A command neither the schema nor a tool describes is treated as the
+    /// work that loses most: a guess that opens more than it should is the one mistake authorisation cannot afford.</remarks>
+    public string For(string command) => Known(command) ?? Reaching(command) ?? Annotated.GetValueOrDefault(command) ?? Scopes.Delete;
 
     /// <summary>The first command in this list the client's key does not open, with what it would have needed; null when it opens them all.</summary>
     /// <remarks>Every step is asked about before any of them is sent: a sequence half refused is a scene half built.</remarks>
@@ -103,4 +112,23 @@ public sealed class ToolScopes(CommandSemantics semantics)
         ?? (semantics.IsDestructive(command) ? Scopes.Delete
             : semantics.IsReadOnly(command) ? Scopes.Read
             : null);
+
+    /// <summary>The scope each tool's own annotation asks for, by the command that tool sends.</summary>
+    private static IReadOnlyDictionary<string, string> AnnotationsOf(Assembly assembly)
+    {
+        var toolTypes = assembly.GetTypes().Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() is not null);
+        var methods = toolTypes.SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly));
+        var declared = methods.Select(method => method.GetCustomAttribute<McpServerToolAttribute>()).OfType<McpServerToolAttribute>();
+        var scoped = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        foreach (var tool in declared.Where(tool => tool.Name is not null))
+        {
+            var name = tool.Name!;
+            var command = name.StartsWith("blender_", StringComparison.Ordinal) ? name["blender_".Length..] : name;
+
+            scoped[command] = tool.Destructive is true ? Scopes.Delete : tool.ReadOnly is true ? Scopes.Read : Scopes.Write;
+        }
+
+        return scoped;
+    }
 }

@@ -116,6 +116,47 @@ public class ProgramToolsTests
         Assert.Equal(["first", "second"], result["data"]!["log"]!.AsArray().Select(line => line!.ToString()));
     }
 
+    /// <summary>The Python setting guards the door a program knocks at too: in fallback the rule is the same one blender_python follows, so
+    /// a script the tools already cover is refused whichever way it arrives.</summary>
+    [Fact]
+    public async Task Program_InFallback_SendingPythonTheToolsCouldDo_IsRefused_WithoutReachingBlender()
+    {
+        var refused = await RunAsync(
+            """return blender.python({ code: "import bpy\nbpy.context.scene.cycles.samples = 64\nbpy.context.scene.render.resolution_x = 1920" });""",
+            new ServerConfig { Python = PythonAccess.Fallback });
+
+        Assert.False(refused["ok"]!.GetValue<bool>());
+        Assert.Contains("the tools already do", refused["error"]!.ToString(), StringComparison.Ordinal);
+        Assert.Empty(_bridge.Sent);
+    }
+
+    [Fact]
+    public async Task Program_InFallback_SendingPythonNoToolCovers_ReachesBlender()
+    {
+        _bridge.Answer(BridgeCommands.Python, new JsonObject { ["stdout"] = "5.2.1" });
+
+        var result = await RunAsync(
+            """return blender.python({ code: "import bpy\nresult = bpy.app.version_string" });""",
+            new ServerConfig { Python = PythonAccess.Fallback });
+
+        Assert.True(result["ok"]!.GetValue<bool>());
+        Assert.Equal(BridgeCommands.Python, _bridge.Sent.Single().Command);
+    }
+
+    /// <summary>Fallback is about Python, not about everything: an ordinary command a program sends goes through untouched.</summary>
+    [Fact]
+    public async Task Program_InFallback_SendingAnOrdinaryCommand_IsNotJudgedAsAScript()
+    {
+        _bridge.Answer(BridgeCommands.AddPrimitive, new JsonObject { ["name"] = "Cube" });
+
+        var result = await RunAsync(
+            """return blender.add_primitive({ kind: "cube" });""",
+            new ServerConfig { Python = PythonAccess.Fallback });
+
+        Assert.True(result["ok"]!.GetValue<bool>());
+        Assert.Equal(BridgeCommands.AddPrimitive, _bridge.Sent.Single().Command);
+    }
+
     private async Task<JsonNode> RunAsync(string code, ServerConfig? config = null, JsonObject? input = null, int timeoutSeconds = 30)
     {
         var settings = config ?? new ServerConfig();

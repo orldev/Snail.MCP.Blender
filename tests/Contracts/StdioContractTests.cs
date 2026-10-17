@@ -156,7 +156,7 @@ public class StdioContractTests
     [Fact]
     public async Task Tools_AsListedWithEverySkill_KeepTheGuardRules()
     {
-        var dataDirectory = Path.Combine(Path.GetTempPath(), $"snail-blender-guards-{Guid.NewGuid().ToString("N")[..8]}");
+        var dataDirectory = TestFolder.Create();
         var variables = new Dictionary<string, string?>
         {
             ["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory,
@@ -227,7 +227,7 @@ public class StdioContractTests
         /// <summary>The dll beside the tests, or the publication <c>SNAIL_BLENDER_SERVER</c> names.</summary>
         public static Task<ServerSession> StartAsync(int? bridgePort = null)
         {
-            var dataDirectory = Path.Combine(Path.GetTempPath(), $"snail-blender-stdio-{Guid.NewGuid().ToString("N")[..8]}");
+            var dataDirectory = TestFolder.Create();
             var (command, arguments) = ServerProgram.Command("Snail.MCP.Blender", "SNAIL_BLENDER_SERVER");
             var start = new ProcessStartInfo(command, arguments)
             {

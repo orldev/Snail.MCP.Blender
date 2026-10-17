@@ -10,9 +10,7 @@ namespace Snail.MCP.Blender.Tests.Application;
 /// <summary>Files between the server's machine and Blender's: chunks in order, a digest at each end, and nothing half-written left behind.</summary>
 public sealed class FileTransferTests : IDisposable
 {
-    private readonly string _root = Path.Combine(Path.GetTempPath(), "snail-transfer-tests", Guid.NewGuid().ToString("N"));
-
-    public FileTransferTests() => Directory.CreateDirectory(_root);
+    private readonly string _root = TestFolder.Create();
 
     public void Dispose() => Directory.Delete(_root, recursive: true);
 

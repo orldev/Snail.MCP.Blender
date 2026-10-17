@@ -80,7 +80,7 @@ public class BlenderConnectionTests
     [Fact]
     public async Task Send_WithoutAConfiguredToken_ReadsTheAddOnsTokenFileOnConnect()
     {
-        var file = Path.Combine(Path.GetTempPath(), $"snail-token-{Guid.NewGuid():N}");
+        var file = Path.Combine(TestFolder.Create(), "token");
         await File.WriteAllTextAsync(file, "from-file\n");
         await using var addOn = FakeAddOn.Echo();
         await using var link = new BlenderConnection(new BlenderLinkOptions { Port = addOn.Port, ConnectTimeoutSeconds = 2, RequestTimeoutSeconds = 5, TokenFile = file }, NullLogger<BlenderConnection>.Instance);
@@ -238,7 +238,7 @@ public class BlenderConnectionTests
     [Fact]
     public async Task Send_WithATokenFileItCannotRead_ReportsItAndKeepsNoLink()
     {
-        var file = Path.Combine(Path.GetTempPath(), $"snail-token-{Guid.NewGuid():N}");
+        var file = Path.Combine(TestFolder.Create(), "token");
         await File.WriteAllTextAsync(file, "secret");
         await using var addOn = FakeAddOn.Echo();
         await using var link = new BlenderConnection(new BlenderLinkOptions { Port = addOn.Port, ConnectTimeoutSeconds = 2, RequestTimeoutSeconds = 5, TokenFile = file }, NullLogger<BlenderConnection>.Instance);

@@ -10,7 +10,7 @@ public class AddOnPackagerTests
     [Fact]
     public void Pack_BundledAddOn_ZipsWithTheManifestAtTheRoot()
     {
-        var config = new ServerConfig { DataDirectory = Path.Combine(Path.GetTempPath(), "snail-blender-tests", Guid.NewGuid().ToString("N")) };
+        var config = new ServerConfig { DataDirectory = TestFolder.Create() };
 
         try
         {

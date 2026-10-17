@@ -81,7 +81,7 @@ foreach ($name in 'bridge', 'client') {
 | `PUBLISH_ADDRESS` | `192.0.2.10` | The address the server port is published on — one the proxy reaches, never the public one |
 | `PUBLISH_PORT` | `8810` | That port |
 | `PYTHON_ACCESS` | `Fallback` | `Allow`, `Fallback` (a script only where no tool covers the job) or `Off` |
-| `BLENDER_MEMORY` | `24g` | What Blender may use before the kernel stops it; a scene that does not fit kills the container instead of swapping the machine to a standstill |
+| `BLENDER_MEMORY` | `24g` | What Blender may use before the kernel stops it; a scene that does not fit kills the container instead of swapping the machine to a standstill. `blender_render_budget` reads this limit from the container's cgroup and judges a scene against it, not against the memory of the host |
 | `MCP_MEMORY` | `1g` | The same for the server, which holds a chunk of a transfer at a time and nothing else large |
 
 The stack keeps four volumes: Blender's data directory (projects, render jobs, batches, snapshots), its kernel cache,
@@ -107,7 +107,7 @@ docker build -f deploy/mcp/Dockerfile --build-arg VERSION=0.1.0 -t ghcr.io/orlde
 ```
 
 `VERSION` is the version the server reports in `blender_diagnose` and on its status page; without it a build from a
-checkout reports `0.0.0-dev`.
+checkout reports `0.0.0-local`.
 
 ## 3. Start
 

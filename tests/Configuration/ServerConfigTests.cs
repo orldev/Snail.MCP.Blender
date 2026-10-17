@@ -247,7 +247,7 @@ public class ServerConfigTests
 
     private static string TemporarySettings(string json)
     {
-        var file = Path.Combine(Path.GetTempPath(), $"s3l-mcp-blender-test-{Guid.NewGuid():N}.json");
+        var file = Path.Combine(TestFolder.Create(), "settings.json");
         File.WriteAllText(file, json);
 
         return file;

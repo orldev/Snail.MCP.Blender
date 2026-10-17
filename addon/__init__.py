@@ -26,6 +26,7 @@ from . import (
     layers,
     lights,
     materials,
+    memory,
     modeling,
     moves,
     objects,

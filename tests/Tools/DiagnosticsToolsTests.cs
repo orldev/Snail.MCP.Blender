@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tests.Tools;
 
 public class DiagnosticsToolsTests
 {
-    private static ServerConfig Config() => new() { DataDirectory = Path.Combine(Path.GetTempPath(), "snail-blender-tests", Guid.NewGuid().ToString("N")) };
+    private static ServerConfig Config() => new() { DataDirectory = TestFolder.Create() };
 
     private static ServerHealth Health(SilentMonitor monitor, BridgeTraffic traffic, ITunnel? tunnel = null) =>
         new(Config(), monitor, traffic, new AddOnFreshness(new AddOnPackager(Config()), NullLogger<AddOnFreshness>.Instance), Lifetime(), tunnel ?? new FakeTunnel(), new LocalProject(Config()));

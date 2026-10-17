@@ -13,7 +13,7 @@ What the frame will cost before rendering it: texture memory by size and depth, 
 | `probe` | `object?` | — | `null` | Probe render at low resolution to time the frame and measure peak memory; omit to skip. |
 | `apply` | `object?` | — | `null` | Limits to apply now. |
 | `packForFarm` | `object?` | — | `null` | Prepare the file for a farm. |
-| `memoryLimitMb` | `integer?` | — | `null` | Memory the render may use in MB; 80 percent of system memory otherwise. |
+| `memoryLimitMb` | `integer?` | — | `null` | Memory the render may use in MB; 80 percent of what this machine, or the container Blender runs in, allows it otherwise. |
 | `scene` | `string?` | — | `null` | Scene to act on; the current scene otherwise. |
 | `timeoutSeconds` | `integer` | — | `300` | Seconds to wait for Blender, 1 to 600. |
 
@@ -158,7 +158,7 @@ What the frame will cost before rendering it: texture memory by size and depth, 
       "default": null
     },
     "memoryLimitMb": {
-      "description": "Memory the render may use in MB; 80 percent of system memory otherwise.",
+      "description": "Memory the render may use in MB; 80 percent of what this machine, or the container Blender runs in, allows it otherwise.",
       "type": [
         "integer",
         "null"

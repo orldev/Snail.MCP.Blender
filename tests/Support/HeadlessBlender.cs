@@ -31,7 +31,7 @@ public sealed class HeadlessBlender : IDisposable
         var port = FreePort();
         var driverPath = Path.Combine(AppContext.BaseDirectory, "Support", "headless_driver.py");
         var (root, package) = packageName is null ? (RepositoryRoot(), "addon") : (CopyAddOnAs(packageName), packageName);
-        var dataDirectory = Path.Combine(Path.GetTempPath(), $"snail-data-{Guid.NewGuid():N}");
+        var dataDirectory = TestFolder.Create();
 
         var start = new ProcessStartInfo
         {
@@ -101,7 +101,7 @@ public sealed class HeadlessBlender : IDisposable
 
     private static string CopyAddOnAs(string packageName)
     {
-        var root = Path.Combine(Path.GetTempPath(), $"snail-package-{Guid.NewGuid():N}");
+        var root = TestFolder.Create();
         var target = Path.Combine(root, packageName);
         Directory.CreateDirectory(target);
 

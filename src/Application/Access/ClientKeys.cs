@@ -76,13 +76,24 @@ public sealed class ClientKeys
 
         foreach (var key in Candidates())
         {
-            if (CryptographicOperations.FixedTimeEquals(offered, Convert.FromBase64String(key.Digest)) && !key.IsRevoked)
+            if (Stored(key.Digest) is { } digest && CryptographicOperations.FixedTimeEquals(offered, digest) && !key.IsRevoked)
             {
                 found = key;
             }
         }
 
         return found;
+    }
+
+    /// <summary>The digest of a stored key as bytes, or null when the line cannot be read as one.</summary>
+    /// <remarks>Decoded on the spot, a digest that is not base64 — a hand edit of the file the note asks nobody to edit by hand, a copy
+    /// restored from elsewhere — threw out of the authentication handler, and the server answered every client with 500, the ones whose keys
+    /// were fine among them. A line nothing can read admits nobody, which costs its own client its session and no one else theirs.</remarks>
+    private static byte[]? Stored(string digest)
+    {
+        var decoded = new byte[SHA256.HashSizeInBytes];
+
+        return Convert.TryFromBase64String(digest, decoded, out var written) && written == decoded.Length ? decoded : null;
     }
 
     /// <summary>Mints a key for a client and returns the secret, which is the only time it exists outside the holder's hands.</summary>

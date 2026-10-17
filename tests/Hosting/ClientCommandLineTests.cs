@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tests.Hosting;
 /// <summary>The operator's whole interface to the keys: what it prints, what it writes and what it refuses.</summary>
 public class ClientCommandLineTests : IDisposable
 {
-    private readonly string _directory = Path.Combine(Path.GetTempPath(), $"snail-cli-{Guid.NewGuid().ToString("N")[..8]}");
+    private readonly string _directory = TestFolder.Create();
 
     public void Dispose()
     {

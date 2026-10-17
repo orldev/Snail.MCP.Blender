@@ -48,6 +48,25 @@ public class BlenderLinksTests
         Assert.Equal(3, addOn.Connections);
     }
 
+    /// <summary>The heartbeat and the progress probe go down the monitor socket: on the control link they would queue behind the render they are asking about.</summary>
+    [Fact]
+    public async Task TheMonitor_AsksForProgressAndPings_OverItsOwnSocket()
+    {
+        await using var addOn = new FakeAddOn(request => Task.FromResult<string?>(
+            new JsonObject { ["id"] = request["id"]?.DeepClone(), ["ok"] = true, ["result"] = new JsonObject { ["command"] = request["command"]?.DeepClone(), ["params"] = request["params"]?.DeepClone() } }.ToJsonString()),
+            isConcurrent: true);
+        await using var links = new BlenderLinks(Link(addOn.Port), NullLogger<BlenderConnection>.Instance);
+        var monitor = new BlenderMonitor(links);
+
+        var progress = await monitor.ProbeAsync();
+        var ping = await monitor.PingAsync(new JsonObject { ["since"] = 4 });
+
+        Assert.Equal(BridgeCommands.Progress.Name, progress.Result!["command"]!.ToString());
+        Assert.Equal(BridgeCommands.Ping.Name, ping.Result!["command"]!.ToString());
+        Assert.Equal(4, ping.Result["params"]!["since"]!.GetValue<int>());
+        Assert.Equal(1, addOn.Connections);
+    }
+
     private static BlenderLinkOptions Link(int port) =>
         new() { Port = port, ConnectTimeoutSeconds = 2, RequestTimeoutSeconds = 5, Agent = "the-server" };
 

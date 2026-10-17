@@ -297,7 +297,7 @@ public class HttpContractTests
 
         public static async Task<HttpServerProcess> StartAsync(string? token, bool waitForHealth = true)
         {
-            var dataDirectory = Path.Combine(Path.GetTempPath(), $"snail-blender-http-{Guid.NewGuid().ToString("N")[..8]}");
+            var dataDirectory = TestFolder.Create();
             var address = new Uri($"http://127.0.0.1:{FreePort()}");
             var start = new ProcessStartInfo
             {

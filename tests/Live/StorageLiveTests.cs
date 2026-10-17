@@ -76,7 +76,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
     [BlenderFact]
     public async Task CommandLine_WithHostTokenFileAndBackend_ServesOnlyThatToken()
     {
-        var tokenFile = Path.Combine(Path.GetTempPath(), $"snail-token-{Guid.NewGuid():N}");
+        var tokenFile = Path.Combine(TestFolder.Create(), "token");
         await File.WriteAllTextAsync(tokenFile, "container-secret\n");
 
         using var blender = await HeadlessBlender.StartAsync(commandLine: ["--host", "127.0.0.1", "--token-file", tokenFile, "--backend", "NONE"]);
@@ -250,7 +250,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
     [BlenderFact]
     public async Task PythonOff_IsTheAddOnsOwnRule_NotOnlyTheServers()
     {
-        var tokenFile = Path.Combine(Path.GetTempPath(), $"snail-token-{Guid.NewGuid():N}");
+        var tokenFile = Path.Combine(TestFolder.Create(), "token");
         await File.WriteAllTextAsync(tokenFile, "closed-secret\n");
 
         using var closed = await HeadlessBlender.StartAsync(commandLine: ["--host", "127.0.0.1", "--token-file", tokenFile, "--backend", "NONE", "--python", "off"]);
@@ -258,7 +258,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
 
         var script = await link.SendAsync(BridgeCommands.Python, new JsonObject { ["code"] = "result = 1" });
         var installer = await link.SendAsync(BridgeCommands.RunOperator, new JsonObject { ["name"] = "preferences.addon_install", ["params"] = new JsonObject { ["filepath"] = "/tmp/x.zip" } });
-        var outside = Path.Combine(Path.GetTempPath(), $"snail-should-not-exist-{Guid.NewGuid():N}.py");
+        var outside = Path.Combine(TestFolder.Create(), "should-not-exist.py");
         var elsewhere = await link.SendAsync(BridgeCommands.FilePut, new JsonObject { ["path"] = outside, ["offset"] = 0, ["data"] = Convert.ToBase64String("x"u8.ToArray()), ["done"] = true });
         var allowed = await link.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Crate" });
 
@@ -275,12 +275,12 @@ public sealed class StorageLiveTests : IAsyncLifetime
     [BlenderFact]
     public async Task PythonOff_ReachesTheBatchWorker_NotOnlyTheBlenderThatWasAsked()
     {
-        var tokenFile = Path.Combine(Path.GetTempPath(), $"snail-token-{Guid.NewGuid():N}");
+        var tokenFile = Path.Combine(TestFolder.Create(), "token");
         await File.WriteAllTextAsync(tokenFile, "closed-secret\n");
 
         using var closed = await HeadlessBlender.StartAsync(commandLine: ["--host", "127.0.0.1", "--token-file", tokenFile, "--backend", "NONE", "--python", "off"]);
         await using var link = new BlenderConnection(new BlenderLinkOptions { Port = closed.Port, Token = "closed-secret", RequestTimeoutSeconds = 120 }, NullLogger<BlenderConnection>.Instance);
-        var written = Path.Combine(Path.GetTempPath(), $"snail-should-not-exist-{Guid.NewGuid():N}.txt");
+        var written = Path.Combine(TestFolder.Create(), "should-not-exist.txt");
         var steps = new JsonArray(new JsonObject
         {
             ["command"] = "python",
@@ -323,12 +323,12 @@ public sealed class StorageLiveTests : IAsyncLifetime
     [BlenderFact]
     public async Task PythonOff_ConfinesEveryPathTheSchemaNames_NotOnlyTransfers()
     {
-        var tokenFile = Path.Combine(Path.GetTempPath(), $"snail-token-{Guid.NewGuid():N}");
+        var tokenFile = Path.Combine(TestFolder.Create(), "token");
         await File.WriteAllTextAsync(tokenFile, "closed-secret\n");
 
         using var closed = await HeadlessBlender.StartAsync(commandLine: ["--host", "127.0.0.1", "--token-file", tokenFile, "--backend", "NONE", "--python", "off"]);
         await using var link = new BlenderConnection(new BlenderLinkOptions { Port = closed.Port, Token = "closed-secret", RequestTimeoutSeconds = 60 }, NullLogger<BlenderConnection>.Instance);
-        var outside = Path.Combine(Path.GetTempPath(), $"snail-should-not-exist-{Guid.NewGuid():N}.obj");
+        var outside = Path.Combine(TestFolder.Create(), "should-not-exist.obj");
 
         await link.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Crate" });
         var away = await link.SendAsync(BridgeCommands.ExportFile, new JsonObject { ["path"] = outside, ["format"] = "obj" });

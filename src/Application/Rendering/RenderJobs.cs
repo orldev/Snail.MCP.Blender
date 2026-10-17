@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Snail.MCP.Blender.Application.Sessions;
 
 namespace Snail.MCP.Blender.Application.Rendering;
@@ -10,7 +11,11 @@ namespace Snail.MCP.Blender.Application.Rendering;
 /// never unpinned.</remarks>
 public sealed class RenderJobs(ClientSessions clients)
 {
-    private readonly Dictionary<ClientSession, HashSet<string>> _inFlight = [];
+    /// <summary>The jobs each client waits for, held weakly: a session this server will not serve again is forgotten with its entry.</summary>
+    /// <remarks>Past the number of names kept a client opens a session per connection, and a table holding those by reference grew for as
+    /// long as the server ran.</remarks>
+    private readonly ConditionalWeakTable<ClientSession, HashSet<string>> _inFlight = [];
+
     private readonly Lock _gate = new();
 
     /// <summary>Every job any client is still waiting for, by id.</summary>
@@ -20,7 +25,9 @@ public sealed class RenderJobs(ClientSessions clients)
         {
             lock (_gate)
             {
-                return [.. _inFlight.Values.SelectMany(jobs => jobs).Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)];
+                var waited = _inFlight.SelectMany(entry => entry.Value);
+
+                return [.. waited.Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal)];
             }
         }
     }
@@ -39,7 +46,7 @@ public sealed class RenderJobs(ClientSessions clients)
 
         lock (_gate)
         {
-            var theirs = _inFlight.TryGetValue(asking, out var known) ? known : _inFlight[asking] = new HashSet<string>(StringComparer.Ordinal);
+            var theirs = _inFlight.TryGetValue(asking, out var known) ? known : new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var job in jobs)
             {
@@ -48,10 +55,12 @@ public sealed class RenderJobs(ClientSessions clients)
 
             if (theirs.Count > 0)
             {
+                _inFlight.AddOrUpdate(asking, theirs);
                 asking.Skills.Pin(Domain.Skills.Farm);
             }
             else
             {
+                _inFlight.Remove(asking);
                 asking.Skills.Unpin(Domain.Skills.Farm);
             }
         }

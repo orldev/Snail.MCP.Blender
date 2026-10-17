@@ -8009,7 +8009,7 @@
           "default": null
         },
         "memoryLimitMb": {
-          "description": "Memory the render may use in MB; 80 percent of system memory otherwise.",
+          "description": "Memory the render may use in MB; 80 percent of what this machine, or the container Blender runs in, allows it otherwise.",
           "type": [
             "integer",
             "null"

@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tests.Application;
 /// <summary>The keys clients are admitted by: minted once, kept as digests, revoked without touching anyone else.</summary>
 public class ClientKeysTests : IDisposable
 {
-    private readonly string _directory = Path.Combine(Path.GetTempPath(), $"snail-keys-{Guid.NewGuid().ToString("N")[..8]}");
+    private readonly string _directory = TestFolder.Create();
 
     public void Dispose()
     {

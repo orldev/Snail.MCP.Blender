@@ -22,8 +22,7 @@ public sealed class TeamLiveTests : IAsyncLifetime
         _blender = await HeadlessBlender.StartAsync();
         _lighting = new BlenderConnection(Link("lighting"), NullLogger<BlenderConnection>.Instance);
         _modeling = new BlenderConnection(Link("modeling"), NullLogger<BlenderConnection>.Instance);
-        _workDirectory = Path.Combine(Path.GetTempPath(), "snail-blender-live", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(_workDirectory);
+        _workDirectory = TestFolder.Create();
     }
 
     private BlenderLinkOptions Link(string agent) => new() { Port = _blender.Port, ConnectTimeoutSeconds = 5, RequestTimeoutSeconds = 120, Agent = agent, TokenFile = _blender.Link.TokenFile };

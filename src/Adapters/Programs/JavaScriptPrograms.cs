@@ -37,7 +37,7 @@ public sealed class JavaScriptPrograms(IBlenderBridge bridge, ServerConfig confi
         var calls = new List<ProgramCall>();
         var log = new List<string>();
         var running = Stopwatch.StartNew();
-        var engine = new Engine(options => options
+        using var engine = new Engine(options => options
             .Strict()
             .LimitMemory(MemoryBytes)
             .TimeoutInterval(timeout)

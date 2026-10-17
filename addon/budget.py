@@ -7,6 +7,7 @@ import time
 import bpy
 
 from .core import _scene, _set_enum, command
+from .memory import available_memory_mb, cgroup_memory_mb
 from .rendering import _timed_render
 from .server import CommandError
 
@@ -80,13 +81,6 @@ def _devices():
     cycles = preferences.preferences
     cycles.get_devices()
     return {"backend": cycles.compute_device_type, "devices": [{"name": device.name, "type": device.type, "use": device.use} for device in cycles.devices]}
-
-
-def _system_memory_mb():
-    try:
-        return os.sysconf("SC_PHYS_PAGES") * os.sysconf("SC_PAGE_SIZE") // 1024 ** 2
-    except (ValueError, OSError, AttributeError):
-        return None
 
 
 def _remove_probes(probes):
@@ -235,7 +229,8 @@ def render_budget(params):
     textures = _texture_budget()
     geometry = _geometry_budget(scene)
     devices = _devices()
-    system_mb = _system_memory_mb()
+    system_mb = available_memory_mb()
+    capped_by_cgroup = cgroup_memory_mb()
     probe = _probe(scene, params["probe"]) if isinstance(params.get("probe"), dict) and params["probe"].get("enabled", True) else None
     estimate_mb, estimate_from = _estimate(scene, textures, geometry, probe)
     limit_mb = params.get("memory_limit_mb") or (int(system_mb * 0.8) if system_mb else None)
@@ -260,6 +255,7 @@ def render_budget(params):
         "geometry": geometry,
         "devices": devices,
         "system_memory_mb": system_mb,
+        "memory_from": "the cgroup this Blender runs in" if capped_by_cgroup is not None and capped_by_cgroup == system_mb else "the machine",
         "probe": probe,
         "estimate_mb": round(estimate_mb, 1),
         "estimate_from": estimate_from,

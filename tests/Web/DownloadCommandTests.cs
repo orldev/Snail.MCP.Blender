@@ -19,12 +19,11 @@ public sealed class DownloadCommandTests : IAsyncLifetime
         },
     };
 
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"snail-download-{Guid.NewGuid():N}");
+    private readonly string _folder = TestFolder.Create();
     private WebApplication _app = null!;
 
     public async Task InitializeAsync()
     {
-        Directory.CreateDirectory(_folder);
         _app = await InProcessHttpServer.StartAsync(_volume.AddOn.Port);
     }
 

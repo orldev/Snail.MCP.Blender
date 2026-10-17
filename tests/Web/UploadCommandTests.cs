@@ -10,12 +10,11 @@ namespace Snail.MCP.Blender.Tests.Web;
 public sealed class UploadCommandTests : IAsyncLifetime
 {
     private readonly InMemoryVolume _volume = new();
-    private readonly string _folder = Path.Combine(Path.GetTempPath(), $"snail-upload-{Guid.NewGuid():N}");
+    private readonly string _folder = TestFolder.Create();
     private WebApplication _app = null!;
 
     public async Task InitializeAsync()
     {
-        Directory.CreateDirectory(_folder);
         _app = await InProcessHttpServer.StartAsync(_volume.AddOn.Port);
     }
 

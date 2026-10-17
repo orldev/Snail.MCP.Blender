@@ -23,7 +23,7 @@ public static class InProcessHttpServer
             ["Bridge:Port"] = bridgePort.ToString(),
             ["Bridge:Token"] = bridgeTokenFile is null ? "add-on" : null,
             ["Bridge:TokenFile"] = bridgeTokenFile,
-            ["DataDirectory"] = Path.Combine(Path.GetTempPath(), $"snail-http-{Guid.NewGuid():N}"),
+            ["DataDirectory"] = TestFolder.Create(),
         }).Build();
         builder.ConfigureHttpServer(settings);
         builder.Logging.ClearProviders();

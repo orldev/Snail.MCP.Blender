@@ -17,7 +17,7 @@ public sealed class BudgetTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
         [Description("Probe render at low resolution to time the frame and measure peak memory; omit to skip.")] Probe? probe = null,
         [Description("Limits to apply now.")] Limits? apply = null,
         [Description("Prepare the file for a farm.")] FarmPack? packForFarm = null,
-        [Description("Memory the render may use in MB; 80 percent of system memory otherwise.")] int? memoryLimitMb = null,
+        [Description("Memory the render may use in MB; 80 percent of what this machine, or the container Blender runs in, allows it otherwise.")] int? memoryLimitMb = null,
         [Description(ToolDescriptions.Parameters.Scene)] string? scene = null,
         [Description(ToolDescriptions.Parameters.TimeoutSeconds)] int timeoutSeconds = 300,
         CancellationToken cancellationToken = default) =>
