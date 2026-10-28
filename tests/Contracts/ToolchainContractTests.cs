@@ -27,24 +27,28 @@ public partial class ToolchainContractTests
             $"the server is built with SDK {wanted} and runs on aspnet:{runs.Groups["version"].Value}, a different .NET");
     }
 
-    /// <summary>Dependabot moves the two pins in one pull request, which is the only way either of them can pass.</summary>
+    /// <summary>Dependabot leaves the SDK band to the standard and follows the build image only inside it.</summary>
+    /// <remarks>A multi-ecosystem group meant to move global.json and the image together brought a pull request that moved global.json
+    /// alone. The band is shared by every Snail repository and raised by hand in Snail.Sdk first, so Dependabot does not track it.</remarks>
     [Fact]
-    public void Dependabot_MovesGlobalJsonAndTheServerImageTogether()
+    public void Dependabot_FollowsTheBuildImageOnlyInsideTheSdkBand()
     {
+        var wanted = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "global.json")))!["sdk"]!["version"]!.GetValue<string>();
         var entries = File.ReadAllText(Path.Combine(Repository.Root, ".github", "dependabot.yml"))
             .Split("\n  - package-ecosystem:", StringSplitOptions.None)
             .Skip(1)
             .ToList();
-        var sdk = entries.Single(entry => entry.TrimStart().StartsWith("dotnet-sdk", StringComparison.Ordinal));
         var image = entries.Single(entry => entry.TrimStart().StartsWith("docker", StringComparison.Ordinal) && entry.Contains("/deploy/mcp", StringComparison.Ordinal));
+        var ceiling = SdkCeiling().Match(image);
 
-        Assert.True(Group(sdk) is { } group && group == Group(image), "the dotnet-sdk and the /deploy/mcp docker updates are not in one multi-ecosystem-group");
+        Assert.DoesNotContain(entries, entry => entry.TrimStart().StartsWith("dotnet-sdk", StringComparison.Ordinal));
+        Assert.True(ceiling.Success, "the /deploy/mcp docker updates do not cap the dotnet/sdk image");
+        Assert.True(ceiling.Groups["version"].Value == NextBand(wanted), $"global.json is on SDK {wanted}, and the image is capped at {ceiling.Groups["version"].Value} instead of {NextBand(wanted)}");
     }
 
     private static string MajorMinor(string version) => string.Join('.', version.Split('.').Take(2));
 
-    private static string? Group(string entry) =>
-        GroupEntry().Match(entry) is { Success: true } found ? found.Groups["name"].Value : null;
+    private static string NextBand(string version) => $"{MajorMinor(version)}.{(int.Parse(version.Split('.')[2], System.Globalization.CultureInfo.InvariantCulture) / 100 + 1) * 100}";
 
     [GeneratedRegex(@"^FROM mcr\.microsoft\.com/dotnet/sdk:(?<version>\d+\.\d+\.\d+)", RegexOptions.Multiline)]
     private static partial Regex SdkImage();
@@ -52,6 +56,6 @@ public partial class ToolchainContractTests
     [GeneratedRegex(@"^FROM mcr\.microsoft\.com/dotnet/aspnet:(?<version>\d+\.\d+\.\d+)", RegexOptions.Multiline)]
     private static partial Regex RuntimeImage();
 
-    [GeneratedRegex(@"multi-ecosystem-group:\s*(?<name>[A-Za-z0-9_-]+)")]
-    private static partial Regex GroupEntry();
+    [GeneratedRegex(@"dependency-name:\s*""\*dotnet/sdk""\s*\n\s*versions:\s*\["">=\s*(?<version>\d+\.\d+\.\d+)""\]")]
+    private static partial Regex SdkCeiling();
 }
