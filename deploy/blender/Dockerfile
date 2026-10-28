@@ -4,8 +4,8 @@
 
 FROM ubuntu:24.04
 
-ARG BLENDER_VERSION=5.2.1
-ARG BLENDER_SHA256=a31f524fa99a527d3d52b7f5aaa68c34e1a19d5a1c9473f79c5cc610fd5b10e9
+ARG BLENDER_VERSION=5.2.3
+ARG BLENDER_SHA256=78486c018b4443efe5e75ab54c290ed8c15abafd249b862c2c9ce2530a918eec
 # download.blender.org answers scripted downloads with 403; the mirrors carry the same files and the checksum proves it.
 ARG BLENDER_MIRROR=https://mirrors.ocf.berkeley.edu/blender/release
 

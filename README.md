@@ -192,7 +192,7 @@ dotnet msbuild src/Snail.MCP.Blender.csproj -t:SnailSite -p:SnailSiteServe=true 
 ```
 
 GitHub Actions: `ci.yml` builds and tests every push, lints the add-on, builds the site, runs the live tests against
-Blender 5.2.1 and builds both images when their sources change. A release is a tag, `git tag v0.2.0 && git push --tags`,
+Blender 5.2.3 and builds both images when their sources change. A release is a tag, `git tag v0.2.0 && git push --tags`,
 and the checkout holds only a placeholder version, `0.1.0` in the project and `.mcp/server.json`: `publish.yml` writes
 the version of the tag into the assembly, the package and its registry manifest and the image tags. It repeats the whole CI, pushes both images to
 GHCR under their version, starts the pair to see that the server reaches Blender, then sends the package to NuGet, and

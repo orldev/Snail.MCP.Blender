@@ -7,7 +7,7 @@ and the server has pages to look through them and clean them.
 
 | Image | What it holds |
 |---|---|
-| `ghcr.io/orldev/s3l-blender:<blender>-<add-on>` | Ubuntu 24.04, Blender (5.2.1, checked by SHA-256), the Snail Bridge add-on; starts `blender -b -c snail_bridge` |
+| `ghcr.io/orldev/s3l-blender:<blender>-<add-on>` | Ubuntu 24.04, Blender (5.2.3, checked by SHA-256), the Snail Bridge add-on; starts `blender -b -c snail_bridge` |
 | `ghcr.io/orldev/s3l-blender-mcp:<version>` | the server on ASP.NET, in HTTP mode on port 8080, with its pages |
 
 The Blender tag names both versions because the add-on is inside it: the pair in `compose.yml` is the pair
@@ -74,7 +74,7 @@ foreach ($name in 'bridge', 'client') {
 | Setting | Default | Meaning |
 |---|---|---|
 | `STACK_NAME` | `s3l-blender` | The compose project, and with it the names of the volumes and the containers (`<name>` and `<name>-mcp`); see [A second stack](#a-second-stack-on-the-same-machine) |
-| `BLENDER_TAG` | `latest` | The Blender image: `latest`, or a release as `5.2.1-X.Y.Z` |
+| `BLENDER_TAG` | `latest` | The Blender image: `latest`, or a release as `5.2.3-X.Y.Z` |
 | `MCP_TAG` | `latest` | The server image: `latest`, or a release as `X.Y.Z`; pin both to the same release |
 | `BLENDER_BACKEND` | `OPTIX` | The Cycles compute backend Blender enables at start: `OPTIX`, `CUDA`, `NONE` for the CPU; `CUDA` on Docker Desktop. A scene renders on it once its device is GPU |
 | `PUBLIC_URL` | `https://blender.example.com` | The address clients reach the server at; links to files are built on it |
@@ -91,7 +91,7 @@ admitted by live, so `clients add` survives an update of the stack.
 ## 2. Images
 
 A tag `vX.Y.Z` in the repository publishes both images to GHCR once the whole CI has passed: the server as `X.Y.Z` and
-Blender as `5.2.1-X.Y.Z`. The pair is then started and asked whether the server reaches Blender, the package goes to
+Blender as `5.2.3-X.Y.Z`. The pair is then started and asked whether the server reaches Blender, the package goes to
 NuGet, and only after that does `latest` move to this release, and only for one without a suffix. The images are
 private. Log in once with a token that has `read:packages`:
 
