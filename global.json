@@ -6,7 +6,7 @@
   "//rollForward": "latestPatch keeps 10.0.3xx and takes its fixes; it refuses 10.0.4xx, which is exactly the move that would change the analyzers. The band is raised deliberately, here first, with a run of every suite, rather than by whoever updates their SDK first.",
 
   "sdk": {
-    "version": "10.0.302",
+    "version": "10.0.403",
     "rollForward": "latestPatch",
     "allowPrerelease": false
   },
