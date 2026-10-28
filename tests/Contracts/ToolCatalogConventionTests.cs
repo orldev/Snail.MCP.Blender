@@ -120,6 +120,16 @@ public partial class ToolCatalogConventionTests
         Assert.True(dangling.Count == 0, $"guidance names tools that do not exist: {string.Join(", ", dangling)}");
     }
 
+    /// <summary>The instructions fit what a client keeps of them; past the limit the client cuts the tail without a word, and the tail was
+    /// how to reach files over HTTP.</summary>
+    [Fact]
+    public void ServerGuidance_FitsWhatAClientKeeps()
+    {
+        var length = ServerGuidance.Instructions.Length;
+
+        Assert.True(length <= ServerGuidance.ClientLimit, $"the guidance is {length} characters and a client keeps {ServerGuidance.ClientLimit}");
+    }
+
     /// <summary>Every tool class has a family in docs/tools.json, the families of the reference the build writes, or its tools reach no page
     /// of their own: run_program was written, registered and tested before anyone noticed the reference had never heard of it.</summary>
     [Fact]

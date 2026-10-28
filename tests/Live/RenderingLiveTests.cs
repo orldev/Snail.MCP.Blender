@@ -83,6 +83,20 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         Assert.Equal("BadRequest", climbing.Error!.Type);
     }
 
+    /// <summary>A path from the open file, the way blender_open_project sets the output, lands beside that file: the handler made the folder
+    /// from the raw string, which the operating system reads from the root.</summary>
+    [BlenderFact]
+    public async Task RenderImage_ToAPathFromTheOpenFile_LandsBesideThatFile()
+    {
+        await Send(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "EEVEE", ["resolution_x"] = 32, ["resolution_y"] = 32, ["samples"] = 1 });
+        var project = Path.Combine(_workDirectory, "project");
+        await Send(BridgeCommands.SaveFile, new JsonObject { ["path"] = Path.Combine(project, "project.blend") });
+
+        var rendered = await Send(BridgeCommands.RenderImage, new JsonObject { ["path"] = "//renders/still.png", ["preview"] = false }, TimeSpan.FromSeconds(120));
+
+        Assert.True(File.Exists(Path.Combine(project, "renders", "still.png")), rendered["path"]!.ToString());
+    }
+
     [BlenderFact]
     public async Task Progress_OnTheMonitorLink_ReportsFramesWhileTheMainLinkRenders()
     {

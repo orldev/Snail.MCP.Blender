@@ -148,6 +148,26 @@ public class HttpContractTests
         Assert.Contains("does not open it", written.Content.OfType<TextContentBlock>().First().Text, StringComparison.Ordinal);
     }
 
+    /// <summary>A call that spells a parameter wrong is told which one, instead of being told that something went wrong.</summary>
+    /// <remarks>The three names here are the ones models really sent — query for intent, program for code, path for remotePath — and each cost
+    /// a round trip, because binding the call threw inside the SDK and the caller read only "An error occurred invoking 'find_tool'".</remarks>
+    [Fact]
+    public async Task ACallWithTheWrongParameterName_IsToldWhichNameTheToolTakes()
+    {
+        await using var server = await HttpServerProcess.StartAsync(Token);
+        await using var client = await ClientAsync(server, agent: "lighting");
+
+        var guessed = await client.CallToolAsync("find_tool", new Dictionary<string, object?> { ["query"] = "render four frames in the background" });
+        var right = await client.CallToolAsync("find_tool", new Dictionary<string, object?> { ["intent"] = "render four frames in the background" });
+        var answer = guessed.Content.OfType<TextContentBlock>().First().Text;
+
+        Assert.True(guessed.IsError);
+        Assert.Contains("'intent'", answer, StringComparison.Ordinal);
+        Assert.Contains("takes no 'query'", answer, StringComparison.Ordinal);
+        Assert.DoesNotContain("An error occurred invoking", answer, StringComparison.Ordinal);
+        Assert.NotEqual(true, right.IsError);
+    }
+
     /// <summary>Revoking a key turns its holder away at once: the list is read again when it changes, because a key is revoked from a command
     /// line while the server it admits is running.</summary>
     [Fact]

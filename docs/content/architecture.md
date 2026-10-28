@@ -194,7 +194,8 @@ render nor holds one up. Chunks are sized by the line limits — 16 MB a request
 chunk carries 8 MB up and 2 MB down, and a file lands under a partial name and takes its own only when the SHA-256 computed at the far end matches, so an
 interrupted transfer leaves nothing that looks whole. A relative path resolves inside `files` and cannot climb out — in a
 transfer and in every command that takes a path, so a render sent to `renders/shot.png` lands where the volume keeps it, not
-in Blender's working folder; a path starting with `//` stays Blender's own, relative to the `.blend`.
+in Blender's working folder; a path starting with `//` is read from the folder of the open `.blend`, as Blender reads it, and
+is refused while the file has never been saved.
 
 The folder the client starts the server in is the project, and its twin on Blender's machine is the add-on's
 `files/<its name>`: an upload from the project lands in the twin at the same relative path, and a download from the
@@ -262,9 +263,11 @@ client's folders, so it has no project folder; a piece of work is a folder under
 walks through the set-up.
 
 A client that opens with `initialize` keeps a session, and the session carries `tools/list_changed` when a skill loads.
-A client of the sessionless protocol revision is served per request and holds no stream of its own, so the tools that
-load or unload a skill — `blender_enable_skill`, `blender_disable_skill`, `find_tool` — also send the notice
-through the server bound to the request, into the reply the client is already reading. Either way every session gets options of its own from the SDK, and with them a client of its own here: a tool
+A client of the sessionless protocol revision is served per request and has no session to be notified on, so the tools
+that load or unload a skill — `blender_enable_skill`, `blender_disable_skill`, `find_tool` — also send the notice
+through the server bound to the request, into the reply the client is already reading. The listen stream such a client
+opens is acknowledged with no notifications and held open until the client closes it: closed at once, Claude Code took
+its end for the end of the connection and lost the tool list it was still fetching. Either way every session gets options of its own from the SDK, and with them a client of its own here: a tool
 collection holding the always-on tools and nothing else, and a name.
 
 A client is named by the key it presents, not by anything it writes for itself: that name is what the add-on's leases

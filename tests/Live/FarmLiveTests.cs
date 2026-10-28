@@ -107,6 +107,42 @@ public sealed class FarmLiveTests : IAsyncLifetime
         Assert.Equal(["kb-19@2x_0001.png"], Directory.GetFiles(Path.Combine(_workDirectory, "named")).Select(Path.GetFileName));
     }
 
+    /// <summary>A path that starts with // is read from the folder of the open file, as Blender reads it, and the frames land beside the project.</summary>
+    /// <remarks>blender_open_project sets the scene's output to //renders/, so a model writes job paths the same way. The job used to create
+    /// the folder from the string as it stood, and on the production server //../renders came back as a raw PermissionError; had the folder
+    /// been made, the worker would still have read // from its own copy of the scene in the job folder.</remarks>
+    [BlenderFact]
+    public async Task RenderJob_GivenAPathFromTheOpenFile_WritesBesideThatFile()
+    {
+        await Send(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "EEVEE", ["samples"] = 1 });
+        var project = Path.Combine(_workDirectory, "project");
+        await Send(BridgeCommands.SaveFile, new JsonObject { ["path"] = Path.Combine(project, "scenes", "shot.blend") });
+        var jobs = Path.Combine(_workDirectory, "jobs");
+
+        var started = await Send(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = "//../renders/shot_####", ["frames"] = "1", ["directory"] = jobs, ["file_format"] = "PNG", ["resolution_x"] = 32, ["resolution_y"] = 32 }, TimeSpan.FromSeconds(120));
+        JsonNode status = started;
+        for (var attempt = 0; attempt < 90 && status["state"]!.ToString() is "queued" or "running"; attempt++)
+        {
+            await Task.Delay(1000);
+            status = await Send(BridgeCommands.RenderJobStatus, new JsonObject { ["id"] = started["id"]!.ToString(), ["directory"] = jobs });
+        }
+
+        Assert.Equal("finished", status["state"]!.ToString());
+        Assert.True(File.Exists(Path.Combine(project, "renders", "shot_0001.png")), status.ToJsonString());
+    }
+
+    /// <summary>A file never saved has no folder for // to start from; the job says so rather than writing somewhere nobody chose.</summary>
+    [BlenderFact]
+    public async Task RenderJob_GivenAPathFromAFileNeverSaved_IsRefusedWithWhatToDo()
+    {
+        var jobs = Path.Combine(_workDirectory, "jobs");
+
+        var refused = await _link.SendAsync(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = "//renders/shot_####", ["frames"] = "1", ["directory"] = jobs }, TimeSpan.FromSeconds(60));
+
+        Assert.Equal("BadRequest", refused.Error?.Type);
+        Assert.Contains("never been saved", refused.Error?.Message, StringComparison.Ordinal);
+    }
+
     /// <summary>Cancel leaves a marker the worker reads between frames and signals it to break: the job stops of its own accord, writes its own last status, and does not flap back to running.</summary>
     [BlenderFact]
     public async Task RenderJob_Cancelled_StopsAndKeepsWrittenFrames()

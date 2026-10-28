@@ -11,7 +11,10 @@ import binascii
 import contextlib
 import hashlib
 import os
+import threading
 import time
+
+import bpy
 
 from . import catalog, state
 from .core import GATES, immediate_command
@@ -101,14 +104,36 @@ def anchor(name, params, agent=None):
     Handlers pass a path to Blender as they get it, and Blender reads a relative one against its working folder — in a container,
     a folder outside the data volume, where a render lands and is lost with the container while the policy, which reads the same
     path inside the files area, has already let it through. Resolved here, once, for every parameter commands.json marks as a path:
-    a path with an area of its own is left to the command, and one starting with // stays Blender's own, relative to the .blend.
+    a path with an area of its own is left to the command, and one starting with // is read from the folder of the open file.
     """
     if not isinstance(params, dict) or params.get("area"):
         return
     for key in catalog.paths_of(name):
         value = params.get(key)
-        if isinstance(value, str) and value.strip() and not value.startswith("//") and not os.path.isabs(os.path.expanduser(value.strip())):
+        if not isinstance(value, str) or not value.strip():
+            continue
+        if value.startswith("//"):
+            params[key] = _from_the_open_file(key, value)
+        elif not os.path.isabs(os.path.expanduser(value.strip())):
             params[key] = _resolve(value)
+
+
+def _from_the_open_file(key, value):
+    """A path written from the folder of the open file, //renders/shot_####, made absolute the way Blender reads it.
+
+    It used to stay as written for Blender to read, but the handlers make the folder first, and the operating system reads // as the
+    root: on the production server //../renders came back as a raw PermissionError. A render job is worse off still, its worker opening a
+    copy of the scene in the job's own folder, where // names another place. The file channel answers off the main thread, where the
+    open file is not to be read, and its commands keep the path as written.
+    """
+    if threading.current_thread() is not threading.main_thread():
+        return value
+    if not bpy.data.filepath:
+        raise CommandError("BadRequest", f"'{key}' starts with //, which Blender reads from the folder of the open file, and this file has "
+                                         f"never been saved: '{value}'",
+                           {"hint": "save the file with blender_save_file first, or pass a path that does not start with //"})
+    absolute = os.path.normpath(bpy.path.abspath(value))
+    return absolute + os.sep if value.endswith(("/", "\\")) else absolute
 
 
 def _digest(path):

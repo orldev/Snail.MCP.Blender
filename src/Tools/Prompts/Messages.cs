@@ -187,6 +187,9 @@ public static class Messages
 
     public const string NoRenderYetHint = "Call blender_render_image, blender_render_object, blender_viewport_capture or blender_inspect_image first.";
 
+    public const string ArgumentsHint =
+        "The names are in the tool's own schema, which tools/list carries and find_tool repeats for every tool it answers with; send the call again with them.";
+
     public const string ResolutionHint = "Keep both edges at 4096 or below; render tiles or upscale outside Blender for more.";
 
     public static string UnknownSkill(string name) => $"There is no skill named '{name}'.";
