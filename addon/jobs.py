@@ -269,10 +269,10 @@ def _advance(root):
         directory = os.path.join(root, entry)
         status = _read_status(directory)
         spec = _read_spec(directory)
+        if spec is not None and not _retriable(spec, status):
+            _forget_the_scene(entry, directory, status)
         if spec is None or entry in running:
             continue
-        if not _retriable(spec, status):
-            _forget_the_scene(entry, directory, status)
         if status.get("state") == "queued" and not status.get("pid"):
             queued.append((-(spec.get("priority") or 0), entry, directory, spec))
         elif _retriable(spec, status) and (status.get("state") == "failed" or _crashed(entry, directory, status)):
@@ -322,7 +322,12 @@ def _retriable(spec, status):
 
 def _forget_the_scene(entry, directory, status):
     """A job that has ended keeps its status and its log, and loses the copy of the file it rendered: that copy is the whole scene, tens of
-    megabytes a job, and nothing reads it again — a job that may still be retried is not one of these, and is asked about first."""
+    megabytes a job, and nothing reads it again — a job that may still be retried is not one of these, and is asked about first.
+
+    The worker writes its last status before its process exits, and a pass that counted a job as running while its process wound down
+    passed over it: on Linux the copy outlived the reply that said "finished", and stayed until something asked about the queue again.
+    An ended status is the worker's last word, so the copy goes on the pass that reads it.
+    """
     if status.get("state") not in ENDED:
         return
     blend = os.path.join(directory, "scene.blend")
