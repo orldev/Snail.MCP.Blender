@@ -37,7 +37,7 @@ public class ToolScopesTests
     {
         var (clients, serving) = Access.Serving("modeling", Scopes.Read, Scopes.Write, Scopes.Farm);
         using var _ = serving;
-        var tools = new TeamTools(_bridge, new ServerConfig(), Advice(), Access.Scopes, clients);
+        var tools = new TeamTools(_bridge, new ServerConfig(), Advice(), Access.Scopes, clients, TestJobs.AddOn(_bridge));
 
         var refused = await tools.BatchAsync([new JsonObject { ["command"] = "delete_objects", ["params"] = new JsonObject { ["names"] = new JsonArray("Cube") } }]);
 

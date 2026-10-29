@@ -229,12 +229,13 @@ public static partial class ToolDescriptions
         public const string Batch =
             "Runs a list of bridge commands in a separate headless Blender on a copy of the file (or a given .blend) and " +
             "saves the result to a .blend: parallel work that does not touch this Blender. Link the output back with " +
-            "blender_append_assets. Returns the batch id; poll blender_batch_status.";
+            "blender_append_assets. Answers when the batch ends within `wait` seconds, with its steps, output and log; a longer " +
+            "batch answers with the job running — read its resource (job://blender/batch/<id>) for where it stands, or wait on it.";
 
-        /// <summary><c>blender_batch_status</c></summary>
-        public const string BatchStatus =
-            "Progress of a batch: state, how many steps finished and the last 20 with their results or errors, the output file and " +
-            "the log tail. Without an id, lists recent batches.";
+        /// <summary><c>blender_batches</c></summary>
+        public const string Batches =
+            "The recent batches the add-on holds, newest first: each one's state, steps finished of total, output file and log " +
+            "tail, and which are still running. One batch's progress is its resource, job://blender/batch/<id>.";
     }
 
     /// <summary><c>FileTools</c>.</summary>

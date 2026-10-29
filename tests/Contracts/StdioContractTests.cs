@@ -6,6 +6,8 @@ using Snail.MCP.Blender.Application.Skills;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting.Jobs;
+using Snail.Sdk.Mcp.JobClient;
 using Snail.Sdk.Mcp.Testing;
 
 namespace Snail.MCP.Blender.Tests.Contracts;
@@ -113,6 +115,40 @@ public class StdioContractTests
 
         Assert.Equal(0, exit);
         Assert.All(session.StdoutLines, line => Assert.Equal("2.0", session.ParseOrFail(line).GetProperty("jsonrpc").GetString()));
+    }
+
+    /// <summary>A render is a job the client waits for by being told: started with no wait, awaited by its resource, answered with the add-on's last word on it.</summary>
+    [Fact]
+    public async Task RenderJob_AsAJob_IsAwaitedOverStdio()
+    {
+        var asked = 0;
+        await using var addOn = new FakeAddOn(request => Task.FromResult<string?>(new JsonObject
+        {
+            ["id"] = request["id"]?.DeepClone(),
+            ["ok"] = true,
+            ["result"] = request["command"]?.GetValue<string>() switch
+            {
+                "render_job" => new JsonObject { ["id"] = "job-7", ["state"] = "queued", ["frames_done"] = 0, ["frames_total"] = 2 },
+                "render_job_status" => new JsonObject { ["id"] = "job-7", ["state"] = ++asked < 2 ? "running" : "finished", ["frames_done"] = asked < 2 ? 1 : 2, ["frames_total"] = 2, ["files"] = new JsonArray("/renders/a_0001.png") },
+                _ => new JsonObject { ["tools"] = new JsonArray() },
+            },
+        }.ToJsonString()));
+        var variables = new Dictionary<string, string?>
+        {
+            ["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = TestFolder.Create(),
+            ["SNAIL_MCP_BLENDER_IDLE_TIMEOUT_MINUTES"] = "0",
+            ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = addOn.Port.ToString(),
+        };
+        await using var client = await ServerProgram.StartAsync("Snail.MCP.Blender", "SNAIL_BLENDER_SERVER", variables);
+        await client.CallToolAsync("blender_enable_skill", new Dictionary<string, object?> { ["name"] = "farm" });
+
+        var report = await client.CallJobAsync("blender_render_job", new Dictionary<string, object?> { ["outputPath"] = "/renders/a_####" }).WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.StartsWith("job://blender/render/", report.Uri, StringComparison.Ordinal);
+        Assert.Equal(JobState.Succeeded, report.State);
+        Assert.Equal("finished", report.Result!.Value.GetProperty("state").GetString());
+        Assert.Equal(2, report.Result.Value.GetProperty("frames_done").GetInt32());
+        Assert.True(asked >= 2, $"the server asked the add-on {asked} times");
     }
 
     /// <summary>The picture of a capture reaches the client as an image block whose data is the base64 text: a unit test over the SDK types once passed while a real client rejected the bytes, so the check runs over the wire.</summary>

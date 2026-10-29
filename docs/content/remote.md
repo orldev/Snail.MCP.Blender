@@ -183,7 +183,7 @@ there. Every path a tool takes is a path on that machine.
   `--backend`. A fresh machine starts at `NONE`, which renders on the CPU; render
   jobs carry the choice to their worker Blender, which would otherwise read only its own saved preferences.
 - **Renders.** `blender_render_animation` renders in a second Blender on the remote machine by default and returns a
-  job id; `blender_render_job_status` follows it, `blender_render_job_cancel` stops it, and `blender_download` fetches
+  job whose resource `job://blender/render/<id>` follows it; `blender_render_job_cancel` stops it, and `blender_download` fetches
   the frames. Jobs, batches and snapshots live in the add-on's data directory there.
 - **Many steps.** Every call is a round trip over the tunnel, so builds belong in `run_tools`: one call for hundreds
   of steps.

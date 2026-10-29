@@ -38,7 +38,8 @@ public static class ServerGuidance
         holds only loaded tools, so ask find_tool before concluding that something has no tool; what it answers can be sent
         through run_program without loading anything.
         Renders inside a tool call block Blender until they finish; for anything longer than a preview use blender_render_job
-        or blender_render_animation, which render in a second Blender process, and follow them with blender_render_job_status.
+        or blender_render_animation, which render in a second Blender process and answer when done or, past their wait, with
+        the job whose resource (job://blender/render/<id>) says where it stands; blender_render_jobs lists them.
         blender_render_check before a long render reports what would make it fail or look wrong. Renders and captures come
         back with a small picture and exposure statistics: look at them before judging.
         Several agents in one Blender: blender_journal shows who changed what, blender_lease claims objects for an agent,

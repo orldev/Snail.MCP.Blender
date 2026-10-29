@@ -6,6 +6,10 @@ public static partial class ToolDescriptions
     /// <summary>Parameter descriptions shared by several tools.</summary>
     public static class Parameters
     {
+        /// <summary>The wait of a tool that starts a job.</summary>
+        public const string Wait =
+            "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.";
+
         public const string ObjectName = "Name of the object as shown in the outliner.";
 
         public const string ObjectType = "Blender object type: MESH, CURVE, SURFACE, META, FONT, ARMATURE, LATTICE, EMPTY, LIGHT, CAMERA, SPEAKER, GREASEPENCIL, VOLUME, POINTCLOUD.";

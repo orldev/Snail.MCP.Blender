@@ -45,6 +45,20 @@ public static class ToolResponse
         StructuredContent = Element(data),
     };
 
+    /// <summary>A job's report as a tool result: where the job stands, its result once it ended, and a note when the tool has one.</summary>
+    /// <remarks>The report's own JSON is the text, so a client reads the same shape here and in the job's resource; the note rides beside it.</remarks>
+    public static CallToolResult Job(Snail.Sdk.Mcp.Hosting.Jobs.JobReport report, string? note = null)
+    {
+        var data = JsonNode.Parse(report.ToJson())!.AsObject();
+
+        if (note is not null)
+        {
+            data["note"] = note;
+        }
+
+        return Success(data);
+    }
+
     /// <summary>A failed result: flagged as an error for the protocol, explained with a hint for the model.</summary>
     public static CallToolResult Failure(string message, string? hint = null, JsonNode? data = null) => new()
     {

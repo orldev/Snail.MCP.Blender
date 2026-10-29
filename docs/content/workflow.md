@@ -126,7 +126,7 @@ keeps its scene copy and log in `jobs/<job-id>/`.
    `blender_snapshot` before anything risky.
 5. **Look** — `blender_render_image` for short previews (it blocks Blender until it finishes and cannot be stopped);
    `blender_render_animation`, which renders as a background job by default, or `blender_render_job` for finals, with
-   `blender_render_job_status` to follow and `blender_render_job_cancel` to stop. On a remote NVIDIA machine
+   the job's resource `job://blender/render/<id>` to follow and `blender_render_job_cancel` to stop. On a remote NVIDIA machine
    `blender_set_cycles` with `backend: OPTIX` puts the GPU to work.
 6. **Save** — `blender_save_file`. On a remote service this is what survives a restart.
 7. **Bring the results home** — `blender_download` of the twin's `renders` and `.blend`, or of the whole twin; without a

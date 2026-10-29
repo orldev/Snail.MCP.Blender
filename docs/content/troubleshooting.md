@@ -244,8 +244,8 @@ already on disk.
 `blender_render_image` blocks Blender and the link until it finishes, and so does `blender_render_animation`
 with `background: false`; the client gives up after `timeoutSeconds`. For anything beyond a preview render in the
 background — `blender_render_job`, or `blender_render_animation`, which does it by default: the file is saved as a
-copy and a second Blender renders it, while this one keeps answering. Poll
-`blender_render_job_status` for frames done, the estimated time left and the files written; stop it with
+copy and a second Blender renders it, while this one keeps answering. The job answers when it ends within its `wait`, or
+as its resource `job://blender/render/<id>`, which carries frames done, the estimated time left and the files written; stop it with
 `blender_render_job_cancel`. Run `blender_render_check` first: it names the missing camera, texture or
 codec before an hour of rendering does.
 

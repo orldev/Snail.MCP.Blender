@@ -16,8 +16,8 @@ dependency runs one way and nothing is edited twice.
 ## Batches
 
 `blender_batch` runs a list of bridge commands in a headless Blender on a copy of the file and saves a
-`.blend`. The calling Blender stays free; several batches run at once. `blender_batch_status` reports
-how many steps finished and the last 20 with their results or errors. Batches are how sub-agents that share one server still work in
+`.blend`. The calling Blender stays free; several batches run at once. `blender_batch` answers when the batch ends within its `wait`, or with the job whose resource
+`job://blender/batch/<id>` reports how many steps finished and the last 20 with their results or errors; `blender_batches` lists them. Batches are how sub-agents that share one server still work in
 parallel: they plan, submit a batch, and the coordinator links the output.
 
 ## Journal and leases

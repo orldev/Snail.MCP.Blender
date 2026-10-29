@@ -19,8 +19,8 @@ public static class Messages
         "blender_render_animation does that by default.";
 
     public const string BackgroundRenderNote =
-        "Rendering in a second Blender: this one stays free, blender_render_job_status follows the frames and blender_render_job_cancel " +
-        "stops it. Pass background=false to render here instead, which blocks Blender and cannot be cancelled.";
+        "Rendering in a second Blender: this one stays free, the job's resource shows the frames as they land and " +
+        "blender_render_job_cancel stops it. Pass background=false to render here instead, which blocks Blender and cannot be cancelled.";
 
     /// <summary>What a busy Blender is doing, said where the model asks why nothing answers.</summary>
     public static string BusyWith(string command) =>
@@ -53,7 +53,7 @@ public static class Messages
         "The add-on has a token set in its preferences (Snail Bridge → Token); set SNAIL_MCP_BLENDER_BRIDGE__TOKEN on this server to the same value.";
 
     public const string PollFailedHint =
-        "The operator's poll rejected the context: check the mode, the active object and the selection, " +
+        "The operator refused the context it was given: check the mode, the active object and the selection, " +
         "or pass area=VIEW_3D for editors that need a 3D viewport.";
 
     public static readonly IReadOnlyList<string> InstallSteps =

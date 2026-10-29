@@ -169,7 +169,7 @@ public class BaseToolsTests
     [Fact]
     public async Task Batch_LeavesTheDirectoryToTheAddOn_AndLeaseDefaultsToList()
     {
-        var tools = new TeamTools(_bridge, new ServerConfig { DataDirectory = "/data/snail" }, Advice, Access.Scopes, Access.Sessions());
+        var tools = new TeamTools(_bridge, new ServerConfig { DataDirectory = "/data/snail" }, Advice, Access.Scopes, Access.Sessions(), TestJobs.AddOn(_bridge));
 
         (await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } }), output: "/out/crate.blend")).Text();
         (await tools.LeaseAsync()).Text();
@@ -216,7 +216,7 @@ public class BaseToolsTests
     [Fact]
     public async Task Batch_InFallback_AStepScriptTheToolsCouldDo_IsRefused()
     {
-        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Advice, Access.Scopes, Access.Sessions());
+        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Advice, Access.Scopes, Access.Sessions(), TestJobs.AddOn(_bridge));
 
         var result = await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "import bpy\nbpy.context.scene.cycles.samples = 64\nbpy.context.scene.render.resolution_x = 1920" } }));
 
@@ -228,7 +228,7 @@ public class BaseToolsTests
     [Fact]
     public async Task Batch_WithAPythonStep_IsRefusedWhenPythonIsOff()
     {
-        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Off }, Advice, Access.Scopes, Access.Sessions());
+        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Off }, Advice, Access.Scopes, Access.Sessions(), TestJobs.AddOn(_bridge));
 
         var refused = JsonNode.Parse((await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "1" } }))).Text())!;
         (await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } }))).Text();

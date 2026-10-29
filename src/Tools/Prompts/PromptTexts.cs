@@ -18,7 +18,7 @@ public static class PromptTexts
         5. Colour: blender_set_color_management viewTransform AgX, look Base Contrast or Punchy, exposure 0.
         6. Post: blender_lens_effects with denoise useDataPasses true, glare BLOOM threshold 1 strength 0.1, chromaticAberration dispersion 0.01, vignette amount 0.25, grain strength 0.05 size 1.5; nothing stronger, restraint reads as real.
         7. Preview: blender_render_settings percentage 25, then blender_render_image or blender_render_object; look at the returned picture and stats: mean_luminance near 0.18 to 0.3, clipped_high under 0.01. Fix exposure, light energy or fstop and repeat until it reads right.
-        8. Final: blender_render_check must be ready; blender_set_output with the delivery format ({output}), OPEN_EXR 32 bit ZIP when compositing follows; percentage 100; blender_render_job for anything longer than a minute and poll blender_render_job_status, or blender_render_image when it is quick.
+        8. Final: blender_render_check must be ready; blender_set_output with the delivery format ({output}), OPEN_EXR 32 bit ZIP when compositing follows; percentage 100; blender_render_job for anything longer than a minute — it answers when the render ends within its wait, or with the job to read — or blender_render_image when it is quick.
         9. Report the file path, the settings that mattered and what you would still change.
         """;
 
@@ -34,7 +34,7 @@ public static class PromptTexts
         3. Output: blender_set_output fileFormat OPEN_EXR_MULTILAYER, colorDepth 32 for data passes (16 when only beauty matters), exrCodec ZIP (never DWAA on data), overwrite false and placeholder true when several machines share the range, stamp with note and frame for review copies only.
         4. Engine: blender_set_cycles with the final samples, adaptive sampling, denoise false and denoising data through blender_lens_effects denoise useDataPasses true so the compositor denoises; persistentData true for animations.
         5. Budget: blender_render_budget with a probe at 10 percent; apply textureLimit or simplify when the verdict is tight or exceeds; packForFarm with packExternal true, relativePaths true and copyTo when the file leaves this machine.
-        6. Run: blender_render_job with frames {frames}, outputPath {directory}/{scene}_{camera}_####, output carrying the format of step 3, queue with chunks 2 to 4 on a multi-core CPU machine, maxParallel 1 on one GPU and retries 1. Poll blender_render_job_status; report eta_s and peak_memory_mb; blender_render_job_cancel when something is wrong. blender_inspect_image on a finished frame to confirm the passes landed.
+        6. Run: blender_render_job with frames {frames}, outputPath {directory}/{scene}_{camera}_####, output carrying the format of step 3, queue with chunks 2 to 4 on a multi-core CPU machine, maxParallel 1 on one GPU and retries 1. Read the job's resource for eta_s and peak_memory_mb and report them; blender_render_job_cancel when something is wrong. blender_inspect_image on a finished frame to confirm the passes landed.
         7. Report the frame paths, the layer and pass list, and the budget verdict.
         """;
 

@@ -322,7 +322,7 @@ with, so the state is at least visible.
 The `farm` skill therefore offers `blender_render_job`: the add-on saves the file as a copy next to a job
 spec, starts a second Blender in background mode on that copy, and returns at once. The job script renders
 the frames, cameras and view layers of the spec and writes a status file after every frame (frames done,
-current frame, peak memory, files written) that `blender_render_job_status` reads, together with the tail
+current frame, peak memory, files written) that the server follows into the job's resource `job://blender/render/<id>`, together with the tail
 of the job's log. Jobs live in the add-on's data directory, on Blender's machine, in `jobs/<id>/`, and survive a restart of the server;
 `blender_render_job_cancel` stops it cooperatively: it writes a marker the worker reads between cameras and between
 the frames of a frame list, and sends SIGINT, which a background Blender treats as the break Ctrl+C is, so the worker ends the render it is inside and
@@ -330,7 +330,7 @@ writes its own last status; SIGTERM and then SIGKILL follow only for a worker th
 stay on disk either way. Jobs queue: at most
 `maxParallel` run at once, higher priority starts first, a crashed job restarts `retries` times, and
 `chunks` splits a frame range into interleaved sub-jobs that render in parallel. While a job is queued or
-running the farm skill is pinned, so idle expiry cannot take `blender_render_job_status` away before the frames land.
+running the farm skill is pinned, so idle expiry cannot take `blender_render_jobs` away before the frames land.
 
 The queue lives in the add-on, on Blender's machine, and stays there. It was once meant to move into the server, where
 a durable store and a scheduler would be easier to write — but the server is not where the work happens. Over stdio it

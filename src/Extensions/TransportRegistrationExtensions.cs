@@ -1,8 +1,5 @@
-using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using ModelContextProtocol;
 using ModelContextProtocol.AspNetCore;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
@@ -16,6 +13,7 @@ using Snail.MCP.Blender.Tools.Base;
 using Snail.MCP.Blender.Web.Access;
 using Snail.MCP.Blender.Tools.Prompts;
 using Snail.Sdk.Mcp.Hosting;
+using Snail.Sdk.Mcp.Hosting.Jobs;
 
 namespace Snail.MCP.Blender.Extensions;
 
@@ -38,7 +36,8 @@ public static class TransportRegistrationExtensions
         /// <summary>Registers the same server over Streamable HTTP.</summary>
         /// <remarks>A client that opens with initialize keeps a session, which is what carries tools/list_changed when a skill loads; a client of the
         /// sessionless protocol revision is served per request and has no session to be notified on, so the tools that load or unload a skill
-        /// tell it in the reply to the call, and its listen stream is held open with nothing on it.</remarks>
+        /// tell it in the reply to the call. Its listen stream is held open by the jobs' registration (Snail.Sdk.Mcp.Hosting), which carries the
+        /// updates of the job resources it asked for and nothing else: Claude Code reads the end of that stream as the end of the connection.</remarks>
         public IServiceCollection AddMcpHttpTransport()
         {
             services.AddMcpServerWithTools().WithHttpTransport(options =>
@@ -46,8 +45,6 @@ public static class TransportRegistrationExtensions
                 options.SessionMode = HttpServerSessionMode.StatefulForInitializeClients;
                 options.ConfigureSessionOptions = OpenASessionAsync;
             });
-            services.Configure<McpServerOptions>(options => options.Handlers.SubscriptionsListenHandler = HoldTheListenOpenAsync);
-
             return services;
         }
 
@@ -65,6 +62,7 @@ public static class TransportRegistrationExtensions
                 .WithBaseTools()
                 .WithPrompts<PipelinePrompts>()
                 .WithResources<BlenderResources>()
+                .WithJobs("blender")
                 .WithRequestFilters(filters => filters.AddCallToolFilter(TrackActivity));
 
         /// <summary>Every session and every sessionless request gets options of its own, and with them a client of its own: a tool collection
@@ -72,35 +70,6 @@ public static class TransportRegistrationExtensions
         /// <remarks>The collection used to be the one the process holds, handed to every session, so a skill one client loaded appeared in the
         /// tool list of all of them and expiry took it away from all of them. A client says who it is with <c>X-Snail-Agent</c>; one that says
         /// nothing is named after the client name it sends with initialize, which is what the add-on's leases and journal then record.</remarks>
-        /// <summary>Acknowledges the listen stream of a sessionless client with the nothing it can be sent, and keeps the stream open until the
-        /// client closes it or the server stops.</summary>
-        /// <remarks>A client of the 2026-07-28 revision is served per request, so there is no channel to notify it on, and the SDK's own handler
-        /// acknowledged nothing and ended the stream at once. Claude Code opens that stream beside tools/list and reads its end as the end of the
-        /// connection: in 172 of 652 sessions tools/list was still in flight, failed with "Connection closed", and the session went on without a
-        /// single Blender tool. An open stream that carries nothing is what the empty acknowledgement promises; the capabilities advertise no
-        /// listChanged, and a tool that loads a skill says so in its own reply.</remarks>
-        private static async ValueTask<EmptyResult> HoldTheListenOpenAsync(RequestContext<SubscriptionsListenRequestParams> request, CancellationToken cancellationToken)
-        {
-            var acknowledgement = new SubscriptionsAcknowledgedNotificationParams { Notifications = new SubscriptionsListenNotifications() };
-            var parameters = JsonSerializer.SerializeToNode(acknowledgement, McpJsonUtilities.DefaultOptions)!.AsObject();
-            parameters["_meta"] = new JsonObject { [MetaKeys.SubscriptionId] = JsonSerializer.SerializeToNode(request.JsonRpcRequest.Id, McpJsonUtilities.DefaultOptions) };
-            var notification = new JsonRpcNotification { Method = NotificationMethods.SubscriptionsAcknowledgedNotification, Params = parameters };
-
-            await request.Server.SendMessageAsync(notification, cancellationToken).ConfigureAwait(false);
-            await ClosedAsync(request.Services?.GetService<IHostApplicationLifetime>()?.ApplicationStopping ?? CancellationToken.None, cancellationToken).ConfigureAwait(false);
-
-            return new EmptyResult();
-        }
-
-        private static async Task ClosedAsync(CancellationToken stopping, CancellationToken closed)
-        {
-            using var either = CancellationTokenSource.CreateLinkedTokenSource(stopping, closed);
-            var ended = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            await using var registration = either.Token.Register(() => ended.TrySetResult());
-
-            await ended.Task.ConfigureAwait(false);
-        }
-
         private static Task OpenASessionAsync(HttpContext context, McpServerOptions session, CancellationToken cancellationToken)
         {
             context.RequestServices.GetRequiredService<ClientSessions>().Open(session, Whom(context), Opens(context));

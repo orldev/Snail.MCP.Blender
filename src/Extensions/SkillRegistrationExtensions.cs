@@ -33,6 +33,7 @@ public static class SkillRegistrationExtensions
             services.AddSingleton<ToolScopes>();
             services.AddSingleton<ScriptAdvice>();
             services.AddSingleton<RenderJobs>();
+            services.AddSingleton<AddOnJobs>();
             services.AddSingleton(provider => SkillExpiryOptions.For(provider.GetRequiredService<ServerConfig>().SkillIdleMinutes));
             services.AddHostedService<SkillExpiry>();
 

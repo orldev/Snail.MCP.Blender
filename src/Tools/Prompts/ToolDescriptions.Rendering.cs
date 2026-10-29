@@ -22,7 +22,8 @@ public static partial class ToolDescriptions
         /// <summary><c>blender_render_animation</c></summary>
         public const string Animation =
             "Renders the frame range as an image sequence or a video. In the background by default: a second Blender renders the " +
-            "same range to the same path, this one stays free, and the reply is a job id that blender_render_job_status follows and " +
+            "same range to the same path, this one stays free, and the reply is the job — its result within `wait` seconds, its " +
+            "resource job://blender/render/<id> to read otherwise — that " +
             "blender_render_job_cancel stops. Pass background=false to render here instead, which holds Blender until the last frame " +
             "and cannot be interrupted — a cancelled tool call stops the waiting, not the render.";
 

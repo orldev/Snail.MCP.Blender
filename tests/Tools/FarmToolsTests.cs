@@ -1,6 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using Snail.MCP.Blender.Application.Rendering;
-using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Farm;
 
@@ -10,14 +7,13 @@ public class FarmToolsTests
 {
     private readonly ScriptedBridge _bridge = new();
 
-    private static RenderJobs Jobs() =>
-        new(new ClientSessions([], [], agent: null, new ServiceCollection().BuildServiceProvider(), TimeProvider.System));
+    private JobTools Tools(ServerConfig config) => new(_bridge, config, TestJobs.Tracked(), TestJobs.AddOn(_bridge));
 
     [Fact]
     public async Task RenderJob_LeavesTheJobsDirectoryToTheAddOn()
     {
         var config = new ServerConfig { DataDirectory = "/data/snail" };
-        var tools = new JobTools(_bridge, config, Jobs());
+        var tools = Tools(config);
 
         (await tools.StartAsync("/renders/{camera}_####", frames: "1-48x2", cameras: ["CamA", "CamB"], output: new JobOutput { FileFormat = "OPEN_EXR", ColorDepth = 16 })).Text();
 
@@ -33,7 +29,7 @@ public class FarmToolsTests
     [Fact]
     public async Task RenderJob_ResolutionAboveTheLimit_IsRefused()
     {
-        var tools = new JobTools(_bridge, new ServerConfig(), Jobs());
+        var tools = Tools(new ServerConfig());
 
         var response = JsonNode.Parse((await tools.StartAsync("/renders/f_####", output: new JobOutput { ResolutionX = 9000 })).Text())!;
 
@@ -42,12 +38,12 @@ public class FarmToolsTests
     }
 
     [Fact]
-    public async Task RenderJobStatus_WithoutAnId_ListsJobs_AndNeitherCallNamesADirectory()
+    public async Task RenderJobs_ListsJobs_AndNeitherCallNamesADirectory()
     {
         var config = new ServerConfig { DataDirectory = "/data/snail" };
-        var tools = new JobTools(_bridge, config, Jobs());
+        var tools = Tools(config);
 
-        (await tools.StatusAsync()).Text();
+        (await tools.ListAsync()).Text();
         (await tools.CancelAsync("job-1")).Text();
 
         Assert.All(_bridge.Sent, sent => Assert.False(sent.Parameters!.ContainsKey("directory")));
@@ -58,7 +54,7 @@ public class FarmToolsTests
     [Fact]
     public async Task RenderJob_UsesTheConfiguredOcio_WhenNoneIsPassed()
     {
-        var tools = new JobTools(_bridge, new ServerConfig { OcioConfig = "/ocio/config.ocio" }, Jobs());
+        var tools = Tools(new ServerConfig { OcioConfig = "/ocio/config.ocio" });
 
         (await tools.StartAsync("/renders/f_####")).Text();
 

@@ -12,7 +12,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>Render settings, renders to disk and render passes.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, RenderGallery gallery, ServerConfig config, RenderJobs jobs) : BridgeToolBase(bridge)
+public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, RenderGallery gallery, ServerConfig config, AddOnJobs background) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_render_settings", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.Settings)]
@@ -62,12 +62,13 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
         [Description("PNG, JPEG, OPEN_EXR or FFMPEG for a video.")] string? fileFormat = null,
         [Description(ToolDescriptions.Parameters.Scene)] string? scene = null,
         [Description(ToolDescriptions.Parameters.Preview)] bool preview = true,
-        [Description("Render in a second Blender, the default: this one stays free, the reply is a job id and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped.")] bool background = true,
+        [Description("Render in a second Blender, the default: this one stays free, the reply is the job — its result within the wait, its resource to read otherwise — and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped.")] bool background = true,
         [Description(ToolDescriptions.Parameters.TimeoutSeconds)] int timeoutSeconds = 600,
+        [Description(ToolDescriptions.Parameters.Wait)] int wait = 60,
         IProgress<ProgressNotificationValue>? progress = null,
         CancellationToken cancellationToken = default) =>
         background
-            ? await InTheBackgroundAsync(outputPath, Frames(start, end, step), fileFormat, scene, cancellationToken).ConfigureAwait(false)
+            ? await InTheBackgroundAsync(outputPath, Frames(start, end, step), fileFormat, scene, TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false)
             : await WithinAsync(timeoutSeconds, async timeout => ToolResponse.Pictured(gallery.Remember(await watch.FollowAsync(
                 ExchangeAsync(BridgeCommands.RenderAnimation,
                     new JsonObject().With("output_path", outputPath).With("start", start).With("end", end).With("step", step).With("file_format", fileFormat).With("scene", scene).With("preview", preview),
@@ -77,23 +78,16 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
     /// <summary>The same range as a background job: one worker over the whole range, so the frames land exactly where the blocking path would put them.</summary>
     /// <remarks>The worker renders a range with <c>render(animation=True)</c> on the same output path, which is what the blocking command does too;
     /// a still is not offered this way because a job names its files after the frame and a still is asked for by its exact path.</remarks>
-    private async Task<CallToolResult> InTheBackgroundAsync(string outputPath, string? frames, string? fileFormat, string? scene, CancellationToken cancellationToken)
+    private async Task<CallToolResult> InTheBackgroundAsync(string outputPath, string? frames, string? fileFormat, string? scene, TimeSpan wait, CancellationToken cancellationToken)
     {
-        var reply = jobs.Observe(await ExchangeAsync(BridgeCommands.RenderJob,
-            new JsonObject().With("output_path", outputPath).With("frames", frames).With("file_format", fileFormat).With("scene", scene)
-                .With("overwrite", true).With("placeholder", false).With("chunks", 1).With("max_parallel", 1).With("retries", 0).With("priority", 0)
-                .With("ocio_config", config.OcioConfig),
-            TimeSpan.FromSeconds(120), cancellationToken).ConfigureAwait(false));
+        var arguments = new JsonObject().With("output_path", outputPath).With("frames", frames).With("file_format", fileFormat).With("scene", scene)
+            .With("overwrite", true).With("placeholder", false).With("chunks", 1).With("max_parallel", 1).With("retries", 0).With("priority", 0)
+            .With("ocio_config", config.OcioConfig);
+        var started = await background.StartRenderAsync(BridgeCommands.RenderJob, BridgeCommands.RenderJobStatus, arguments, cancellationToken).ConfigureAwait(false);
 
-        if (!reply.IsOk || reply.Result is not JsonObject job)
-        {
-            return ToolResponse.From(reply);
-        }
-
-        var noted = job.DeepClone().AsObject();
-        noted["note"] = Messages.BackgroundRenderNote;
-
-        return ToolResponse.Success(noted);
+        return started.Job is { } job
+            ? ToolResponse.Job(await job.ForAsync(wait, cancellationToken).ConfigureAwait(false), Messages.BackgroundRenderNote)
+            : ToolResponse.From(started.First);
     }
 
     /// <summary>A frame range as the job spec writes it: 1-240, or 1-240x2 with a step; nothing means the scene's own range.</summary>

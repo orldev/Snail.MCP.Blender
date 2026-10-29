@@ -1,7 +1,5 @@
-using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol.Protocol;
 using Snail.MCP.Blender.Application.Rendering;
-using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools;
 using Snail.MCP.Blender.Tools.Rendering;
@@ -13,8 +11,7 @@ public class RenderingToolsTests
     private readonly ScriptedBridge _bridge = new();
 
     private RenderTools Render() =>
-        new(_bridge, new RenderWatch(new SilentMonitor()), new RenderGallery(), new ServerConfig { DataDirectory = "/data/snail" },
-            new RenderJobs(new ClientSessions([], [], agent: null, new ServiceCollection().BuildServiceProvider(), TimeProvider.System)));
+        new(_bridge, new RenderWatch(new SilentMonitor()), new RenderGallery(), new ServerConfig { DataDirectory = "/data/snail" }, TestJobs.AddOn(_bridge));
 
     [Fact]
     public async Task RenderSettings_ResolutionAboveTheLimit_IsRefusedBeforeReachingBlender()
@@ -45,14 +42,15 @@ public class RenderingToolsTests
         _bridge.Answer(BridgeCommands.RenderJob, new JsonObject { ["id"] = "job-1", ["state"] = "queued" });
         var tools = Render();
 
-        var answer = JsonNode.Parse((await tools.AnimationAsync("/renders/shot_", start: 1, end: 48, step: 2, fileFormat: "PNG")).Text())!["data"]!;
+        var answer = JsonNode.Parse((await tools.AnimationAsync("/renders/shot_", start: 1, end: 48, step: 2, fileFormat: "PNG", wait: 0)).Text())!["data"]!;
 
         Assert.Equal(BridgeCommands.RenderJob, _bridge.Sent.Single().Command);
         Assert.Equal("/renders/shot_", _bridge.LastParameters!["output_path"]!.ToString());
         Assert.Equal("1-48x2", _bridge.LastParameters["frames"]!.ToString());
         Assert.Equal("PNG", _bridge.LastParameters["file_format"]!.ToString());
         Assert.Equal(1, _bridge.LastParameters["chunks"]!.GetValue<int>());
-        Assert.Equal("job-1", answer["id"]!.ToString());
+        Assert.StartsWith("job://blender/render/", answer["uri"]!.ToString(), StringComparison.Ordinal);
+        Assert.Equal("running", answer["state"]!.ToString());
         Assert.Contains("blender_render_job_cancel", answer["note"]!.ToString(), StringComparison.Ordinal);
     }
 
@@ -61,7 +59,7 @@ public class RenderingToolsTests
     {
         _bridge.Answer(BridgeCommands.RenderJob, new JsonObject { ["id"] = "job-2", ["state"] = "queued" });
 
-        (await Render().AnimationAsync("/renders/shot_")).Text();
+        (await Render().AnimationAsync("/renders/shot_", wait: 0)).Text();
 
         Assert.False(_bridge.LastParameters!.ContainsKey("frames"));
     }

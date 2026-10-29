@@ -10,14 +10,16 @@ public static partial class ToolDescriptions
             "Starts a background render: the file is saved as a copy and a second Blender renders it, so this Blender and " +
             "the tools stay free. Frames, cameras, view layers, engine, output template with {scene} and {camera} and " +
             "####, format and depth. Jobs queue up and run maxParallel at a time, retry on failure, and can split into " +
-            "chunks that render interleaved frames in parallel. Returns the job id; poll blender_render_job_status. Save " +
-            "the file first: unsaved changes are included, but relative paths resolve best from a saved file.";
+            "chunks that render interleaved frames in parallel. Answers when the render ends within `wait` seconds, with its " +
+            "frames, files and timings; a longer render answers with the job running — read its resource (job://blender/render/<id>) " +
+            "for where it stands, or wait on it. Save the file first: unsaved changes are included, but relative paths resolve " +
+            "best from a saved file.";
 
-        /// <summary><c>blender_render_job_status</c></summary>
-        public const string Status =
-            "Progress of a background render: state, frames done of total, current frame and camera, elapsed and " +
-            "estimated remaining seconds, peak memory, the files written, the error if it failed and the tail of its log. " +
-            "Without an id, lists recent jobs.";
+        /// <summary><c>blender_render_jobs</c></summary>
+        public const string List =
+            "The recent background renders the add-on holds, newest first, with each one's state, frames done of total, " +
+            "elapsed seconds and files written, and which are still running — across restarts of this server. One job's " +
+            "progress is its resource, job://blender/render/<id>.";
 
         /// <summary><c>blender_render_job_cancel</c></summary>
         public const string Cancel = "Stops a background render; frames already written stay on disk.";
