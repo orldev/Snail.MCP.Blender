@@ -30,7 +30,7 @@ public sealed class BearerAuthentication(IOptionsMonitor<AuthenticationSchemeOpt
             return Task.FromResult(AuthenticateResult.Fail("the bearer token belongs to no client of this server, or to one that was revoked"));
         }
 
-        List<Claim> claims = [new(ClaimTypes.Name, client.Name), .. client.Scopes.Select(scope => new Claim(WebAccess.ScopeClaim, scope))];
+        List<Claim> claims = [new(ClaimTypes.Name, client.Name), new(ClaimTypes.NameIdentifier, client.Name), .. client.Scopes.Select(scope => new Claim(WebAccess.ScopeClaim, scope))];
 
         if (client == keys.Configured)
         {

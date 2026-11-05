@@ -34,7 +34,7 @@ public sealed class LinkAuthentication(IOptionsMonitor<AuthenticationSchemeOptio
             return Task.FromResult(AuthenticateResult.Fail("the link is not signed for this request or has expired"));
         }
 
-        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, "link")], Scheme.Name);
+        var identity = new ClaimsIdentity([new Claim(ClaimTypes.Name, "link"), new Claim(ClaimTypes.NameIdentifier, "link")], Scheme.Name);
 
         return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(new ClaimsPrincipal(identity), Scheme.Name)));
     }
