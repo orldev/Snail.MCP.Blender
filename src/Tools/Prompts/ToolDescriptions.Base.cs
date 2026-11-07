@@ -300,6 +300,7 @@ public static partial class ToolDescriptions
             "program returns comes back, instead of one call and one reply per step. Return a value from the program; log(...) adds a line to " +
             "the reply. A failed command throws {type, message, details}, which the program may catch and carry on. This is not Blender's " +
             "Python: the program reaches nothing but the commands, and blender_python stays the last resort for what no command does. " +
-            "The reply lists every command it sent. Limits: 200 commands, the timeout it was given, and one program's memory.";
+            "The reply lists every command it sent. Limits: 200 commands, 1000000 statements, calls nested 256 " +
+            "deep, the timeout it was given, and one program's memory.";
     }
 }

@@ -38,6 +38,11 @@ public sealed class ProgramTools(IProgramRunner programs, BridgeTraffic traffic)
             })]),
         };
 
+        if (run.Error is not null)
+        {
+            data["type"] = run.Error.Type;
+        }
+
         return run.Error is null
             ? ToolResponse.Success(data)
             : ToolResponse.Failure(run.Error.Message, Messages.HintFor(run.Error) ?? Messages.ProgramStoppedHint, data);

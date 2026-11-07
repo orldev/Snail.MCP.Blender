@@ -14,14 +14,25 @@ namespace Snail.MCP.Blender.Adapters.Programs;
 
 /// <summary>Runs a JavaScript program whose only door to the outside is the command catalog: no files, no network, no clock but its own.</summary>
 /// <remarks>The engine is synchronous, so the program runs on a thread of its own and each command it sends waits there for the link. Nothing of
-/// the host is reachable from the script — the engine is created without CLR access — and the program is bounded three ways: the timeout it was
-/// given, a memory ceiling, and a cap on how many commands it may send, because a program is a way to spend one call, not to hide a thousand.
+/// the host is reachable from the script — the engine is created without CLR access — and the program is bounded five ways: the timeout it was
+/// given, a memory ceiling, a recursion depth, a statement count and a cap on how many commands it may send, because a program is a way to
+/// spend one call, not to hide a thousand.
 /// <para>Every command a program sends is put to the calling client's key first. The tool that starts a program carries one annotation, and a
 /// program is whatever the script asks for: without this, a key issued without the Python scope ran Python by writing one line of JavaScript.</para></remarks>
 public sealed class JavaScriptPrograms(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, ToolScopes scopes, ClientSessions clients) : IProgramRunner
 {
     /// <summary>Commands one program may send.</summary>
     public const int MostCalls = 200;
+
+    /// <summary>How deep the calls of one program may nest.</summary>
+    /// <remarks>Left to the engine's defaults the depth has no ceiling of its own, so a function that calls itself forever runs until the thread's stack gives out.</remarks>
+    public const int DeepestRecursion = 256;
+
+    /// <summary>Statements one program may run.</summary>
+    /// <remarks>A loop that sends no command is otherwise stopped only by its timeout, which may be minutes of a busy core for nothing.</remarks>
+    public const int MostStatements = 1_000_000;
+
+    private const string TooLargeType = "ProgramTooLarge";
 
     private const long MemoryBytes = 32L * 1024 * 1024;
 
@@ -40,6 +51,8 @@ public sealed class JavaScriptPrograms(IBlenderBridge bridge, ServerConfig confi
         using var engine = new Engine(options => options
             .Strict()
             .LimitMemory(MemoryBytes)
+            .LimitRecursion(DeepestRecursion)
+            .MaxStatements(MostStatements)
             .TimeoutInterval(timeout)
             .CancellationToken(cancellationToken));
 
@@ -61,13 +74,21 @@ public sealed class JavaScriptPrograms(IBlenderBridge bridge, ServerConfig confi
         {
             return new ProgramRun(null, log, calls, Thrown(failure));
         }
+        catch (RecursionDepthOverflowException)
+        {
+            return new ProgramRun(null, log, calls, new BridgeError(TooLargeType, $"the program nested its calls deeper than {DeepestRecursion} levels; bound the recursion or write it as a loop."));
+        }
+        catch (StatementsCountOverflowException)
+        {
+            return new ProgramRun(null, log, calls, new BridgeError(TooLargeType, $"the program ran more than {MostStatements} statements; split the work into several programs."));
+        }
+        catch (MemoryLimitExceededException)
+        {
+            return new ProgramRun(null, log, calls, new BridgeError(TooLargeType, $"the program used more than the {MemoryBytes / 1024 / 1024} MB of memory a program may use; split the work into several."));
+        }
         catch (Exception failure) when (failure is TimeoutException or ExecutionCanceledException)
         {
             return new ProgramRun(null, log, calls, new BridgeError(BridgeError.TimeoutType, $"the program ran longer than the {timeout.TotalSeconds:0.#} s it was given; the commands it had already sent stand."));
-        }
-        catch (Exception failure) when (failure is MemoryLimitExceededException or StatementsCountOverflowException or RecursionDepthOverflowException)
-        {
-            return new ProgramRun(null, log, calls, new BridgeError("ProgramTooLarge", $"the program asked for more than a program may use ({failure.GetType().Name}); split the work into several."));
         }
     }
 

@@ -79,10 +79,14 @@ public class ProgramToolsTests
         Assert.Empty(_bridge.Sent);
     }
 
+    /// <summary>Each turn of the loop is one long scan, so the timeout comes long before the statement cap would.</summary>
     [Fact]
     public async Task Program_ThatNeverEnds_IsStoppedByItsTimeout()
     {
-        var stopped = await RunAsync("while (true) { }", timeoutSeconds: 1);
+        var stopped = await RunAsync("""
+            const row = new Array(200000).fill(1);
+            while (true) { row.indexOf(2); }
+            """, timeoutSeconds: 1);
 
         Assert.False(stopped["ok"]!.GetValue<bool>());
         Assert.Contains("longer", stopped["error"]!.ToString(), StringComparison.OrdinalIgnoreCase);
@@ -101,6 +105,71 @@ public class ProgramToolsTests
 
         Assert.False(stopped["ok"]!.GetValue<bool>());
         Assert.Equal(JavaScriptPrograms.MostCalls, _bridge.Sent.Count);
+    }
+
+    /// <summary>A function that calls itself forever is stopped by a depth the server sets, and the reply names that cause rather than a stack.</summary>
+    [Fact]
+    public async Task Program_RecursingWithoutEnd_IsStopped_AndSaysItNestedTooDeep()
+    {
+        var stopped = await RunAsync("""
+            function deeper(level) { return deeper(level + 1); }
+            return deeper(0);
+            """);
+
+        Assert.False(stopped["ok"]!.GetValue<bool>());
+        Assert.Equal("ProgramTooLarge", stopped["data"]!["type"]!.ToString());
+        Assert.Contains($"deeper than {JavaScriptPrograms.DeepestRecursion} levels", stopped["error"]!.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>A loop that sends nothing is stopped at the statement cap, long before the timeout it was given would have stopped it.</summary>
+    [Fact]
+    public async Task Program_LoopingPastTheStatementCap_IsStoppedByTheCap_NotByItsTimeout()
+    {
+        var stopped = await RunAsync($$"""
+            let count = 0;
+            for (let index = 0; index < {{JavaScriptPrograms.MostStatements * 2}}; index++) count++;
+            return count;
+            """, timeoutSeconds: 600);
+
+        Assert.False(stopped["ok"]!.GetValue<bool>());
+        Assert.Equal("ProgramTooLarge", stopped["data"]!["type"]!.ToString());
+        Assert.Contains($"more than {JavaScriptPrograms.MostStatements} statements", stopped["error"]!.ToString(), StringComparison.Ordinal);
+    }
+
+    /// <summary>The statement cap holds for the whole program: the commands it sends between its loops do not start the count again.</summary>
+    [Fact]
+    public async Task Program_SpreadingItsStatementsBetweenCommands_IsStillStoppedAtTheCap()
+    {
+        var third = JavaScriptPrograms.MostStatements * 2 / 5;
+        var stopped = await RunAsync($$"""
+            let count = 0;
+            for (let index = 0; index < {{third}}; index++) count++;
+            blender.scene_info();
+            for (let index = 0; index < {{third}}; index++) count++;
+            blender.scene_info();
+            for (let index = 0; index < {{third}}; index++) count++;
+            return count;
+            """, timeoutSeconds: 600);
+
+        Assert.False(stopped["ok"]!.GetValue<bool>());
+        Assert.Equal("ProgramTooLarge", stopped["data"]!["type"]!.ToString());
+        Assert.NotEmpty(_bridge.Sent);
+    }
+
+    [Fact]
+    public async Task Program_RecursingAndLoopingWithinTheLimits_Runs()
+    {
+        var result = await RunAsync("""
+            function sum(upTo) { return upTo === 0 ? 0 : upTo + sum(upTo - 1); }
+            let total = 0;
+            for (let index = 0; index < 10000; index++) total += index;
+            return { sum: sum(100), total: total, objects: blender.scene_info().objects };
+            """);
+
+        Assert.True(result["ok"]!.GetValue<bool>());
+        Assert.Equal(5050, result["data"]!["result"]!["sum"]!.GetValue<int>());
+        Assert.Equal(49995000, result["data"]!["result"]!["total"]!.GetValue<int>());
+        Assert.Equal(3, result["data"]!["result"]!["objects"]!.GetValue<int>());
     }
 
     [Fact]
