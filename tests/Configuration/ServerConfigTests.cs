@@ -102,8 +102,8 @@ public class ServerConfigTests
         var link = provider.GetRequiredService<BlenderLinkOptions>();
 
         Assert.True(link.Tunnel.IsEnabled);
-        Assert.Equal(Path.Combine(ServerPaths.Home, ".ssh", "id_ed25519"), link.Tunnel.Key);
-        Assert.Equal(Path.Combine(ServerPaths.Home, ".s3l-mcp-blender", "remote", "win-main.token"), link.TokenFile);
+        Assert.Equal(Path.Combine(ServerFolders.Home, ".ssh", "id_ed25519"), link.Tunnel.Key);
+        Assert.Equal(Path.Combine(ServerFolders.Home, ".s3l-mcp-blender", "remote", "win-main.token"), link.TokenFile);
         Assert.Equal(9876, link.Tunnel.RemotePort);
         Assert.Equal(9877, link.Port);
     }
@@ -119,7 +119,7 @@ public class ServerConfigTests
         ServerConfigExtensions.Normalize(named);
 
         Assert.Equal(Path.GetFullPath(Environment.CurrentDirectory), unnamed.ProjectDirectory);
-        Assert.Equal(Path.Combine(ServerPaths.Home, "Projects", "lobby"), named.ProjectDirectory);
+        Assert.Equal(Path.Combine(ServerFolders.Home, "Projects", "lobby"), named.ProjectDirectory);
     }
 
     /// <summary>A container is configured through its environment only; the secret arrives as a file with a path that may carry a tilde, and a server
@@ -140,9 +140,9 @@ public class ServerConfigTests
         var http = new ServerConfigValidation().Validate(Options.DefaultName, config.Value);
 
         Assert.False(http.Failed);
-        Assert.Equal(Transport.Http, config.Value.Transport);
+        Assert.Equal(McpTransport.Http, config.Value.Transport);
         Assert.Equal("http://0.0.0.0:8080", config.Value.Http.Url);
-        Assert.Equal(Path.Combine(ServerPaths.Home, "secrets", "client.token"), config.Value.Http.TokenFile);
+        Assert.Equal(Path.Combine(ServerFolders.Home, "secrets", "client.token"), config.Value.Http.TokenFile);
         Assert.Equal("https://blender.example.com", config.Value.Http.PublicUrl);
         Assert.Equal(30, config.Value.Http.LinkMinutes);
         Assert.Null(config.Value.ProjectDirectory);
@@ -156,7 +156,7 @@ public class ServerConfigTests
 
         var peeked = ServerConfigExtensions.Peek(configuration);
 
-        Assert.Equal(Transport.Http, peeked.Transport);
+        Assert.Equal(McpTransport.Http, peeked.Transport);
         Assert.Equal("http://0.0.0.0:9000", peeked.Http.Url);
     }
 
@@ -185,7 +185,7 @@ public class ServerConfigTests
 
         var link = provider.GetRequiredService<BlenderLinkOptions>();
 
-        Assert.Equal(Path.Combine(ServerPaths.Home, "blender-from-the-environment", "state", "token"), link.TokenFile);
+        Assert.Equal(Path.Combine(ServerFolders.Home, "blender-from-the-environment", "state", "token"), link.TokenFile);
         Assert.Same(provider.GetRequiredService<ServerConfig>().Bridge, link);
     }
 
@@ -236,7 +236,7 @@ public class ServerConfigTests
                 new Dictionary<string, string?> { [ServerSettings.FileVariableOf(ServerPaths.ShortName)] = file },
                 () => ServerConfigExtensions.Peek(ServerConfigExtensions.Settings()));
 
-            Assert.Equal(Transport.Http, peeked.Transport);
+            Assert.Equal(McpTransport.Http, peeked.Transport);
             Assert.Equal("lighting", peeked.Agent);
         }
         finally
@@ -260,7 +260,7 @@ public class ServerConfigTests
 
         ServerConfigExtensions.Normalize(config);
 
-        Assert.Equal(Path.Combine(ServerPaths.Home, "blender-data", "state", "token"), config.Bridge.TokenFile);
+        Assert.Equal(Path.Combine(ServerFolders.Home, "blender-data", "state", "token"), config.Bridge.TokenFile);
     }
 
     [Fact]
@@ -270,7 +270,7 @@ public class ServerConfigTests
 
         ServerConfigExtensions.Normalize(config);
 
-        Assert.Equal(Path.Combine(ServerPaths.Home, "custom-blender-data"), config.DataDirectory);
+        Assert.Equal(Path.Combine(ServerFolders.Home, "custom-blender-data"), config.DataDirectory);
     }
 
     [Theory]
@@ -319,7 +319,7 @@ public class ServerConfigTests
                 return builder.Services.BuildServiceProvider().GetRequiredService<ServerConfig>();
             });
 
-        Assert.Equal(Transport.Stdio, read.Transport);
+        Assert.Equal(McpTransport.Stdio, read.Transport);
         Assert.Equal(PythonAccess.Allow, read.Python);
     }
 

@@ -2,9 +2,9 @@
 
 ## <code>blender_<wbr>skills</code>
 
-Lists the skills: named groups of tools that are loaded on demand, with what each covers, whether it is loaded and the tools it brings.
+Lists this server's skills — groups of tools loaded on demand — with whether each is loaded and its tools.
 
-*read-only · every call adds · stays inside Blender.*
+*read-only · repeat-safe · stays inside Blender.*
 
 Takes no parameters.
 
@@ -21,13 +21,13 @@ Takes no parameters.
 
 ## <code>blender_<wbr>enable_<wbr>skill</code>
 
-Loads a skill: its tools appear in the tool list right away (the client is notified). A skill stays loaded until blender_disable_skill, unless this server is configured to unload idle ones.
+Loads a skill: its tools join this session's tool list.
 
-*only adds · every call adds · stays inside Blender.*
+*only adds · repeat-safe · stays inside Blender.*
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `name` | `string` | yes | — | Skill name as blender_skills lists it. |
+| `name` | `string` | yes | — | The skill's name, as the skills tool lists it. |
 
 <details><summary>JSON Schema</summary>
 
@@ -36,7 +36,7 @@ Loads a skill: its tools appear in the tool list right away (the client is notif
   "type": "object",
   "properties": {
     "name": {
-      "description": "Skill name as blender_skills lists it.",
+      "description": "The skill\u0027s name, as the skills tool lists it.",
       "type": "string"
     }
   },
@@ -50,13 +50,13 @@ Loads a skill: its tools appear in the tool list right away (the client is notif
 
 ## <code>blender_<wbr>disable_<wbr>skill</code>
 
-Unloads a skill, removing its tools from the tool list.
+Unloads a skill: its tools leave this session's tool list until it is loaded again.
 
-*only adds · every call adds · stays inside Blender.*
+*only adds · repeat-safe · stays inside Blender.*
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `name` | `string` | yes | — | Skill name as blender_skills lists it. |
+| `name` | `string` | yes | — | The skill's name, as the skills tool lists it. |
 
 <details><summary>JSON Schema</summary>
 
@@ -65,7 +65,7 @@ Unloads a skill, removing its tools from the tool list.
   "type": "object",
   "properties": {
     "name": {
-      "description": "Skill name as blender_skills lists it.",
+      "description": "The skill\u0027s name, as the skills tool lists it.",
       "type": "string"
     }
   },

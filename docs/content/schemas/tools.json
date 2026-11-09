@@ -27,12 +27,14 @@
   },
   {
     "name": "blender_skills",
-    "description": "Lists the skills: named groups of tools that are loaded on demand, with what each covers, whether it is loaded and the tools it brings.",
+    "description": "Lists this server\u0027s skills \u2014 groups of tools loaded on demand \u2014 with whether each is loaded and its tools.",
     "inputSchema": {
       "type": "object",
       "properties": {}
     },
     "annotations": {
+      "destructiveHint": false,
+      "idempotentHint": true,
       "openWorldHint": false,
       "readOnlyHint": true
     },
@@ -40,12 +42,12 @@
   },
   {
     "name": "blender_enable_skill",
-    "description": "Loads a skill: its tools appear in the tool list right away (the client is notified). A skill stays loaded until blender_disable_skill, unless this server is configured to unload idle ones.",
+    "description": "Loads a skill: its tools join this session\u0027s tool list.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "name": {
-          "description": "Skill name as blender_skills lists it.",
+          "description": "The skill\u0027s name, as the skills tool lists it.",
           "type": "string"
         }
       },
@@ -55,18 +57,20 @@
     },
     "annotations": {
       "destructiveHint": false,
-      "openWorldHint": false
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "skill": null
   },
   {
     "name": "blender_disable_skill",
-    "description": "Unloads a skill, removing its tools from the tool list.",
+    "description": "Unloads a skill: its tools leave this session\u0027s tool list until it is loaded again.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "name": {
-          "description": "Skill name as blender_skills lists it.",
+          "description": "The skill\u0027s name, as the skills tool lists it.",
           "type": "string"
         }
       },
@@ -76,53 +80,66 @@
     },
     "annotations": {
       "destructiveHint": false,
-      "openWorldHint": false
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "skill": null
   },
   {
     "name": "find_tool",
-    "description": "Finds the tools for a task. Ask in plain English words for what you are about to do (\u0022bevel the edges\u0022, \u0022warm key light\u0022, \u0022render four frames in the background\u0022); the answer names the tools with their descriptions, the skill each belongs to, the command each sends and every parameter it takes. That is enough to call them at once through run_program, which needs no skill loaded; pass enable to put the tools themselves in the tool list instead. Most of this server\u0027s tools are not in the tool list until their skill is enabled, so a tool you cannot see is not a tool that does not exist: ask here before reaching for blender_python.",
+    "description": "Finds tools of this server for a task in words, best first, with the parameters of each. Ask it before deciding that no tool exists. It searches unloaded skills too: enable: true loads them, and run_program or this server\u0027s own run_tools (see its description) runs them without loading.",
     "inputSchema": {
       "type": "object",
       "properties": {
-        "intent": {
-          "description": "What you are trying to do, in English words: \u0022bevel the edges of a mesh\u0022, \u0022warm key light on the subject\u0022, \u0022render four frames in the background\u0022.",
-          "type": "string"
+        "task": {
+          "description": "What you are trying to do, in words: \u0027bevel the edges of a mesh\u0027, \u0027warm key light on the subject\u0027, \u0027render four frames in the background\u0027.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         },
         "limit": {
-          "description": "Most tools to return, 1 to 25; 8 by default.",
+          "description": "How many tools to name, 1 to 20.",
           "type": "integer",
-          "default": 8
+          "default": 5
         },
         "enable": {
-          "description": "Load the skills the matches live in, so their tools join the tool list; false by default, because the answer already carries what it takes to call them through run_program.",
+          "description": "Load the skills of the tools found, so they join the tool list.",
           "type": "boolean",
           "default": false
+        },
+        "intent": {
+          "description": "Same as task.",
+          "type": [
+            "string",
+            "null"
+          ],
+          "default": null
         }
-      },
-      "required": [
-        "intent"
-      ]
+      }
     },
     "annotations": {
       "destructiveHint": false,
-      "openWorldHint": false
+      "idempotentHint": true,
+      "openWorldHint": false,
+      "readOnlyHint": false
     },
     "skill": null
   },
   {
     "name": "run_program",
-    "description": "Runs a small JavaScript program that calls the commands itself: blender.add_primitive({kind: \u0022cube\u0022, name: \u0022Crate\u0022}) and so on for every command of the catalog, with loops, conditions and the results in hand. Use it when a build takes many steps, when each step depends on what the last one answered, or when only a summary of a long listing matters: the steps run here, and only what the program returns comes back, instead of one call and one reply per step. Return a value from the program; log(...) adds a line to the reply. A failed command throws {type, message, details}, which the program may catch and carry on. This is not Blender\u0027s Python: the program reaches nothing but the commands, and blender_python stays the last resort for what no command does. The reply lists every command it sent. Limits: 200 commands, the timeout it was given, and one program\u0027s memory.",
+    "description": "Runs a small JavaScript program that calls the commands itself: blender.add_primitive({kind: \u0022cube\u0022, name: \u0022Crate\u0022}) and so on for every command of the catalog \u2014 the names find_tool reports, the tool name without blender_ \u2014 with loops, conditions and the results in hand. Use it when a build takes many steps, when each step depends on what the last one answered, or when only a summary of a long listing matters: the steps run here, and only what the program returns comes back, instead of one call and one reply per step. This is not Blender\u0027s Python: blender_python stays the last resort for what no command does.\nWhat the program returns comes back as result, log(\u2026) writes lines that come back with it, and input is the object\npassed alongside. A failed or refused command throws { error, message, hint, type, details }, which the program may\ncatch and act on; a command the server does not have stops the program with the names nearest to it. The program\nreaches nothing but the commands: no files, no network, no clock but its own. The reply lists every command it sent.\nLimits: 200 commands, 1000000 statements, calls nested 256 deep, 32 MB of memory, and 120 seconds unless timeoutSeconds gives up to 600.",
     "inputSchema": {
       "type": "object",
       "properties": {
         "code": {
-          "description": "JavaScript. Call commands as blender.\u003Ccommand\u003E({...}) \u2014 the names find_tool reports, the tool name without blender_ \u2014 return a value, log(...) to add a line. Up to 200 commands, no files, no network, no bpy.",
+          "description": "The body of the program: JavaScript in strict mode, with return for whatever should come back as result.",
           "type": "string"
         },
         "input": {
-          "description": "Values the program reads as input, e.g. {\u0022count\u0022: 8}.",
+          "description": "Values the program reads as input, so that the code itself can stay the same between calls.",
           "type": [
             "object",
             "null"
@@ -130,9 +147,12 @@
           "default": null
         },
         "timeoutSeconds": {
-          "description": "Seconds to wait for Blender, 1 to 600.",
-          "type": "integer",
-          "default": 120
+          "description": "Seconds the program may run; the description of run_program states the default and the most it may be given.",
+          "type": [
+            "integer",
+            "null"
+          ],
+          "default": null
         }
       },
       "required": [
@@ -141,7 +161,9 @@
     },
     "annotations": {
       "destructiveHint": true,
-      "openWorldHint": true
+      "idempotentHint": false,
+      "openWorldHint": true,
+      "readOnlyHint": false
     },
     "skill": null
   },
@@ -1670,7 +1692,7 @@
   },
   {
     "name": "blender_batch",
-    "description": "Runs a list of bridge commands in a separate headless Blender on a copy of the file (or a given .blend) and saves the result to a .blend: parallel work that does not touch this Blender. Link the output back with blender_append_assets. Returns the batch id; poll blender_batch_status.",
+    "description": "Runs a list of bridge commands in a separate headless Blender on a copy of the file (or a given .blend) and saves the result to a .blend: parallel work that does not touch this Blender. Link the output back with blender_append_assets. Answers when the batch ends within \u0060wait\u0060 seconds, with its steps, output and log; a longer batch answers with the job running \u2014 read its resource (job://blender/batch/\u003Cid\u003E) for where it stands, or wait on it.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1706,6 +1728,11 @@
             "null"
           ],
           "default": null
+        },
+        "wait": {
+          "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+          "type": "integer",
+          "default": 60
         }
       },
       "required": [
@@ -1719,23 +1746,15 @@
     "skill": null
   },
   {
-    "name": "blender_batch_status",
-    "description": "Progress of a batch: state, how many steps finished and the last 20 with their results or errors, the output file and the log tail. Without an id, lists recent batches.",
+    "name": "blender_batches",
+    "description": "The recent batches the add-on holds, newest first: each one\u0027s state, steps finished of total, output file and log tail, and which are still running. One batch\u0027s progress is its resource, job://blender/batch/\u003Cid\u003E.",
     "inputSchema": {
       "type": "object",
       "properties": {
-        "id": {
-          "description": "Batch id as blender_batch returned it; every recent batch otherwise.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
         "logLines": {
-          "description": "Lines from the end of the batch log.",
+          "description": "Lines from the end of each batch log.",
           "type": "integer",
-          "default": 10
+          "default": 0
         }
       }
     },
@@ -4904,7 +4923,7 @@
   },
   {
     "name": "blender_render_animation",
-    "description": "Renders the frame range as an image sequence or a video. In the background by default: a second Blender renders the same range to the same path, this one stays free, and the reply is a job id that blender_render_job_status follows and blender_render_job_cancel stops. Pass background=false to render here instead, which holds Blender until the last frame and cannot be interrupted \u2014 a cancelled tool call stops the waiting, not the render.",
+    "description": "Renders the frame range as an image sequence or a video. In the background by default: a second Blender renders the same range to the same path, this one stays free, and the reply is the job \u2014 its result within \u0060wait\u0060 seconds, its resource job://blender/render/\u003Cid\u003E to read otherwise \u2014 that blender_render_job_cancel stops. Pass background=false to render here instead, which holds Blender until the last frame and cannot be interrupted \u2014 a cancelled tool call stops the waiting, not the render.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -4958,7 +4977,7 @@
           "default": true
         },
         "background": {
-          "description": "Render in a second Blender, the default: this one stays free, the reply is a job id and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped.",
+          "description": "Render in a second Blender, the default: this one stays free, the reply is the job \u2014 its result within the wait, its resource to read otherwise \u2014 and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped.",
           "type": "boolean",
           "default": true
         },
@@ -4966,6 +4985,11 @@
           "description": "Seconds to wait for Blender, 1 to 600.",
           "type": "integer",
           "default": 600
+        },
+        "wait": {
+          "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+          "type": "integer",
+          "default": 60
         }
       },
       "required": [
@@ -7587,7 +7611,7 @@
   },
   {
     "name": "blender_render_job",
-    "description": "Starts a background render: the file is saved as a copy and a second Blender renders it, so this Blender and the tools stay free. Frames, cameras, view layers, engine, output template with {scene} and {camera} and ####, format and depth. Jobs queue up and run maxParallel at a time, retry on failure, and can split into chunks that render interleaved frames in parallel. Returns the job id; poll blender_render_job_status. Save the file first: unsaved changes are included, but relative paths resolve best from a saved file.",
+    "description": "Starts a background render: the file is saved as a copy and a second Blender renders it, so this Blender and the tools stay free. Frames, cameras, view layers, engine, output template with {scene} and {camera} and ####, format and depth. Jobs queue up and run maxParallel at a time, retry on failure, and can split into chunks that render interleaved frames in parallel. Answers when the render ends within \u0060wait\u0060 seconds, with its frames, files and timings; a longer render answers with the job running \u2014 read its resource (job://blender/render/\u003Cid\u003E) for where it stands, or wait on it. Save the file first: unsaved changes are included, but relative paths resolve best from a saved file.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -7778,6 +7802,11 @@
             "null"
           ],
           "default": null
+        },
+        "wait": {
+          "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+          "type": "integer",
+          "default": 60
         }
       },
       "required": [
@@ -7791,23 +7820,15 @@
     "skill": "farm"
   },
   {
-    "name": "blender_render_job_status",
-    "description": "Progress of a background render: state, frames done of total, current frame and camera, elapsed and estimated remaining seconds, peak memory, the files written, the error if it failed and the tail of its log. Without an id, lists recent jobs.",
+    "name": "blender_render_jobs",
+    "description": "The recent background renders the add-on holds, newest first, with each one\u0027s state, frames done of total, elapsed seconds and files written, and which are still running \u2014 across restarts of this server. One job\u0027s progress is its resource, job://blender/render/\u003Cid\u003E.",
     "inputSchema": {
       "type": "object",
       "properties": {
-        "id": {
-          "description": "Job id as blender_render_job returned it.",
-          "type": [
-            "string",
-            "null"
-          ],
-          "default": null
-        },
         "logLines": {
-          "description": "Lines from the end of the job\u0027s log to include.",
+          "description": "Lines from the end of each job\u0027s log to include.",
           "type": "integer",
-          "default": 20
+          "default": 0
         }
       }
     },

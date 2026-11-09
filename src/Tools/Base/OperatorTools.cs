@@ -1,11 +1,10 @@
 using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Snail.MCP.Blender.Application.Access;
 using Snail.MCP.Blender.Application.Discovery;
-using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting.Sessions;
 
 namespace Snail.MCP.Blender.Tools.Base;
 
@@ -27,7 +26,7 @@ public sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, Sc
         config.Python != PythonAccess.Off || !ScriptAccess.RunsScripts(name, parameters)
             ? WithinAsync(timeoutSeconds, timeout => SendAsync(BridgeCommands.RunOperator,
                 new JsonObject().With("name", name).With("params", parameters).With("area", area), cancellationToken, timeout))
-            : Task.FromResult(ToolResponse.Failure(Messages.ScriptOperatorDisabled, Messages.PythonDisabledHint));
+            : Task.FromResult(ToolAnswer.Failed(Messages.ScriptOperatorDisabled, Messages.PythonDisabledHint));
 
     [McpServerTool(Name = "blender_describe_operator", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Operators.DescribeOperator)]
@@ -46,14 +45,14 @@ public sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, Sc
     {
         if (config.Python == PythonAccess.Off)
         {
-            return ToolResponse.Failure(Messages.PythonDisabled, Messages.PythonDisabledHint);
+            return ToolAnswer.Failed(Messages.PythonDisabled, Messages.PythonDisabledHint);
         }
 
         var covered = advice.Read(code);
 
         if (config.Python == PythonAccess.Fallback && covered.Count >= ScriptAccess.CoveredLimit)
         {
-            return ToolResponse.Failure(Messages.PythonCovered(covered.Count), Messages.PythonCoveredHint, Advice(covered));
+            return ToolAnswer.Failed(Messages.PythonCovered(covered.Count), Messages.PythonCoveredHint, data: Advice(covered));
         }
 
         return await WithinAsync(timeoutSeconds, async timeout =>
@@ -65,20 +64,29 @@ public sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, Sc
     /// work the tools already do.</summary>
     /// <remarks>A python step is the same script a blender_python call would carry, so fallback reads it the same way; otherwise a sequence or a
     /// batch would be the way around the setting.</remarks>
-    /// <summary>The first step this client's key does not open, as a refusal; null when it opens them all.</summary>
-    /// <remarks>A tool that carries commands is one tool with one annotation, and what it does is whatever is inside it — so the key is asked
-    /// about the steps, not about the tool. Checked before the Python setting, because "your key does not open this" is the plainer answer of
-    /// the two and the one that does not depend on what the server was configured to allow.</remarks>
-    public static CallToolResult? RefusalFor(JsonArray commands, ToolScopes scopes, ClientSession client) =>
-        scopes.Refused(commands, client) is { } denied
-            ? ToolResponse.Failure(ToolScopes.Refusal(denied.Command, denied.Scope, client.Name), Messages.ScopeHint)
-            : null;
+    /// <summary>The first step the session's gate refuses, as a refusal; null when it lets them all through.</summary>
+    /// <remarks>A tool that carries commands is one tool with one annotation, and what it does is whatever is inside it — so the gate is asked
+    /// about every step, under the name of the tool the step's command stands for, before any of them is sent: a sequence half refused is a scene
+    /// half built. Checked before the Python setting, because "your key does not open this" is the plainer answer of the two and the one that does
+    /// not depend on what the server was configured to allow.</remarks>
+    public static CallToolResult? RefusalFor(JsonArray commands, IServiceProvider services)
+    {
+        foreach (var step in commands.OfType<JsonObject>())
+        {
+            if (step["command"]?.GetValue<string>() is { } command && ToolForwarding.Refused(services, BridgeCommands.ToolOf(command)) is { } refused)
+            {
+                return refused;
+            }
+        }
+
+        return null;
+    }
 
     public static CallToolResult? RefusalFor(JsonArray commands, PythonAccess access, ScriptAdvice advice, string offMessage)
     {
         if (access == PythonAccess.Off)
         {
-            return ScriptAccess.ContainsPython(commands) ? ToolResponse.Failure(offMessage, Messages.PythonDisabledHint) : null;
+            return ScriptAccess.ContainsPython(commands) ? ToolAnswer.Failed(offMessage, Messages.PythonDisabledHint) : null;
         }
 
         if (access != PythonAccess.Fallback)
@@ -89,7 +97,7 @@ public sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, Sc
         var scripts = commands.Select((step, index) => (Step: index + 1, Covered: CoveredBy(step, advice)));
 
         return scripts.FirstOrDefault(script => script.Covered.Count >= ScriptAccess.CoveredLimit) is { Covered.Count: > 0 } refused
-            ? ToolResponse.Failure(Messages.StepPythonCovered(refused.Step, refused.Covered.Count), Messages.PythonCoveredHint, Advice(refused.Covered))
+            ? ToolAnswer.Failed(Messages.StepPythonCovered(refused.Step, refused.Covered.Count), Messages.PythonCoveredHint, data: Advice(refused.Covered))
             : null;
     }
 
@@ -103,13 +111,13 @@ public sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, Sc
     {
         if (!reply.IsOk || covered.Count == 0 || reply.Result is not JsonObject result)
         {
-            return ToolResponse.From(reply);
+            return BridgeAnswers.From(reply);
         }
 
         var advised = result.DeepClone().AsObject();
         advised["advice"] = Advice(covered);
 
-        return ToolResponse.Success(advised);
+        return ToolAnswer.Ok(advised);
     }
 
     private static JsonNode Advice(IReadOnlyList<ScriptFinding> covered) => new JsonObject

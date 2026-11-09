@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Tools.Prompts;
 
 namespace Snail.MCP.Blender.Tools.Post;

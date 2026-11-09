@@ -12,12 +12,12 @@ public static class ServerGuidance
     public const string Instructions =
         """
         This server drives a running Blender through its Python add-on. Every tool is named blender_*, except
-        find_tool, run_tools and run_program, which every server of the fleet spells alike.
+        find_tool, run_tools and run_program, named as on every server of the fleet; run_tools here sends bridge commands.
         Start with blender_diagnose: it tells whether the add-on inside Blender answers and which machine Blender runs on.
         When it does not answer, blender_install_addon builds the zip and lists the steps; over HTTP the add-on comes with
         the Blender image beside this server instead.
         Every answer is JSON with an ok flag, and a failed call is also flagged isError. When ok is false, read error
-        and hint and fix the call instead of retrying it verbatim; data.type names the failure.
+        and hint and fix the call instead of retrying it verbatim; type names the failure.
         Rotations are degrees, distances are metres, colours are 0 to 1.
         Reached over HTTP, this server runs beside Blender and sees none of the client's folders: begin with blender_open_project
         named after the folder you work in, render into the renders folder it names, and run in your own shell the command that

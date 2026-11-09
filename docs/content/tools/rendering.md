@@ -192,7 +192,7 @@ Renders the current or a given frame of a scene and view layer to an image file 
 
 ## <code>blender_<wbr>render_<wbr>animation</code>
 
-Renders the frame range as an image sequence or a video. In the background by default: a second Blender renders the same range to the same path, this one stays free, and the reply is a job id that blender_render_job_status follows and blender_render_job_cancel stops. Pass background=false to render here instead, which holds Blender until the last frame and cannot be interrupted — a cancelled tool call stops the waiting, not the render.
+Renders the frame range as an image sequence or a video. In the background by default: a second Blender renders the same range to the same path, this one stays free, and the reply is the job — its result within `wait` seconds, its resource job://blender/render/&lt;id&gt; to read otherwise — that blender_render_job_cancel stops. Pass background=false to render here instead, which holds Blender until the last frame and cannot be interrupted — a cancelled tool call stops the waiting, not the render.
 
 *only adds · every call adds · stays inside Blender.*
 
@@ -205,8 +205,9 @@ Renders the frame range as an image sequence or a video. In the background by de
 | `fileFormat` | `string?` | — | `null` | PNG, JPEG, OPEN_EXR or FFMPEG for a video. |
 | `scene` | `string?` | — | `null` | Scene to act on; the current scene otherwise. |
 | `preview` | `boolean` | — | `true` | Return a small JPEG of the result as image content, with exposure statistics; false for the path only. |
-| `background` | `boolean` | — | `true` | Render in a second Blender, the default: this one stays free, the reply is a job id and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped. |
+| `background` | `boolean` | — | `true` | Render in a second Blender, the default: this one stays free, the reply is the job — its result within the wait, its resource to read otherwise — and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped. |
 | `timeoutSeconds` | `integer` | — | `600` | Seconds to wait for Blender, 1 to 600. |
+| `wait` | `integer` | — | `60` | Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on. |
 
 <details><summary>JSON Schema</summary>
 
@@ -264,7 +265,7 @@ Renders the frame range as an image sequence or a video. In the background by de
       "default": true
     },
     "background": {
-      "description": "Render in a second Blender, the default: this one stays free, the reply is a job id and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped.",
+      "description": "Render in a second Blender, the default: this one stays free, the reply is the job \u2014 its result within the wait, its resource to read otherwise \u2014 and blender_render_job_cancel stops it. False renders here, which blocks Blender until every frame is done and cannot be stopped.",
       "type": "boolean",
       "default": true
     },
@@ -272,6 +273,11 @@ Renders the frame range as an image sequence or a video. In the background by de
       "description": "Seconds to wait for Blender, 1 to 600.",
       "type": "integer",
       "default": 600
+    },
+    "wait": {
+      "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+      "type": "integer",
+      "default": 60
     }
   },
   "required": [

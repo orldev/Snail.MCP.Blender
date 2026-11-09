@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.Extensions.Options;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Configuration;
 
@@ -16,7 +17,7 @@ public sealed class ServerConfig
     public BlenderLinkOptions Bridge { get; set; } = new();
 
     /// <summary>stdio when the client starts this server; http when it runs on its own beside Blender and clients connect to it.</summary>
-    public Transport Transport { get; set; } = Transport.Stdio;
+    public McpTransport Transport { get; set; } = McpTransport.Stdio;
 
     [ValidateObjectMembers]
     public HttpOptions Http { get; set; } = new();
@@ -105,7 +106,12 @@ public sealed class TunnelOptions
 public sealed class HttpOptions
 {
     /// <summary>The address to listen on; a container listens on every interface, a server started by hand on the loopback only.</summary>
-    public string Url { get; set; } = "http://127.0.0.1:8080";
+    /// <remarks>The HTTP server replaces it with the address it really listens on, which <c>Url</c> at the root (<c>SNAIL_MCP_BLENDER_URL</c>) or a
+    /// <c>Port</c> may have moved, so what is built on it — the links, the status page, the diagnosis — names that address.</remarks>
+    public string Url { get; set; } = DefaultUrl;
+
+    /// <summary>Where the HTTP server listens when nothing says otherwise: the loopback, which a container widens to every interface.</summary>
+    public const string DefaultUrl = "http://127.0.0.1:8080";
 
     /// <summary>The token a client presents as a bearer and on the page login; empty reads <see cref="TokenFile"/>.</summary>
     public string? Token { get; set; }
@@ -113,7 +119,7 @@ public sealed class HttpOptions
     /// <summary>A file holding the token, the way a container receives a secret.</summary>
     public string? TokenFile { get; set; }
 
-    /// <summary>The address clients reach this server at behind a reverse proxy, which links to files are built on; empty uses <see cref="Url"/>.</summary>
+    /// <summary>The address clients reach this server at behind a reverse proxy, which links to files are built on; empty uses <see cref="Url"/>, the address the server listens on.</summary>
     public string? PublicUrl { get; set; }
 
     /// <summary>Minutes a signed link to a file stays valid.</summary>

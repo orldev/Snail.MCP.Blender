@@ -38,6 +38,24 @@ public static partial class BridgeCommands
 
     public static IReadOnlyList<BridgeCommand> All => Catalog.Value;
 
+    /// <summary>What every tool that sends one command is called before the command's name: <c>blender_add_primitive</c> sends <c>add_primitive</c>.</summary>
+    public const string ToolPrefix = "blender_";
+
+    /// <summary>The tool a command stands for, under whose name a session's gate grants it: <c>add_primitive</c> is <c>blender_add_primitive</c>.</summary>
+    /// <remarks>A command no tool sends — <c>run</c>, <c>batch_job</c> — still has a tool name to be asked about; the gate answers for it from
+    /// the command's own meaning.</remarks>
+    public static string ToolOf(string command) => ToolPrefix + command;
+
+    /// <summary>The command a tool sends, when the catalog holds one of its name without the prefix; null for the server's own tools.</summary>
+    /// <remarks>The tools that carry no command are the server's own — discovery, skills, transfers, the add-on package — and a program cannot
+    /// send those, which is what a null says.</remarks>
+    public static string? CommandOf(string tool)
+    {
+        var name = tool.StartsWith(ToolPrefix, StringComparison.Ordinal) ? tool[ToolPrefix.Length..] : tool;
+
+        return All.Any(command => string.Equals(command.Name, name, StringComparison.Ordinal)) ? name : null;
+    }
+
     /// <summary>The commands one add-on module implements.</summary>
     public static IReadOnlyList<BridgeCommand> Of(string module) =>
         [.. All.Where(command => string.Equals(command.Module, module, StringComparison.Ordinal))];

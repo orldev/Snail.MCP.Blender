@@ -1,5 +1,3 @@
-using System.Text.Json.Serialization.Metadata;
-using ModelContextProtocol;
 using Snail.Sdk.Mcp.Hosting.Jobs;
 
 namespace Snail.MCP.Blender.Application.Rendering;
@@ -9,20 +7,24 @@ namespace Snail.MCP.Blender.Application.Rendering;
 /// The add-on owns the work and its state file; this server asks it where the work stands every <see cref="Interval"/>
 /// until the state is a terminal one, reports each answer as the job's progress, and ends the job with the last answer
 /// as its result. The asking is the server's, not the model's: a client subscribed to the job's resource is told when
-/// it ends, and a model reads the resource when it wants. Every answer also passes <see cref="RenderJobs.Observe"/>,
-/// which keeps the farm skill loaded while the client's work runs.
+/// it ends, and a model reads the resource when it wants.
 /// </remarks>
-public sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, RenderJobs tracked, TimeProvider clock)
+public sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, TimeProvider clock)
 {
-    /// <summary>The add-on's answer as the job's result: a JSON object, which the SDK's options know how to write.</summary>
-    private static readonly JsonTypeInfo<JsonObject> AnswerType = (JsonTypeInfo<JsonObject>)McpJsonUtilities.DefaultOptions.GetTypeInfo(typeof(JsonObject));
+    /// <summary>The kind of job a render is.</summary>
+    private const string RenderKind = "render";
+
+    private int _renders;
 
     /// <summary>How often the add-on is asked; long enough that a question never competes with the render for Blender's attention.</summary>
     public TimeSpan Interval { get; init; } = TimeSpan.FromSeconds(2);
 
+    /// <summary>Whether a render this server follows is still running: the farm skill stays loaded while one is.</summary>
+    public bool IsRendering => Volatile.Read(ref _renders) > 0;
+
     /// <summary>Starts a render with <paramref name="start"/> and follows it with <paramref name="status"/> as a job of the server; a refusal of the add-on is answered as it is.</summary>
     public Task<JobStart> StartRenderAsync(BridgeCommand start, BridgeCommand status, JsonObject arguments, CancellationToken cancellationToken) =>
-        StartAsync("render", start, status, arguments, Frames, cancellationToken);
+        StartAsync(RenderKind, start, status, arguments, Frames, cancellationToken);
 
     /// <summary>Starts a batch with <paramref name="start"/> and follows it with <paramref name="status"/> as a job of the server; a refusal of the add-on is answered as it is.</summary>
     public Task<JobStart> StartBatchAsync(BridgeCommand start, BridgeCommand status, JsonObject arguments, CancellationToken cancellationToken) =>
@@ -30,16 +32,32 @@ public sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, RenderJobs track
 
     private async Task<JobStart> StartAsync(string kind, BridgeCommand start, BridgeCommand status, JsonObject arguments, Func<JsonObject, JobProgress> progressOf, CancellationToken cancellationToken)
     {
-        var started = tracked.Observe(await bridge.SendAsync(start, arguments, TimeSpan.FromSeconds(120), cancellationToken).ConfigureAwait(false));
+        var started = await bridge.SendAsync(start, arguments, TimeSpan.FromSeconds(120), cancellationToken).ConfigureAwait(false);
 
         if (!started.IsOk || started.Result is not JsonObject first || first["id"]?.GetValue<string>() is not { } id)
         {
             return new JobStart(null, started);
         }
 
-        var job = jobs.Start(kind, (progress, token) => FollowAsync(status, id, first, progressOf, progress, token), AnswerType);
+        var isRender = kind == RenderKind;
+        var job = jobs.Start(kind, (progress, token) => isRender ? RenderingAsync(status, id, first, progress, token) : FollowAsync(status, id, first, progressOf, progress, token), ToolAnswer.ObjectInfo);
 
         return new JobStart(job, started);
+    }
+
+    /// <summary>Follows a render, counted as running from its first answer to its last.</summary>
+    private async Task<JsonObject> RenderingAsync(BridgeCommand status, string id, JsonObject first, IProgress<JobProgress> progress, CancellationToken cancellationToken)
+    {
+        Interlocked.Increment(ref _renders);
+
+        try
+        {
+            return await FollowAsync(status, id, first, Frames, progress, cancellationToken).ConfigureAwait(false);
+        }
+        finally
+        {
+            Interlocked.Decrement(ref _renders);
+        }
     }
 
     /// <summary>Asks the add-on until the work has ended, reporting each answer; the last answer is the result.</summary>
@@ -52,7 +70,7 @@ public sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, RenderJobs track
         while (JobStates.IsActive(last["state"]?.GetValue<string>()))
         {
             await Task.Delay(Interval, clock, cancellationToken).ConfigureAwait(false);
-            var asked = tracked.Observe(await bridge.SendAsync(status, new JsonObject { ["id"] = id, ["log_lines"] = 20 }, null, cancellationToken).ConfigureAwait(false));
+            var asked = await bridge.SendAsync(status, new JsonObject { ["id"] = id, ["log_lines"] = 20 }, null, cancellationToken).ConfigureAwait(false);
 
             if (!asked.IsOk)
             {

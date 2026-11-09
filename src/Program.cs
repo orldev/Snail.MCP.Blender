@@ -5,29 +5,37 @@ using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Hosting;
 using Snail.Sdk.Mcp.Hosting;
 
-ServerFolders.MoveFromSnailNames(ServerPaths.ShortName);
-
-if (ClientCommandLine.IsAsked(args))
+try
 {
-    return ClientCommandLine.Run(args, Console.Out);
-}
+    if (ClientCommandLine.IsAsked(args))
+    {
+        return ClientCommandLine.Run(args, Console.Out);
+    }
 
-var settings = ServerConfigExtensions.Settings();
+    var settings = ServerConfigExtensions.Settings();
+    var endpoint = McpEndpoint.Read(settings, new Uri(HttpOptions.DefaultUrl), HttpServerRegistrationExtensions.EndpointOptions);
 
-if (ServerConfigExtensions.Peek(settings).Transport is Transport.Http)
-{
-    await WebApplication.CreateBuilder(args)
-        .ConfigureHttpServer(settings)
+    if (endpoint.Transport is McpTransport.Http)
+    {
+        await WebApplication.CreateBuilder(args)
+            .ConfigureHttpServer(settings)
+            .Build()
+            .UseHttpServer()
+            .RunAsync();
+
+        return 0;
+    }
+
+    await McpHost.CreateBuilder(args, settings)
+        .ConfigureMcpServer(settings)
         .Build()
-        .UseHttpServer()
         .RunAsync();
 
     return 0;
 }
+catch (StartRefusedException refused)
+{
+    await Console.Error.WriteLineAsync(refused.Message);
 
-await McpHost.CreateBuilder(args)
-    .ConfigureMcpServer(settings)
-    .Build()
-    .RunAsync();
-
-return 0;
+    return 1;
+}

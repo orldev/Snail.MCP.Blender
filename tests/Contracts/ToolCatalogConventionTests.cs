@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using ModelContextProtocol;
 using ModelContextProtocol.Server;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Tools;
 using Snail.MCP.Blender.Tools.Farm;
 using Snail.MCP.Blender.Tools.Post;
@@ -86,14 +86,14 @@ public partial class ToolCatalogConventionTests
         var names = ToolMethods().Select(ToolName).ToList();
 
         Assert.All(names.Except(machinery), name => Assert.Matches("^blender_[a-z0-9_]+$", name));
-        Assert.Equal(machinery.Order(StringComparer.Ordinal), names.Intersect(machinery).Order(StringComparer.Ordinal));
+        Assert.Equal(machinery.Except(ServerTools.OfTheSdk).Order(StringComparer.Ordinal), names.Intersect(machinery).Order(StringComparer.Ordinal));
         Assert.Equal(names.Count, names.Distinct(StringComparer.Ordinal).Count());
     }
 
     [Fact]
     public void Descriptions_ReferenceOnlyExistingTools()
     {
-        var known = ToolMethods().Select(ToolName).ToHashSet(StringComparer.Ordinal);
+        var known = ToolMethods().Select(ToolName).Concat(ServerTools.OfTheSdk).ToHashSet(StringComparer.Ordinal);
 
         var dangling = ToolMethods()
             .SelectMany(method => ToolReference.Matches(DescriptionOf(method) ?? string.Empty)
@@ -109,7 +109,7 @@ public partial class ToolCatalogConventionTests
     [Fact]
     public void ServerGuidance_ReferencesOnlyExistingTools()
     {
-        var known = ToolMethods().Select(ToolName).ToHashSet(StringComparer.Ordinal);
+        var known = ToolMethods().Select(ToolName).Concat(ServerTools.OfTheSdk).ToHashSet(StringComparer.Ordinal);
 
         var dangling = ToolReference.Matches(ServerGuidance.Instructions)
             .Select(match => match.Value)
@@ -136,8 +136,8 @@ public partial class ToolCatalogConventionTests
     public void EveryToolType_HasAFamilyInTheReference()
     {
         var settings = JsonNode.Parse(File.ReadAllText(Path.Combine(Repository.Root, "docs", "tools.json")))!;
-        var families = settings["families"]!.AsArray().Select(family => family!["type"]!.GetValue<string>()).ToHashSet(StringComparer.Ordinal);
-        var missing = typeof(ToolResponse).Assembly.GetTypes()
+        var families = settings["families"]!.AsArray().Select(family => family?["type"]?.GetValue<string>()).OfType<string>().ToHashSet(StringComparer.Ordinal);
+        var missing = typeof(BridgeAnswers).Assembly.GetTypes()
             .Where(type => type.GetCustomAttribute<McpServerToolTypeAttribute>() is not null)
             .Select(type => type.Name)
             .Where(name => !families.Contains(name))
@@ -181,7 +181,7 @@ public partial class ToolCatalogConventionTests
     [Fact]
     public void Prompts_ReferenceOnlyExistingTools()
     {
-        var known = ToolMethods().Select(ToolName).ToHashSet(StringComparer.Ordinal);
+        var known = ToolMethods().Select(ToolName).Concat(ServerTools.OfTheSdk).ToHashSet(StringComparer.Ordinal);
         var texts = typeof(PromptTexts).GetFields(BindingFlags.Public | BindingFlags.Static).Where(field => field.IsLiteral).Select(field => (string)field.GetRawConstantValue()!);
 
         var dangling = texts
@@ -297,7 +297,7 @@ public partial class ToolCatalogConventionTests
         var start = source.IndexOf($"Name = \"{name}\"", StringComparison.Ordinal);
         var next = ToolAttribute.Match(source[(start + 1)..]);
         var body = next.Success ? source[start..(start + 1 + next.Index)] : source[start..];
-        var fields = CommandField.Matches(body).Select(match => match.Groups[1].Value).Distinct();
+        var fields = CommandField.Matches(body).Select(match => match.Groups[1].Value).Distinct().Where(field => typeof(BridgeCommands).GetField(field)?.FieldType == typeof(BridgeCommand));
 
         return [.. fields.Select(field => ((BridgeCommand)typeof(BridgeCommands).GetField(field)!.GetValue(null)!).Name)];
     }

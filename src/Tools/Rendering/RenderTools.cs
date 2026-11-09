@@ -3,7 +3,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Rendering;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
 
@@ -35,7 +35,7 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
                     .With("samples", samples).With("denoise", denoise).With("device", device)
                     .With("film_transparent", filmTransparent).With("filter_size", filterSize).With("camera", camera).With("scene", scene),
                 cancellationToken)
-            : Task.FromResult(ToolResponse.Failure(Messages.ResolutionTooLarge, Messages.ResolutionHint));
+            : Task.FromResult(ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint));
 
     [McpServerTool(Name = "blender_render_image", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.Image)]
@@ -48,7 +48,7 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
         [Description(ToolDescriptions.Parameters.TimeoutSeconds)] int timeoutSeconds = 300,
         IProgress<ProgressNotificationValue>? progress = null,
         CancellationToken cancellationToken = default) =>
-        await WithinAsync(timeoutSeconds, async timeout => ToolResponse.Pictured(gallery.Remember(await watch.FollowAsync(
+        await WithinAsync(timeoutSeconds, async timeout => BridgeAnswers.Pictured(gallery.Remember(await watch.FollowAsync(
             ExchangeAsync(BridgeCommands.RenderImage, new JsonObject().With("path", path).With("frame", frame).With("scene", scene).With("view_layer", viewLayer).With("preview", preview), timeout, cancellationToken),
             progress, 1, cancellationToken).ConfigureAwait(false)))).ConfigureAwait(false);
 
@@ -69,7 +69,7 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
         CancellationToken cancellationToken = default) =>
         background
             ? await InTheBackgroundAsync(outputPath, Frames(start, end, step), fileFormat, scene, TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false)
-            : await WithinAsync(timeoutSeconds, async timeout => ToolResponse.Pictured(gallery.Remember(await watch.FollowAsync(
+            : await WithinAsync(timeoutSeconds, async timeout => BridgeAnswers.Pictured(gallery.Remember(await watch.FollowAsync(
                 ExchangeAsync(BridgeCommands.RenderAnimation,
                     new JsonObject().With("output_path", outputPath).With("start", start).With("end", end).With("step", step).With("file_format", fileFormat).With("scene", scene).With("preview", preview),
                     timeout, cancellationToken),
@@ -86,8 +86,8 @@ public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, Render
         var started = await background.StartRenderAsync(BridgeCommands.RenderJob, BridgeCommands.RenderJobStatus, arguments, cancellationToken).ConfigureAwait(false);
 
         return started.Job is { } job
-            ? ToolResponse.Job(await job.ForAsync(wait, cancellationToken).ConfigureAwait(false), Messages.BackgroundRenderNote)
-            : ToolResponse.From(started.First);
+            ? BridgeAnswers.Job(await job.ForAsync(wait, cancellationToken).ConfigureAwait(false), Messages.BackgroundRenderNote)
+            : BridgeAnswers.From(started.First);
     }
 
     /// <summary>A frame range as the job spec writes it: 1-240, or 1-240x2 with a step; nothing means the scene's own range.</summary>

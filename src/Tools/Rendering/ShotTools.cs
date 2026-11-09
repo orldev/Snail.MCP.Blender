@@ -3,7 +3,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Rendering;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Tools.Prompts;
 
 namespace Snail.MCP.Blender.Tools.Rendering;
@@ -32,13 +32,13 @@ public sealed class ShotTools(IBlenderBridge bridge, RenderWatch watch, RenderGa
         IProgress<ProgressNotificationValue>? progress = null,
         CancellationToken cancellationToken = default) =>
         ToolLimits.IsRenderable(resolutionX) && ToolLimits.IsRenderable(resolutionY)
-            ? await WithinAsync(timeoutSeconds, async timeout => ToolResponse.Pictured(gallery.Remember(await watch.FollowAsync(
+            ? await WithinAsync(timeoutSeconds, async timeout => BridgeAnswers.Pictured(gallery.Remember(await watch.FollowAsync(
                 ExchangeAsync(BridgeCommands.RenderObject,
                     new JsonObject().With("path", path).With("name", name).With("names", names).With("azimuth", azimuth).With("elevation", elevation).With("lens", lens)
                         .With("margin", margin).With("transparent", transparent).With("resolution_x", resolutionX).With("resolution_y", resolutionY).With("keep_camera", keepCamera).With("preview", preview),
                     timeout, cancellationToken),
                 progress, 1, cancellationToken).ConfigureAwait(false)))).ConfigureAwait(false)
-            : (ToolResponse.Failure(Messages.ResolutionTooLarge, Messages.ResolutionHint));
+            : (ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint));
 
     [McpServerTool(Name = "blender_viewport_capture", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.ViewportCapture)]
@@ -46,7 +46,7 @@ public sealed class ShotTools(IBlenderBridge bridge, RenderWatch watch, RenderGa
         [Description("Absolute path of the image to write.")] string path,
         [Description(ToolDescriptions.Parameters.Preview)] bool preview = true,
         CancellationToken cancellationToken = default) =>
-        ToolResponse.Pictured(gallery.Remember(await ExchangeAsync(BridgeCommands.ViewportCapture, new JsonObject().With("path", path).With("preview", preview), TimeSpan.FromSeconds(60), cancellationToken).ConfigureAwait(false)));
+        BridgeAnswers.Pictured(gallery.Remember(await ExchangeAsync(BridgeCommands.ViewportCapture, new JsonObject().With("path", path).With("preview", preview), TimeSpan.FromSeconds(60), cancellationToken).ConfigureAwait(false)));
 
     [McpServerTool(Name = "blender_inspect_image", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.InspectImage)]
@@ -55,7 +55,7 @@ public sealed class ShotTools(IBlenderBridge bridge, RenderWatch watch, RenderGa
         [Description(ToolDescriptions.Parameters.Preview)] bool preview = true,
         [Description("Longest edge of the preview in pixels; 512 by default, 1024 to read fine detail.")] int? previewSize = null,
         CancellationToken cancellationToken = default) =>
-        ToolResponse.Pictured(gallery.Remember(await ExchangeAsync(BridgeCommands.InspectImage, new JsonObject().With("path", path).With("preview", preview).With("preview_size", previewSize), TimeSpan.FromSeconds(60), cancellationToken).ConfigureAwait(false)));
+        BridgeAnswers.Pictured(gallery.Remember(await ExchangeAsync(BridgeCommands.InspectImage, new JsonObject().With("path", path).With("preview", preview).With("preview_size", previewSize), TimeSpan.FromSeconds(60), cancellationToken).ConfigureAwait(false)));
 
     [McpServerTool(Name = "blender_bake_texture", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.BakeTexture)]
@@ -73,7 +73,7 @@ public sealed class ShotTools(IBlenderBridge bridge, RenderWatch watch, RenderGa
         [Description(ToolDescriptions.Parameters.TimeoutSeconds)] int timeoutSeconds = 600,
         IProgress<ProgressNotificationValue>? progress = null,
         CancellationToken cancellationToken = default) =>
-        await WithinAsync(timeoutSeconds, async timeout => ToolResponse.Pictured(gallery.Remember(await watch.FollowAsync(
+        await WithinAsync(timeoutSeconds, async timeout => BridgeAnswers.Pictured(gallery.Remember(await watch.FollowAsync(
             ExchangeAsync(BridgeCommands.BakeTexture,
                 new JsonObject().With("name", name).With("path", path).With("type", type).With("width", width).With("height", height).With("samples", samples)
                     .With("margin", margin).With("image_name", imageName).With("keep_node", keepNode).With("preview", preview),

@@ -300,6 +300,7 @@ public class BlenderConnectionTests
 
     /// <summary>A socket that listens with its backlog already filled: a connect to it neither completes nor is refused, which is how a Blender
     /// whose main thread never comes back looks from here.</summary>
+    /// <remarks>Some hosts reset a connect past a full backlog instead of leaving it waiting; the backlog is full either way.</remarks>
     private static async Task<Deaf> DeafAsync()
     {
         var deaf = new Deaf();
@@ -315,6 +316,12 @@ public class BlenderConnectionTests
                 deaf.Keep(waiting);
             }
             catch (OperationCanceledException)
+            {
+                waiting.Dispose();
+
+                break;
+            }
+            catch (SocketException)
             {
                 waiting.Dispose();
 

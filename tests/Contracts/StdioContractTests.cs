@@ -1,14 +1,10 @@
 using System.Diagnostics;
-using System.Reflection;
 using System.Text.Json;
-using ModelContextProtocol.Server;
-using Snail.MCP.Blender.Application.Skills;
 using Snail.MCP.Blender.Configuration;
-using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting;
 using Snail.Sdk.Mcp.Hosting.Jobs;
 using Snail.Sdk.Mcp.JobClient;
-using Snail.Sdk.Mcp.Testing;
 
 namespace Snail.MCP.Blender.Tests.Contracts;
 
@@ -29,7 +25,7 @@ public class StdioContractTests
     [Fact]
     public async Task Server_AfterHandshake_KeepsStdoutCleanOfEverythingButJsonRpc()
     {
-        using var session = await ServerSession.StartAsync(ClosedPort());
+        using var session = await ServerSession.StartAsync(Ports.Free());
 
         var initialize = await session.CallAsync(1, "initialize", new
         {
@@ -42,7 +38,7 @@ public class StdioContractTests
         var serverInfo = result.GetProperty("serverInfo");
 
         Assert.Equal("s3l-mcp-blender", serverInfo.GetProperty("name").GetString());
-        Assert.Equal(ThisAssembly.InformationalVersion, serverInfo.GetProperty("version").GetString());
+        Assert.Equal(ServerIdentity.VersionOf(typeof(ServerConfig).Assembly), serverInfo.GetProperty("version").GetString());
         Assert.Equal(ServerGuidance.Instructions, result.GetProperty("instructions").GetString());
 
         await session.NotifyAsync("notifications/initialized");
@@ -82,9 +78,9 @@ public class StdioContractTests
         var skillAnswer = JsonDocument.Parse(skillCall.GetProperty("result").GetProperty("content")[0].GetProperty("text").GetString()!).RootElement;
 
         Assert.False(skillAnswer.GetProperty("ok").GetBoolean());
-        Assert.Equal("Unavailable", skillAnswer.GetProperty("data").GetProperty("type").GetString());
+        Assert.Equal("Unavailable", skillAnswer.GetProperty("type").GetString());
         Assert.True(skillCall.GetProperty("result").GetProperty("isError").GetBoolean());
-        Assert.Equal("Unavailable", skillCall.GetProperty("result").GetProperty("structuredContent").GetProperty("data").GetProperty("type").GetString());
+        Assert.False(skillCall.GetProperty("result").TryGetProperty("structuredContent", out _));
 
         var prompts = await session.CallAsync(7, "prompts/list", new { });
         var promptNames = prompts.GetProperty("result").GetProperty("prompts").EnumerateArray().Select(prompt => prompt.GetProperty("name").GetString()!).ToHashSet();
@@ -185,6 +181,29 @@ public class StdioContractTests
         Assert.False(text.GetProperty("data").GetProperty("preview").TryGetProperty("base64", out _));
     }
 
+    /// <summary>A word where the bridge's port belongs crashed the server with a trace and exit code 134, from the binding the program does before
+    /// any host exists; it is refused in one line that names the variable, with exit code 1.</summary>
+    [Fact]
+    public async Task Server_WithAWordForTheBridgePort_IsRefusedInOneLine_NamingTheVariable()
+    {
+        var dataDirectory = TestFolder.Create();
+        var variables = new Dictionary<string, string?>
+        {
+            ["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory,
+            ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = "abc",
+        };
+
+        var refused = await Assert.ThrowsAsync<ServerExitedException>(() => ServerProgram.StartAsync("Snail.MCP.Blender", "SNAIL_BLENDER_SERVER", variables));
+
+        var line = Assert.Single(refused.Stderr.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+
+        Assert.Equal(1, refused.ExitCode);
+        Assert.Contains("SNAIL_MCP_BLENDER_BRIDGE__PORT", line, StringComparison.Ordinal);
+        Assert.Contains("'abc'", line, StringComparison.Ordinal);
+        Assert.DoesNotContain("   at ", refused.Stderr, StringComparison.Ordinal);
+        Directory.Delete(dataDirectory, recursive: true);
+    }
+
     /// <summary>
     /// The guard rules of every Snail server, on the list a model receives with every skill loaded: names in snake case and listed once,
     /// the tool and every parameter described, read-only or destructive stated, every allowed value named, English.
@@ -197,16 +216,16 @@ public class StdioContractTests
         {
             ["SNAIL_MCP_BLENDER_DATA_DIRECTORY"] = dataDirectory,
             ["SNAIL_MCP_BLENDER_IDLE_TIMEOUT_MINUTES"] = "0",
-            ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = ClosedPort().ToString(),
+            ["SNAIL_MCP_BLENDER_BRIDGE__PORT"] = Ports.Free().ToString(),
         };
 
         try
         {
             await using var client = await ServerProgram.StartAsync("Snail.MCP.Blender", "SNAIL_BLENDER_SERVER", variables);
 
-            foreach (var skill in SkillCatalog.Discover(typeof(ToolDescriptions).Assembly))
+            foreach (var skill in typeof(Skills).GetFields().Select(field => (string)field.GetValue(null)!))
             {
-                var enabled = await client.CallToolAsync("blender_enable_skill", new Dictionary<string, object?> { ["name"] = skill.Name });
+                var enabled = await client.CallToolAsync("blender_enable_skill", new Dictionary<string, object?> { ["name"] = skill });
 
                 Assert.NotEqual(true, enabled.IsError);
             }
@@ -225,25 +244,10 @@ public class StdioContractTests
         }
     }
 
-    private static int ClosedPort()
-    {
-        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-
-        return port;
-    }
-
     /// <summary>Tools are discovered by the SDK through attributes, so a misconfigured attribute is invisible to reflection-only guards; skill tools stay out until a skill is enabled.</summary>
     private static double Kilobytes(JsonElement listed) => listed.GetProperty("result").GetProperty("tools").GetRawText().Length / 1024.0;
 
-    private static HashSet<string> BaseToolNamesOfAssembly() =>
-        SkillRegistrationExtensions.BaseToolTypes(typeof(ToolDescriptions).Assembly)
-            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
-            .Select(method => method.GetCustomAttribute<McpServerToolAttribute>()?.Name)
-            .OfType<string>()
-            .ToHashSet(StringComparer.Ordinal);
+    private static HashSet<string> BaseToolNamesOfAssembly() => ServerTools.BaseNames();
 
     /// <summary>The server started as a separate process and spoken to over stdin/stdout, exactly as an MCP client does.</summary>
     private sealed class ServerSession : IDisposable

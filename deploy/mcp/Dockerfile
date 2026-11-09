@@ -38,13 +38,12 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=build /app .
 
-# Every request at Information buries what matters in a container's log; the server's own warnings and failures stay.
+# The MCP SDK and ASP.NET Core write from warnings up by Snail.Sdk's default (UseLevelsFrom, through UseMcpEndpoint): every
+# request at Information would bury what matters in a container's log. The server's own information stays.
 ENV SNAIL_MCP_BLENDER_TRANSPORT=Http \
     SNAIL_MCP_BLENDER_HTTP__URL=http://0.0.0.0:8080 \
     SNAIL_MCP_BLENDER_DATA_DIRECTORY=/home/app/.s3l-mcp-blender \
-    Logging__LogLevel__Default=Information \
-    Logging__LogLevel__Microsoft.AspNetCore=Warning \
-    Logging__LogLevel__ModelContextProtocol=Warning
+    Logging__LogLevel__Default=Information
 
 # The keys that sign sessions and form tokens live in a volume, so a recreated container does not sign everyone out.
 RUN mkdir -p /home/app/.aspnet/DataProtection-Keys /home/app/.s3l-mcp-blender \

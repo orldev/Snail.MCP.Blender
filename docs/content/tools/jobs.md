@@ -4,7 +4,7 @@ Part of the `farm` skill: these tools appear once it is loaded — by `blender_e
 
 ## <code>blender_<wbr>render_<wbr>job</code>
 
-Starts a background render: the file is saved as a copy and a second Blender renders it, so this Blender and the tools stay free. Frames, cameras, view layers, engine, output template with {scene} and {camera} and ####, format and depth. Jobs queue up and run maxParallel at a time, retry on failure, and can split into chunks that render interleaved frames in parallel. Returns the job id; poll blender_render_job_status. Save the file first: unsaved changes are included, but relative paths resolve best from a saved file.
+Starts a background render: the file is saved as a copy and a second Blender renders it, so this Blender and the tools stay free. Frames, cameras, view layers, engine, output template with {scene} and {camera} and ####, format and depth. Jobs queue up and run maxParallel at a time, retry on failure, and can split into chunks that render interleaved frames in parallel. Answers when the render ends within `wait` seconds, with its frames, files and timings; a longer render answers with the job running — read its resource (job://blender/render/&lt;id&gt;) for where it stands, or wait on it. Save the file first: unsaved changes are included, but relative paths resolve best from a saved file.
 
 *only adds · every call adds · stays inside Blender.*
 
@@ -18,6 +18,7 @@ Starts a background render: the file is saved as a copy and a second Blender ren
 | `output` | `object?` | — | `null` | What the job writes: format, depth, codec, size, samples, overwrite and placeholders. |
 | `queue` | `object?` | — | `null` | How the job runs: chunks, parallel jobs, retries, priority, threads and OCIO config. |
 | `scene` | `string?` | — | `null` | Scene to act on; the current scene otherwise. |
+| `wait` | `integer` | — | `60` | Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on. |
 
 <details><summary>JSON Schema</summary>
 
@@ -212,6 +213,11 @@ Starts a background render: the file is saved as a copy and a second Blender ren
         "null"
       ],
       "default": null
+    },
+    "wait": {
+      "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+      "type": "integer",
+      "default": 60
     }
   },
   "required": [
@@ -222,16 +228,15 @@ Starts a background render: the file is saved as a copy and a second Blender ren
 
 </details>
 
-## <code>blender_<wbr>render_<wbr>job_<wbr>status</code>
+## <code>blender_<wbr>render_<wbr>jobs</code>
 
-Progress of a background render: state, frames done of total, current frame and camera, elapsed and estimated remaining seconds, peak memory, the files written, the error if it failed and the tail of its log. Without an id, lists recent jobs.
+The recent background renders the add-on holds, newest first, with each one's state, frames done of total, elapsed seconds and files written, and which are still running — across restarts of this server. One job's progress is its resource, job://blender/render/&lt;id&gt;.
 
 *read-only · every call adds · stays inside Blender.*
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `id` | `string?` | — | `null` | Job id as blender_render_job returned it. |
-| `logLines` | `integer` | — | `20` | Lines from the end of the job's log to include. |
+| `logLines` | `integer` | — | `0` | Lines from the end of each job's log to include. |
 
 <details><summary>JSON Schema</summary>
 
@@ -239,18 +244,10 @@ Progress of a background render: state, frames done of total, current frame and 
 {
   "type": "object",
   "properties": {
-    "id": {
-      "description": "Job id as blender_render_job returned it.",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
-    },
     "logLines": {
-      "description": "Lines from the end of the job\u0027s log to include.",
+      "description": "Lines from the end of each job\u0027s log to include.",
       "type": "integer",
-      "default": 20
+      "default": 0
     }
   }
 }

@@ -1,5 +1,8 @@
+using Microsoft.Extensions.DependencyInjection;
 using Snail.MCP.Blender.Configuration;
+using Snail.MCP.Blender.Extensions;
 using Snail.MCP.Blender.Tools.Farm;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 
 namespace Snail.MCP.Blender.Tests.Tools;
 
@@ -7,7 +10,7 @@ public class FarmToolsTests
 {
     private readonly ScriptedBridge _bridge = new();
 
-    private JobTools Tools(ServerConfig config) => new(_bridge, config, TestJobs.Tracked(), TestJobs.AddOn(_bridge));
+    private JobTools Tools(ServerConfig config) => new(_bridge, config, TestJobs.AddOn(_bridge));
 
     [Fact]
     public async Task RenderJob_LeavesTheJobsDirectoryToTheAddOn()
@@ -24,6 +27,28 @@ public class FarmToolsTests
         Assert.Equal("1-48x2", parameters["frames"]!.ToString());
         Assert.Equal("CamB", parameters["cameras"]![1]!.ToString());
         Assert.True(parameters["overwrite"]!.GetValue<bool>());
+    }
+
+    /// <summary>A render outlives any idle time the skills are given, and the model still polls and cancels it with the farm's tools: the farm
+    /// stays loaded while a render the server follows runs, and no other skill does.</summary>
+    [Fact]
+    public async Task FarmSkill_IsBusy_WhileARenderRuns_AndNoLongerOnceItEnds()
+    {
+        var skills = new SkillOptions();
+        TransportRegistrationExtensions.Loading(skills, new ServerConfig { SkillIdleMinutes = 10 });
+        var running = TestJobs.AddOn(new ScriptedBridge().Answer(BridgeCommands.RenderJob, new JsonObject { ["id"] = "job-1", ["state"] = "running" }));
+        var ended = TestJobs.AddOn(new ScriptedBridge().Answer(BridgeCommands.RenderJob, new JsonObject { ["id"] = "job-2", ["state"] = "done" }));
+
+        await running.StartRenderAsync(BridgeCommands.RenderJob, BridgeCommands.RenderJobStatus, [], CancellationToken.None);
+        var finished = await ended.StartRenderAsync(BridgeCommands.RenderJob, BridgeCommands.RenderJobStatus, [], CancellationToken.None);
+        await finished.Job!.ForAsync(TimeSpan.FromSeconds(10), CancellationToken.None);
+        var whileRunning = new ServiceCollection().AddSingleton(running).BuildServiceProvider();
+        var onceEnded = new ServiceCollection().AddSingleton(ended).BuildServiceProvider();
+
+        Assert.True(SpinWait.SpinUntil(() => skills.IsBusy!(Skills.Farm, whileRunning), TimeSpan.FromSeconds(10)));
+        Assert.False(skills.IsBusy!(Skills.Rendering, whileRunning));
+        Assert.False(skills.IsBusy!(Skills.Farm, onceEnded));
+        Assert.Equal("blender", skills.Prefix);
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 
 namespace Snail.MCP.Blender.Application.Discovery;
 
@@ -9,9 +10,23 @@ public sealed record ScriptFinding(string Operation, string Tool, string? Skill)
 /// <remarks>The measured reason blender_python wins is not that the tools are missing but that they are invisible: two thirds of the
 /// mutating commands in a working session were scripts, and what those scripts did — resolution, samples, look, materials, lights —
 /// every one of them has a tool. The table below is read from that evidence and is checked against the catalog by a test, so a tool
-/// that gets renamed cannot leave a promise behind. Operators are matched by name instead, which needs no table.</remarks>
-public sealed partial class ScriptAdvice(ToolIndex index)
+/// that gets renamed cannot leave a promise behind. Operators are matched by name instead, which needs no table.
+/// <para>The tools are the ones the server registers, read as Snail.Sdk's discovery reads them (<see cref="ToolCatalog"/>); the strict match of
+/// an operator to the tool that covers it (<see cref="Covering"/>) is this server's own, since <c>find_tool</c> ranks by likeness and a near
+/// miss there is a fair answer where here it would be wrong advice.</para></remarks>
+public sealed partial class ScriptAdvice(IReadOnlyList<ToolEntry> tools)
 {
+    /// <summary>Words that carry no intent in an operator's or a tool's name: the prefix every tool shares, and the glue of an English sentence.</summary>
+    private static readonly HashSet<string> Noise = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "blender", "bpy", "ops", "the", "a", "an", "and", "or", "of", "for", "to", "in", "on", "with", "how", "do", "does", "did",
+        "i", "it", "its", "is", "are", "be", "that", "this", "my", "from", "into", "at", "by", "as", "can", "want", "need", "please", "some",
+    };
+
+    private readonly IReadOnlyDictionary<string, ToolEntry> _named = tools.ToDictionary(tool => tool.Name, StringComparer.Ordinal);
+
+    private readonly IReadOnlyList<(ToolEntry Tool, HashSet<string> Words)> _worded = [.. tools.Select(tool => (tool, Words(tool.Name)))];
+
     /// <summary>Marks of the Blender API that a dedicated tool covers: the text to find in the script, and the tool that does the same thing.</summary>
     private static readonly (string Operation, string Tool, string[] Marks)[] Api =
     [
@@ -72,7 +87,7 @@ public sealed partial class ScriptAdvice(ToolIndex index)
 
         foreach (var (operation, tool, marks) in Api)
         {
-            if (marks.Any(mark => text.Contains(mark, StringComparison.Ordinal)) && index.Named(tool) is { } entry && seen.Add(tool))
+            if (marks.Any(mark => text.Contains(mark, StringComparison.Ordinal)) && _named.GetValueOrDefault(tool) is { } entry && seen.Add(tool))
             {
                 found.Add(new ScriptFinding(operation, entry.Name, entry.Skill));
             }
@@ -94,11 +109,69 @@ public sealed partial class ScriptAdvice(ToolIndex index)
     {
         foreach (var name in Called(code))
         {
-            if (index.Covering(name[(name.IndexOf('.', StringComparison.Ordinal) + 1)..]) is { } entry)
+            if (Covering(name[(name.IndexOf('.', StringComparison.Ordinal) + 1)..]) is { } entry)
             {
                 yield return (name, entry);
             }
         }
+    }
+
+    /// <summary>The tool that covers a bpy operation such as <c>mesh.bevel</c>: every word of the operation stands in the tool's name, or nothing does.</summary>
+    /// <remarks>Deliberately strict. Advice that names the wrong tool is worse than no advice, so a near miss answers nothing; of the tools
+    /// that cover it, the one whose name says least else.</remarks>
+    public ToolEntry? Covering(string operation)
+    {
+        var words = Words(operation);
+
+        if (words.Count == 0)
+        {
+            return null;
+        }
+
+        var covering = _worded.Where(tool => words.All(tool.Words.Contains));
+        var narrowest = covering
+            .OrderBy(tool => tool.Words.Count)
+            .ThenBy(tool => tool.Tool.Name, StringComparer.Ordinal);
+
+        return narrowest.Select(tool => tool.Tool).FirstOrDefault();
+    }
+
+    /// <summary>Every distinct word of a name: letters and digits, split on everything else, without the noise.</summary>
+    /// <remarks>Splitting by hand keeps <c>mesh.bevel</c> and <c>blender_mesh_bevel</c> reducible to the same words.</remarks>
+    private static HashSet<string> Words(string? text)
+    {
+        var words = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return words;
+        }
+
+        var start = -1;
+
+        for (var index = 0; index <= text.Length; index++)
+        {
+            if (index < text.Length && char.IsLetterOrDigit(text[index]))
+            {
+                start = start < 0 ? index : start;
+
+                continue;
+            }
+
+            if (start >= 0)
+            {
+                var word = text[start..index];
+
+                if (word.Length > 1 && !Noise.Contains(word))
+                {
+                    words.Add(word);
+                }
+
+                start = -1;
+            }
+        }
+
+        return words;
     }
 
     /// <summary>Every <c>bpy.ops.module.operator</c> the text calls, in the order it calls them.</summary>

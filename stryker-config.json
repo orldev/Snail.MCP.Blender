@@ -1,0 +1,29 @@
+{
+  "stryker-config": {
+    "project": "Snail.MCP.Blender.csproj",
+    "test-projects": ["tests/Snail.MCP.Blender.Tests.csproj"],
+    "test-case-filter": "FullyQualifiedName!~.Tests.Live.&FullyQualifiedName!~.Contracts.StdioContract&FullyQualifiedName!~.Contracts.HttpContract&FullyQualifiedName!~.Contracts.SessionlessListen&FullyQualifiedName!~.Chaos.",
+    "mutation-level": "Standard",
+    "coverage-analysis": "perTest",
+    "ignore-mutations": ["string"],
+    "ignore-methods": ["*Log*", "ConfigureAwait", "*Exception.ctor", "ArgumentNullException.ThrowIfNull", "ArgumentException.Throw*"],
+    "additional-timeout": 3000,
+    "concurrency": 4,
+    "break-on-initial-test-failure": true,
+    "mutate": [
+      "**/*.cs",
+      "!**/obj/**",
+      "!**/Program.cs",
+      "!**/GlobalUsings.cs",
+      "!**/Log.cs",
+      "!**/Extensions/**",
+      "!**/Hosting/**",
+      "!**/Tools/Prompts/**",
+      "!**/Web/Pages/**",
+      "!**/Domain/Commands/**",
+      "!**/Domain/Vocabularies.cs",
+      "!**/Configuration/ServerConfigValidation.cs",
+      "!**/Adapters/Ssh/SshProcesses.cs"
+    ]
+  }
+}

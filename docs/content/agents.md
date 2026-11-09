@@ -101,8 +101,9 @@ return { moved: parts.length };
 ```
 
 Every call goes over the same link as a tool call, so the lease guard, the journal and the validation hold for each
-step, and a failed command throws `{type, message, details}` the program may catch. Only what the program returns
-comes back, with the log it wrote and the list of commands it sent: twenty steps cost one call and one reply instead
+step, and a failed command throws `{error, message, hint, type, details}` the program may catch, `type` being the
+add-on's own (`Leased`, `NotFound`). `log(…)` is a global of the program, not a command of `blender`. Only what the
+program returns comes back, with the log it wrote and the list of commands it sent: twenty steps cost one call and one reply instead
 of twenty of each, and a listing a program filters never reaches the conversation whole. It is bounded by the timeout
 it was given, by its memory, and by 200 commands; past that it stops and reports what it managed. It is not
 `blender_python`: it reaches the commands and nothing else — no files, no network, no `bpy`.

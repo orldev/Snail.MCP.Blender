@@ -13,12 +13,12 @@ public sealed class DiagnosticsTools(ServerHealth health, IAddOnPackager package
     [McpServerTool(Name = "blender_diagnose", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Diagnostics.Diagnose)]
     public async Task<CallToolResult> DiagnoseAsync(CancellationToken cancellationToken = default) =>
-        ToolResponse.Success(await health.ReportAsync(cancellationToken).ConfigureAwait(false));
+        ToolAnswer.Ok(await health.ReportAsync(cancellationToken).ConfigureAwait(false));
 
     [McpServerTool(Name = "blender_install_addon", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Diagnostics.InstallAddOn)]
     public CallToolResult InstallAddOn() =>
-        ToolResponse.Success(Describe(packager.Pack()));
+        ToolAnswer.Ok(Describe(packager.Pack()));
 
     private static JsonObject Describe(AddOnPackage package) => new()
     {

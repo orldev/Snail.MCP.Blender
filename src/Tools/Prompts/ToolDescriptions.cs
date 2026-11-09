@@ -49,13 +49,6 @@ public static partial class ToolDescriptions
         /// <summary>States <c>ToolLimits.MaxTimeoutSeconds</c>; a guard test keeps the number equal.</summary>
         public const string TimeoutSeconds = "Seconds to wait for Blender, 1 to 600.";
 
-        public const string SkillName = "Skill name as blender_skills lists it.";
-
-        /// <summary>States <c>JavaScriptPrograms.MostCalls</c>; a guard test keeps the number equal.</summary>
-        public const string ProgramCode =
-            "JavaScript. Call commands as blender.<command>({...}) — the names find_tool reports, the tool name without blender_ — return a " +
-            "value, log(...) to add a line. Up to 200 commands, no files, no network, no bpy.";
-
         public const string MeshName = "Name of the mesh object.";
 
         public const string ModifierName = "Modifier name as shown in the stack; blender_object_info lists them.";

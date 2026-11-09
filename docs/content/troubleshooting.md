@@ -255,13 +255,14 @@ Proxy settings are stored on the strips, but Blender builds proxies only from th
 a Video Sequencer area in Blender and call `blender_sequencer_proxy` again, or build them in Blender with
 Strip → Rebuild Proxy and Timecode Indices.
 
-## The server exits at start-up with `OptionsValidationException`
+## The server exits at start-up with one line naming a setting
 
-A setting is out of range — a port, a timeout, negative minutes, link minutes outside 1 to 1440 — and the message names
-each one with the range it allows: `Port: The field ServerConfig.Bridge.Port must be between 1 and 65535.` A server over
-HTTP without a client token stops the same way with `The HTTP server needs the token clients present: set
-SNAIL_MCP_BLENDER_HTTP__TOKEN, or SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE to a file that holds it.`; a missing or empty token
-file counts as none. A value that is not a number, or not one of a setting's names, stops the process with
+A setting is out of range — a port, a timeout, negative minutes, link minutes outside 1 to 1440 — and the process exits
+with code 1 and one line on stderr that names each one with the range it allows:
+`Port: The field ServerConfig.Bridge.Port must be between 1 and 65535.` A server over HTTP without a client token stops
+the same way with `The HTTP server needs the token clients present: set SNAIL_MCP_BLENDER_HTTP__TOKEN (or Http:Token in
+the settings file), or SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE (or Http:TokenFile in the settings file) to a file that holds
+it.`; a missing or empty token file counts as none. A value that is not a number, or not one of a setting's names, stops the process with
 `InvalidOperationException` instead. Fix the environment variable or the settings file; see
 [Configuration](configuration.md).
 

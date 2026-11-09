@@ -92,8 +92,10 @@ public sealed class BridgeTraffic
         }
     }
 
-    /// <summary>Notes a program and the commands it sent, so the report shows how much of the traffic one call carried.</summary>
-    public void Ran(int calls)
+    /// <summary>Notes a program that ran, finished or stopped, with the commands it sent, so the report shows how much of the traffic one call carried.</summary>
+    /// <remarks>Snail.Sdk runs the program and says when it has run (<c>ProgramOptions.Ran</c>), so a program that sent no command is counted
+    /// too; the commands the gate refused are among its calls.</remarks>
+    public void RanAProgram(int calls)
     {
         lock (_gate)
         {

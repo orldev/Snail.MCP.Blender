@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 
 namespace Snail.MCP.Blender.Tests.Contracts;
 
@@ -48,12 +48,18 @@ public partial class LiveCoverageContractTests
         var scenarios = LiveSources();
 
         Assert.All(
-            SkillCatalog.Discover(typeof(SkillAttribute).Assembly),
+            SkillTypes(),
             skill => Assert.Contains(CommandsOfSkill(skill), scenarios.Contains));
     }
 
-    private static IReadOnlyList<string> CommandsOfSkill(Skill skill) =>
-        [.. skill.ToolTypes
+    /// <summary>The tool classes of each skill, by the skill's name.</summary>
+    private static IEnumerable<IGrouping<string, Type>> SkillTypes() =>
+        typeof(BridgeCommands).Assembly.GetTypes()
+            .Where(type => type.GetCustomAttribute<SkillAttribute>() is not null)
+            .GroupBy(type => type.GetCustomAttribute<SkillAttribute>()!.Name, StringComparer.Ordinal);
+
+    private static IReadOnlyList<string> CommandsOfSkill(IEnumerable<Type> skill) =>
+        [.. skill
             .Select(type => File.ReadAllText(Directory.EnumerateFiles(Path.Combine(Repository.Root, "src", "Tools"), $"{type.Name}.cs", SearchOption.AllDirectories).Single()))
             .SelectMany(source => CommandReference.Matches(source).Select(match => match.Groups["constant"].Value))
             .Distinct(StringComparer.Ordinal)];

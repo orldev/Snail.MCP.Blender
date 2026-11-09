@@ -23,14 +23,14 @@ public sealed class BlenderResources(IBlenderBridge bridge, RenderGallery galler
     public ReadResourceResult LastRender() =>
         gallery.Last is { } picture
             ? new ReadResourceResult { Contents = [new BlobResourceContents { Uri = LastRenderUri, MimeType = picture.MimeType, Blob = Encoding.UTF8.GetBytes(picture.Base64) }] }
-            : new ReadResourceResult { Contents = [new TextResourceContents { Uri = LastRenderUri, MimeType = "application/json", Text = ToolResponse.Error(Messages.NoRenderYet, Messages.NoRenderYetHint) }] };
+            : new ReadResourceResult { Contents = [new TextResourceContents { Uri = LastRenderUri, MimeType = "application/json", Text = ToolAnswer.Text(ToolAnswer.Failed(Messages.NoRenderYet, Messages.NoRenderYetHint)) }] };
 
     [McpServerResource(UriTemplate = JournalUri, Name = "journal", Title = "Journal", MimeType = "application/json")]
     [Description(ToolDescriptions.Resources.Journal)]
     public async Task<ReadResourceResult> JournalAsync(CancellationToken cancellationToken = default)
     {
         var reply = await bridge.SendAsync(BridgeCommands.Journal, new JsonObject { ["limit"] = 200 }, null, cancellationToken).ConfigureAwait(false);
-        var text = ((TextContentBlock)ToolResponse.From(reply).Content[0]).Text;
+        var text = ((TextContentBlock)BridgeAnswers.From(reply).Content[0]).Text;
 
         return new ReadResourceResult { Contents = [new TextResourceContents { Uri = JournalUri, MimeType = "application/json", Text = text }] };
     }

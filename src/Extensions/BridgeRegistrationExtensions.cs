@@ -3,7 +3,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Snail.MCP.Blender.Adapters.AddOn;
 using Snail.MCP.Blender.Adapters.Blender;
-using Snail.MCP.Blender.Adapters.Programs;
 using Snail.MCP.Blender.Adapters.Ssh;
 using Snail.MCP.Blender.Application.Access;
 using Snail.MCP.Blender.Application.Diagnostics;
@@ -31,7 +30,6 @@ public static class BridgeRegistrationExtensions
             services.AddSingleton<IBlenderMonitor, BlenderMonitor>();
             services.AddSingleton<RenderWatch>();
             services.AddSingleton<RenderGallery>();
-            services.AddSingleton<IProgramRunner, JavaScriptPrograms>();
             services.AddSingleton<IAddOnPackager, AddOnPackager>();
             services.AddSingleton<AddOnFreshness>();
             services.AddSingleton<BlenderLifetime>();

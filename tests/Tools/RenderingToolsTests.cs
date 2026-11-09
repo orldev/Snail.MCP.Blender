@@ -42,7 +42,7 @@ public class RenderingToolsTests
         _bridge.Answer(BridgeCommands.RenderJob, new JsonObject { ["id"] = "job-1", ["state"] = "queued" });
         var tools = Render();
 
-        var answer = JsonNode.Parse((await tools.AnimationAsync("/renders/shot_", start: 1, end: 48, step: 2, fileFormat: "PNG", wait: 0)).Text())!["data"]!;
+        var answer = ((await tools.AnimationAsync("/renders/shot_", start: 1, end: 48, step: 2, fileFormat: "PNG", wait: 0))).Data()!;
 
         Assert.Equal(BridgeCommands.RenderJob, _bridge.Sent.Single().Command);
         Assert.Equal("/renders/shot_", _bridge.LastParameters!["output_path"]!.ToString());

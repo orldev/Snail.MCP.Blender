@@ -17,7 +17,7 @@ public static class InProcessHttpServer
         var settings = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
         {
             ["Transport"] = "Http",
-            ["Http:Url"] = $"http://127.0.0.1:{FreePort()}",
+            ["Http:Url"] = $"http://127.0.0.1:{Ports.Free()}",
             ["Http:Token"] = Token,
             ["Http:PublicUrl"] = publicUrl,
             ["Bridge:Port"] = bridgePort.ToString(),
@@ -37,16 +37,5 @@ public static class InProcessHttpServer
         await app.StartAsync();
 
         return app;
-    }
-
-    /// <summary>A port chosen before the server starts, so the links it signs name the address it listens on.</summary>
-    private static int FreePort()
-    {
-        var listener = new System.Net.Sockets.TcpListener(System.Net.IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-
-        return port;
     }
 }

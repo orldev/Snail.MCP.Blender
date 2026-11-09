@@ -3,7 +3,7 @@ using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Rendering;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Tools.Prompts;
 
 namespace Snail.MCP.Blender.Tools.Video;
@@ -111,11 +111,11 @@ public sealed class SequencerTools(IBlenderBridge bridge, RenderWatch watch) : B
         IProgress<ProgressNotificationValue>? progress = null,
         CancellationToken cancellationToken = default) =>
         ToolLimits.IsRenderable(resolutionX) && ToolLimits.IsRenderable(resolutionY)
-            ? await WithinAsync(timeoutSeconds, async timeout => ToolResponse.From(await watch.FollowAsync(
+            ? await WithinAsync(timeoutSeconds, async timeout => BridgeAnswers.From(await watch.FollowAsync(
                 ExchangeAsync(BridgeCommands.SequencerRender,
                     new JsonObject().With("path", path).With("codec", codec).With("quality", quality).With("audio_codec", audioCodec).With("fit_range", fitRange)
                         .With("start", start).With("end", end).With("fps", fps).With("resolution_x", resolutionX).With("resolution_y", resolutionY),
                     timeout, cancellationToken),
                 progress, start is { } first && end is { } last ? last - first + 1 : null, cancellationToken).ConfigureAwait(false))).ConfigureAwait(false)
-            : ToolResponse.Failure(Messages.ResolutionTooLarge, Messages.ResolutionHint);
+            : ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint);
 }

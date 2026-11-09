@@ -12,10 +12,6 @@ public static class ServerPaths
 
     public const string AddOnManifestFileName = "blender_manifest.toml";
 
-    public static string Home => Environment.GetFolderPath(
-        Environment.SpecialFolder.UserProfile,
-        Environment.SpecialFolderOption.DoNotVerify);
-
     /// <summary><c>~/.s3l-mcp-blender</c>, moved there from <c>~/.snail-mcp-blender</c> when only that one exists.</summary>
     public static string DefaultDataDirectory => ServerFolders.DataDirectory(ShortName);
 

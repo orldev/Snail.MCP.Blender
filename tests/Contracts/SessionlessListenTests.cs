@@ -6,7 +6,7 @@ using ModelContextProtocol.Protocol;
 namespace Snail.MCP.Blender.Tests.Contracts;
 
 /// <summary>The listen stream a client of the 2026-07-28 revision opens beside its first requests, asked over raw HTTP the way Claude Code
-/// asks it.</summary>
+/// asks it: the MCP SDK's client opens none, so these tests are the contract of a sessionless client hearing that a skill's tools arrived.</summary>
 /// <remarks>The stream used to be acknowledged with nothing and closed at once. Claude Code read the close as the end of the connection and
 /// dropped the tools/list still in flight: a quarter of its sessions with this server had no Blender tool at all.</remarks>
 public sealed class SessionlessListenTests
@@ -31,10 +31,36 @@ public sealed class SessionlessListenTests
         var ending = await EndingWithinAsync(reader, Held);
 
         Assert.Equal(NotificationMethods.SubscriptionsAcknowledgedNotification, acknowledgement["method"]!.ToString());
-        Assert.Empty(acknowledgement["params"]!["notifications"]!.AsObject());
+        Assert.Equal(true, acknowledgement["params"]!["notifications"]!["toolsListChanged"]?.GetValue<bool>());
         Assert.Equal(1, acknowledgement["params"]!["_meta"]![ModelContextProtocol.Protocol.MetaKeys.SubscriptionId]!.GetValue<int>());
         Assert.NotEmpty(listedTools);
         Assert.Null(ending);
+    }
+
+    /// <summary>A client of the 2026-07-28 revision hears only what it subscribed to, and a skill it loads changes its tool list: the change has
+    /// to come down the listen stream it opened with <c>toolsListChanged</c>, since the reply to the call no longer carries it.</summary>
+    /// <remarks>Blender's own skills sent the notice in the reply to the call to every client; Snail.Sdk's <c>WithSkills</c> sends it there only
+    /// before this revision and from it announces the change on the listen stream, beside the job updates <c>WithJobs</c> carries there.</remarks>
+    [Fact]
+    public async Task ListenStream_OfASessionlessClient_CarriesToolsListChanged_WhenTheClientLoadsASkill()
+    {
+        await using var app = await InProcessHttpServer.StartAsync(bridgePort: 1);
+        using var http = new HttpClient { Timeout = System.Threading.Timeout.InfiniteTimeSpan };
+        using var listen = Request(app, RequestMethods.SubscriptionsListen, new JsonObject { ["notifications"] = new JsonObject { ["toolsListChanged"] = true } });
+        using var enable = Request(app, RequestMethods.ToolsCall, new JsonObject { ["name"] = "blender_enable_skill", ["arguments"] = new JsonObject { ["name"] = "rendering" } });
+        enable.Headers.Add("Mcp-Name", "blender_enable_skill");
+
+        using var listened = await http.SendAsync(listen, HttpCompletionOption.ResponseHeadersRead);
+        using var reader = new StreamReader(await listened.Content.ReadAsStreamAsync());
+        var acknowledgement = await NextMessageAsync(reader, CancellationToken.None);
+        using var enabled = await http.SendAsync(enable);
+        var reply = JsonNode.Parse(Data(await enabled.Content.ReadAsStringAsync()))!["result"]!["content"]![0]!["text"]!.ToString();
+        using var patience = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var heard = await NextMessageOrNullAsync(reader, patience.Token);
+
+        Assert.True(reply.Contains("\"ok\":true", StringComparison.Ordinal), reply);
+        Assert.Equal(true, acknowledgement["params"]!["notifications"]!["toolsListChanged"]?.GetValue<bool>());
+        Assert.Equal(NotificationMethods.ToolListChangedNotification, heard?["method"]?.ToString());
     }
 
     /// <summary>A held stream does not hold the server: stopping it ends the stream rather than waiting out the shutdown timeout.</summary>
@@ -86,6 +112,19 @@ public sealed class SessionlessListenTests
         }
 
         throw new EndOfStreamException("the stream ended before a message");
+    }
+
+    /// <summary>The next message on the stream, or null when none came before the token ended.</summary>
+    private static async Task<JsonNode?> NextMessageOrNullAsync(StreamReader reader, CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await NextMessageAsync(reader, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            return null;
+        }
     }
 
     /// <summary>What ended the stream within the wait, or null when it was still open at the end of it.</summary>

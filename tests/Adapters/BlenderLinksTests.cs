@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Adapters.Blender;
 using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Configuration;
@@ -18,12 +16,11 @@ public class BlenderLinksTests
         await using var addOn = FakeAddOn.Echo();
         var sessions = Sessions("the-server");
         await using var links = new BlenderLinks(Link(addOn.Port), NullLogger<BlenderConnection>.Instance, sessions);
-        var lighting = sessions.Open(new McpServerOptions(), "lighting");
 
         var byTheServer = await links.SendAsync(BridgeCommands.SceneInfo);
         BridgeReply byTheClient;
 
-        using (sessions.Serve(lighting))
+        using (sessions.Serve(clientName: null, "lighting"))
         {
             byTheClient = await links.SendAsync(BridgeCommands.SceneInfo);
         }
@@ -70,6 +67,5 @@ public class BlenderLinksTests
     private static BlenderLinkOptions Link(int port) =>
         new() { Port = port, ConnectTimeoutSeconds = 2, RequestTimeoutSeconds = 5, Agent = "the-server" };
 
-    private static ClientSessions Sessions(string? agent) =>
-        new([], [], agent, new ServiceCollection().BuildServiceProvider(), TimeProvider.System);
+    private static ClientSessions Sessions(string? agent) => new(agent);
 }

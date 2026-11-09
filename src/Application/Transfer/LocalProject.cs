@@ -1,4 +1,5 @@
 using Snail.MCP.Blender.Configuration;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Application.Transfer;
 
@@ -74,7 +75,7 @@ public sealed class LocalProject(ServerConfig config)
         }
 
         var full = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
-        var home = Path.TrimEndingDirectorySeparator(ServerPaths.Home);
+        var home = Path.TrimEndingDirectorySeparator(ServerFolders.Home);
 
         return string.Equals(full, home, StringComparison.OrdinalIgnoreCase) || string.Equals(full, Path.TrimEndingDirectorySeparator(Path.GetPathRoot(full) ?? full), StringComparison.OrdinalIgnoreCase)
             ? null

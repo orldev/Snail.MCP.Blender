@@ -4,6 +4,7 @@ using Snail.MCP.Blender.Application.Transfer;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools;
 using Snail.MCP.Blender.Tools.Base;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Tests.Tools;
 
@@ -81,7 +82,7 @@ public class DiagnosticsToolsTests
         var monitor = new SilentMonitor().Answering(new JsonObject { ["blender"] = "5.2.1", ["busy"] = true, ["executing"] = "render_image" });
         var tools = new DiagnosticsTools(Health(monitor, new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var note = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["blender"]!["note"]!.ToString();
+        var note = ((await tools.DiagnoseAsync())).Data()!["blender"]!["note"]!.ToString();
 
         Assert.Contains("cannot be interrupted", note, StringComparison.Ordinal);
         Assert.Contains("blender_render_job", note, StringComparison.Ordinal);
@@ -93,7 +94,7 @@ public class DiagnosticsToolsTests
         var monitor = new SilentMonitor().Answering(new JsonObject { ["blender"] = "5.2.1", ["busy"] = true, ["executing"] = "import_file" });
         var tools = new DiagnosticsTools(Health(monitor, new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var note = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["blender"]!["note"]!.ToString();
+        var note = ((await tools.DiagnoseAsync())).Data()!["blender"]!["note"]!.ToString();
 
         Assert.DoesNotContain("cannot be interrupted", note, StringComparison.Ordinal);
         Assert.Contains("queue behind it", note, StringComparison.Ordinal);
@@ -105,7 +106,7 @@ public class DiagnosticsToolsTests
         var tunnel = new FakeTunnel(new JsonObject { ["host"] = "artist@203.0.113.42", ["up"] = false, ["lastError"] = "Permission denied (publickey)." });
         var tools = new DiagnosticsTools(Health(new SilentMonitor(), new BridgeTraffic(), tunnel), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["tunnel"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!["tunnel"]!;
 
         Assert.Equal("Permission denied (publickey).", report["lastError"]!.ToString());
         Assert.Contains("host key", report["hint"]!.ToString(), StringComparison.Ordinal);
@@ -116,7 +117,7 @@ public class DiagnosticsToolsTests
     {
         var tools = new DiagnosticsTools(Health(new SilentMonitor(), new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var project = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["project"]!;
+        var project = ((await tools.DiagnoseAsync())).Data()!["project"]!;
 
         Assert.Null(project["directory"]);
         Assert.Contains("SNAIL_MCP_BLENDER_PROJECT_DIRECTORY", project["note"]!.ToString(), StringComparison.Ordinal);
@@ -125,10 +126,10 @@ public class DiagnosticsToolsTests
     [Fact]
     public async Task Diagnose_OverHttp_NamesTheTransport_AndPointsAtOpeningAProject()
     {
-        var config = new ServerConfig { Transport = Transport.Http, Http = { PublicUrl = "https://blender.example.com" } };
+        var config = new ServerConfig { Transport = McpTransport.Http, Http = { PublicUrl = "https://blender.example.com" } };
         var health = new ServerHealth(config, new SilentMonitor(), new BridgeTraffic(), new AddOnFreshness(new AddOnPackager(config), NullLogger<AddOnFreshness>.Instance), Lifetime(), new FakeTunnel(), new LocalProject(config));
 
-        var report = JsonNode.Parse((await new DiagnosticsTools(health, new AddOnPackager(config)).DiagnoseAsync()).Text())!["data"]!;
+        var report = ((await new DiagnosticsTools(health, new AddOnPackager(config)).DiagnoseAsync())).Data()!;
 
         Assert.Equal("http", report["transport"]!["kind"]!.ToString());
         Assert.Equal("https://blender.example.com", report["transport"]!["publicUrl"]!.ToString());
@@ -141,7 +142,7 @@ public class DiagnosticsToolsTests
     {
         var tools = new DiagnosticsTools(Health(new SilentMonitor(), new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!;
 
         Assert.Null(report["tunnel"]);
     }
@@ -154,7 +155,7 @@ public class DiagnosticsToolsTests
         traffic.Abandon(BridgeCommands.RenderImage);
         var tools = new DiagnosticsTools(Health(new SilentMonitor().Answering(new JsonObject { ["blender"] = "5.2.1" }), traffic), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["traffic"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!["traffic"]!;
 
         Assert.Equal(1, report["abandoned"]!.GetValue<int>());
         Assert.Equal("render_image", report["lastAbandoned"]!["command"]!.ToString());
@@ -164,8 +165,8 @@ public class DiagnosticsToolsTests
     [Fact]
     public void TimeoutHint_OnARender_SaysTheRenderContinues_AndOnAnythingElseKeepsTheOldAdvice()
     {
-        var render = ToolResponse.From(BridgeReply.Failed(BridgeError.Timeout(BridgeCommands.RenderImage, TimeSpan.FromSeconds(300))));
-        var ordinary = ToolResponse.From(BridgeReply.Failed(BridgeError.Timeout(BridgeCommands.SceneInfo, TimeSpan.FromSeconds(30))));
+        var render = BridgeAnswers.From(BridgeReply.Failed(BridgeError.Timeout(BridgeCommands.RenderImage, TimeSpan.FromSeconds(300))));
+        var ordinary = BridgeAnswers.From(BridgeReply.Failed(BridgeError.Timeout(BridgeCommands.SceneInfo, TimeSpan.FromSeconds(30))));
 
         Assert.Contains("cannot be interrupted from outside", render.Text(), StringComparison.Ordinal);
         Assert.Contains("blender_render_job", render.Text(), StringComparison.Ordinal);
@@ -183,7 +184,7 @@ public class DiagnosticsToolsTests
         traffic.Record(BridgeCommands.ObjectInfo, TimeSpan.FromMilliseconds(3), RecordedAnswers.Error("object_info for a name no object has"));
         var tools = new DiagnosticsTools(Health(monitor, traffic), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!;
 
         Assert.Equal("none", report["bridge"]!["token"]!.ToString());
         Assert.Equal(2, report["traffic"]!["requests"]!.GetValue<int>());
@@ -202,7 +203,7 @@ public class DiagnosticsToolsTests
         });
         var tools = new DiagnosticsTools(Health(monitor, new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!;
 
         Assert.Equal("current", report["addOn"]!["status"]!.ToString());
         Assert.Equal(BundledDigest(), report["addOn"]!["installed"]!["digest"]!.ToString());
@@ -228,7 +229,7 @@ public class DiagnosticsToolsTests
         });
         var tools = new DiagnosticsTools(Health(monitor, new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["addOn"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!["addOn"]!;
 
         Assert.Equal("differs", report["status"]!.ToString());
         Assert.False(report["protocol"]!["behind"]!.GetValue<bool>());
@@ -246,7 +247,7 @@ public class DiagnosticsToolsTests
         });
         var tools = new DiagnosticsTools(Health(monitor, new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["addOn"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!["addOn"]!;
 
         Assert.Equal("older", report["status"]!.ToString());
         Assert.Equal(AddOnProtocol.Version, report["protocol"]!["server"]!.GetValue<int>());
@@ -263,7 +264,7 @@ public class DiagnosticsToolsTests
         var monitor = new SilentMonitor().Answering(new JsonObject { ["blender"] = "5.2.1" });
         var tools = new DiagnosticsTools(Health(monitor, new BridgeTraffic()), new AddOnPackager(Config()));
 
-        var report = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["addOn"]!;
+        var report = ((await tools.DiagnoseAsync())).Data()!["addOn"]!;
 
         Assert.Equal("unknown", report["status"]!.ToString());
         Assert.Equal(BundledDigest(), report["bundled"]!["digest"]!.ToString());
@@ -272,23 +273,23 @@ public class DiagnosticsToolsTests
     [Fact]
     public void UnknownCommand_CarriesTheStaleAddOnHint()
     {
-        var response = JsonNode.Parse(ToolResponse.From(RecordedAnswers.Reply("a command of a name the add-on has never registered")).Text())!;
+        var response = JsonNode.Parse(BridgeAnswers.From(RecordedAnswers.Reply("a command of a name the add-on has never registered")).Text())!;
 
         Assert.Contains("blender_install_addon", response["hint"]!.ToString(), StringComparison.Ordinal);
     }
 
     [Fact]
-    public void ToolResponse_FromFailedReply_CarriesTheTypeAndTheHint()
+    public void BridgeAnswers_FromFailedReply_CarriesTheTypeAndTheHint()
     {
         var reply = RecordedAnswers.Reply("an operator that cannot run in this context");
 
-        var result = ToolResponse.From(reply);
+        var result = BridgeAnswers.From(reply);
         var response = JsonNode.Parse(result.Text())!;
 
-        Assert.True(result.Failed());
+        Assert.False(result.IsOk());
         Assert.False(response["ok"]!.GetValue<bool>());
         Assert.Contains("cannot run in the current context", response["error"]!.ToString(), StringComparison.Ordinal);
-        Assert.Equal("PollFailed", response["data"]!["type"]!.ToString());
+        Assert.Equal("PollFailed", response["type"]!.ToString());
         Assert.Equal("OBJECT", response["data"]!["mode"]!.ToString());
         Assert.Contains("area=VIEW_3D", response["hint"]!.ToString(), StringComparison.Ordinal);
     }
@@ -305,7 +306,7 @@ public class DiagnosticsToolsTests
         await tools.DiagnoseAsync();
         monitor.Answering(Process(9, new JsonObject { ["path"] = "/tmp/00-serdce.crash.txt", ["written_at"] = "2026-10-14 02:41:39", ["age_s"] = 21.0 }));
 
-        var blender = JsonNode.Parse((await tools.DiagnoseAsync()).Text())!["data"]!["blender"]!;
+        var blender = ((await tools.DiagnoseAsync())).Data()!["blender"]!;
 
         Assert.Equal(7, blender["restarted"]!["previousPid"]!.GetValue<int>());
         Assert.Equal(9, blender["restarted"]!["pid"]!.GetValue<int>());

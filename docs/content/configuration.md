@@ -8,10 +8,10 @@ section and a field.
 | `SNAIL_MCP_BLENDER_DATA_DIRECTORY` | `~/.s3l-mcp-blender` | This server's own files: the add-on zip, downloads when there is no project and, when Blender runs here, the token. The add-on reads the same variable for its journal, leases, render jobs, batches and snapshots, which live on the machine Blender runs on |
 | `SNAIL_MCP_BLENDER_PROJECT_DIRECTORY` | the folder the client starts the server in | Over stdio, the project on this machine: `blender_download` brings files into it, relative `blender_upload` paths are read from it, and its twin on Blender's machine is the add-on's `files/<its name>`. The home folder and the root count as no project. A server over HTTP sees none of the client's folders and ignores it; `blender_open_project` names the project there |
 | `SNAIL_MCP_BLENDER_TRANSPORT` | `Stdio` | `Stdio` when the client starts the server; `Http` when it runs on its own beside Blender, in a container, and clients connect to it — [Blender in Docker](docker.md) |
-| `SNAIL_MCP_BLENDER_HTTP__URL` | `http://127.0.0.1:8080` | Over HTTP: the address to listen on; the image sets `http://0.0.0.0:8080` |
+| `SNAIL_MCP_BLENDER_HTTP__URL` | `http://127.0.0.1:8080` | Over HTTP: the address to listen on; the image sets `http://0.0.0.0:8080`. `SNAIL_MCP_BLENDER_URL` wins over it and `SNAIL_MCP_BLENDER_PORT` replaces its port |
 | `SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE` | — | Over HTTP: the file holding the token clients present — as a bearer on `/mcp` and at the pages' sign-in. Required: without it, or `HTTP__TOKEN`, the server refuses to start |
 | `SNAIL_MCP_BLENDER_HTTP__TOKEN` | — | The same token given directly, for a quick local run; it wins over `HTTP__TOKEN_FILE`. Either is read once at start, so a new token takes a restart |
-| `SNAIL_MCP_BLENDER_HTTP__PUBLIC_URL` | `HTTP__URL` | The address clients reach the server at behind a reverse proxy; the links `blender_upload` and `blender_download` hand out are built on it, and an `https` address marks the session cookie Secure |
+| `SNAIL_MCP_BLENDER_HTTP__PUBLIC_URL` | the address the server listens on | The address clients reach the server at behind a reverse proxy; the links `blender_upload` and `blender_download` hand out are built on it, and an `https` address marks the session cookie Secure |
 | `SNAIL_MCP_BLENDER_HTTP__LINK_MINUTES` | `15` | How long those links work, 1 to 1440 |
 | `SNAIL_MCP_BLENDER_BRIDGE__HOST` | `127.0.0.1` | Where the server finds the add-on: the loopback, or the Blender container's name when both run in containers. A Blender on another machine is reached through the tunnel, never directly |
 | `SNAIL_MCP_BLENDER_BRIDGE__PORT` | `9876` | Must match the port in the add-on preferences |
@@ -32,7 +32,7 @@ section and a field.
 
 Every range lives as an attribute on the setting it constrains, and the server checks them all while the host
 starts: a port outside 1 to 65535, a timeout of zero or less, negative minutes, link minutes outside 1 to 1440. The
-process then exits with `OptionsValidationException` naming each setting it refused and the range it allows; a server
+process then exits with code 1 and one line on stderr naming each setting it refused and the range it allows; a server
 over HTTP without a client token exits the same way, naming `HTTP__TOKEN` and `HTTP__TOKEN_FILE`. A value that is not a
 number, or a `PYTHON` or `TRANSPORT` that is none of its names, stops the process with `InvalidOperationException`
 instead. Nothing is repaired in

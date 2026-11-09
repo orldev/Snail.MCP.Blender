@@ -1,15 +1,15 @@
 {
   "intro": [
-    "Skills load with `blender_enable_skill`, or through `find_tool` for the tools a search returns. A loaded skill stays loaded until `blender_disable_skill`, unless `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` unloads idle ones; `farm` stays while a render job runs. The table shows the first sentence of each description."
+    "Skills load with `blender_enable_skill`, or through `find_tool` for the tools a search returns. A loaded skill stays loaded until `blender_disable_skill`, unless `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` unloads idle ones; calling a tool of a skill that is not loaded loads it. The table shows the first sentence of each description."
   ],
   "skillNote": "Part of the `{skill}` skill: these tools appear once it is loaded — by `blender_enable_skill` with `{skill}`, or by `find_tool` when a search returns one of them.",
   "openWorld": "may reach beyond Blender",
   "closedWorld": "stays inside Blender",
   "families": [
     { "type": "DiagnosticsTools", "slug": "diagnostics", "title": "Diagnostics" },
-    { "type": "SkillTools", "slug": "skills", "title": "Skills" },
-    { "type": "DiscoveryTools", "slug": "discovery", "title": "Finding a tool" },
-    { "type": "ProgramTools", "slug": "programs", "title": "Programs" },
+    { "tools": ["blender_skills", "blender_enable_skill", "blender_disable_skill"], "slug": "skills", "title": "Skills" },
+    { "tools": ["find_tool"], "slug": "discovery", "title": "Finding a tool" },
+    { "tools": ["run_program"], "slug": "programs", "title": "Programs" },
     { "type": "SequenceTools", "slug": "sequence", "title": "Sequences" },
     { "type": "TransferTools", "slug": "transfer", "title": "Files between machines" },
     { "type": "SceneTools", "slug": "scene", "title": "Scene" },

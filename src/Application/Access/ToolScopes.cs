@@ -1,7 +1,6 @@
 using System.Reflection;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Discovery;
-using Snail.MCP.Blender.Application.Sessions;
 
 namespace Snail.MCP.Blender.Application.Access;
 
@@ -12,7 +11,8 @@ namespace Snail.MCP.Blender.Application.Access;
 /// long after the call returned.
 /// <para>A tool's own name is not enough for the three tools that carry commands they are handed. <c>run_tools</c>, <c>blender_batch</c> and
 /// <c>run_program</c> are each one tool with one annotation, and what they do is whatever is inside them: a key without the Python scope
-/// was running Python by sending it as a step. Those three ask about every command they carry, which is what <see cref="Refused"/> is for.</para></remarks>
+/// was running Python by sending it as a step. Those three ask the gate (<see cref="ScopeGate"/>) about every command they carry, under the name of
+/// the tool the command stands for.</para></remarks>
 public sealed class ToolScopes(CommandSemantics semantics)
 {
     private static readonly string[] Farmed = ["render_job", "batch", "render_animation"];
@@ -75,26 +75,6 @@ public sealed class ToolScopes(CommandSemantics semantics)
     /// destroy deleted objects by sending <c>delete_objects</c> as a step. A command neither the schema nor a tool describes is treated as the
     /// work that loses most: a guess that opens more than it should is the one mistake authorisation cannot afford.</remarks>
     public string For(string command) => Known(command) ?? Reaching(command) ?? Annotated.GetValueOrDefault(command) ?? Scopes.Delete;
-
-    /// <summary>The first command in this list the client's key does not open, with what it would have needed; null when it opens them all.</summary>
-    /// <remarks>Every step is asked about before any of them is sent: a sequence half refused is a scene half built.</remarks>
-    public (string Command, string Scope)? Refused(JsonArray? commands, ClientSession client)
-    {
-        foreach (var step in commands?.OfType<JsonObject>() ?? [])
-        {
-            if (step["command"]?.GetValue<string>() is not { } command)
-            {
-                continue;
-            }
-
-            if (For(command) is { } scope && !client.May(scope))
-            {
-                return (command, scope);
-            }
-        }
-
-        return null;
-    }
 
     /// <summary>What to tell a client whose key does not open this kind of work.</summary>
     public static string Refusal(string what, string scope, string client) =>

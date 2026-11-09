@@ -119,7 +119,7 @@ Claims objects or collections for this agent for a while: mutating commands from
 
 ## <code>blender_<wbr>batch</code>
 
-Runs a list of bridge commands in a separate headless Blender on a copy of the file (or a given .blend) and saves the result to a .blend: parallel work that does not touch this Blender. Link the output back with blender_append_assets. Returns the batch id; poll blender_batch_status.
+Runs a list of bridge commands in a separate headless Blender on a copy of the file (or a given .blend) and saves the result to a .blend: parallel work that does not touch this Blender. Link the output back with blender_append_assets. Answers when the batch ends within `wait` seconds, with its steps, output and log; a longer batch answers with the job running — read its resource (job://blender/batch/&lt;id&gt;) for where it stands, or wait on it.
 
 *may overwrite or delete · every call adds · may reach beyond Blender.*
 
@@ -130,6 +130,7 @@ Runs a list of bridge commands in a separate headless Blender on a copy of the f
 | `output` | `string?` | — | `null` | Absolute .blend to save the result to; output.blend in the batch folder otherwise. |
 | `continueOnError` | `boolean` | — | `false` | Keep going after a failed step. |
 | `name` | `string?` | — | `null` | Name for the batch. |
+| `wait` | `integer` | — | `60` | Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on. |
 
 <details><summary>JSON Schema</summary>
 
@@ -169,6 +170,11 @@ Runs a list of bridge commands in a separate headless Blender on a copy of the f
         "null"
       ],
       "default": null
+    },
+    "wait": {
+      "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+      "type": "integer",
+      "default": 60
     }
   },
   "required": [
@@ -179,16 +185,15 @@ Runs a list of bridge commands in a separate headless Blender on a copy of the f
 
 </details>
 
-## <code>blender_<wbr>batch_<wbr>status</code>
+## <code>blender_<wbr>batches</code>
 
-Progress of a batch: state, how many steps finished and the last 20 with their results or errors, the output file and the log tail. Without an id, lists recent batches.
+The recent batches the add-on holds, newest first: each one's state, steps finished of total, output file and log tail, and which are still running. One batch's progress is its resource, job://blender/batch/&lt;id&gt;.
 
 *read-only · every call adds · stays inside Blender.*
 
 | Parameter | Type | Required | Default | Description |
 | --- | --- | --- | --- | --- |
-| `id` | `string?` | — | `null` | Batch id as blender_batch returned it; every recent batch otherwise. |
-| `logLines` | `integer` | — | `10` | Lines from the end of the batch log. |
+| `logLines` | `integer` | — | `0` | Lines from the end of each batch log. |
 
 <details><summary>JSON Schema</summary>
 
@@ -196,18 +201,10 @@ Progress of a batch: state, how many steps finished and the last 20 with their r
 {
   "type": "object",
   "properties": {
-    "id": {
-      "description": "Batch id as blender_batch returned it; every recent batch otherwise.",
-      "type": [
-        "string",
-        "null"
-      ],
-      "default": null
-    },
     "logLines": {
-      "description": "Lines from the end of the batch log.",
+      "description": "Lines from the end of each batch log.",
       "type": "integer",
-      "default": 10
+      "default": 0
     }
   }
 }

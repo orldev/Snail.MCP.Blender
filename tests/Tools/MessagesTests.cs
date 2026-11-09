@@ -62,11 +62,4 @@ public class MessagesTests
         Assert.Equal("Deleted 3 items, 2 MB freed.", Messages.DeletedFromThePage(3, "2 MB"));
         Assert.Contains("job-1", Messages.CancelledFromThePage("job-1"), StringComparison.Ordinal);
     }
-
-    [Fact]
-    public void AnUnknownSkill_IsNamed_AndTheKnownOnesAreListed()
-    {
-        Assert.Contains("'sculpting'", Messages.UnknownSkill("sculpting"), StringComparison.Ordinal);
-        Assert.Contains("modeling, rendering", Messages.KnownSkills(["modeling", "rendering"]), StringComparison.Ordinal);
-    }
 }

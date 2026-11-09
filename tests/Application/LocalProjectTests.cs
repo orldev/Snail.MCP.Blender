@@ -1,5 +1,6 @@
 using Snail.MCP.Blender.Application.Transfer;
 using Snail.MCP.Blender.Configuration;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Tests.Application;
 
@@ -44,11 +45,11 @@ public sealed class LocalProjectTests
     [Fact]
     public void TheHomeFolder_IsNoProject_AndDownloadsGoToTheServersOwnFolder()
     {
-        var project = Project(ServerPaths.Home);
+        var project = Project(ServerFolders.Home);
 
         Assert.Null(project.Directory);
         Assert.Equal(Path.Combine("/data/snail", "downloads", "still.png"), project.DownloadTarget("snail-test/renders/still.png"));
-        Assert.Equal("wood.png", project.UploadTarget(Path.Combine(ServerPaths.Home, "wood.png")));
+        Assert.Equal("wood.png", project.UploadTarget(Path.Combine(ServerFolders.Home, "wood.png")));
     }
 
     [Fact]

@@ -1,18 +1,17 @@
 using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Snail.MCP.Blender.Application.Access;
 using Snail.MCP.Blender.Application.Discovery;
-using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Application.Rendering;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting.Sessions;
 
 namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Working alongside other agents in one Blender: the journal of who changed what, leases on objects, and batches that run elsewhere.</summary>
 [McpServerToolType]
-public sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, ToolScopes scopes, ClientSessions clients, AddOnJobs background) : BridgeToolBase(bridge)
+public sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, IServiceProvider services, AddOnJobs background) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_journal", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Team.Journal)]
@@ -36,6 +35,7 @@ public sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, Script
         SendAsync(BridgeCommands.Lease, new JsonObject().With("action", action).With("names", names).With("ttl_seconds", ttlSeconds).With("note", note).With("force", force), cancellationToken);
 
     [McpServerTool(Name = "blender_batch", Destructive = true, OpenWorld = true)]
+    [Forwards]
     [Description(ToolDescriptions.Team.Batch)]
     public async Task<CallToolResult> BatchAsync(
         [Description("Steps in order: [{\"command\": \"add_primitive\", \"params\": {\"kind\": \"cube\", \"name\": \"Crate\"}}, ...]; command names are the bridge names, the tool name without blender_.")] JsonArray commands,
@@ -46,7 +46,7 @@ public sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, Script
         [Description(ToolDescriptions.Parameters.Wait)] int wait = 60,
         CancellationToken cancellationToken = default)
     {
-        if ((OperatorTools.RefusalFor(commands, scopes, clients.Current) ?? OperatorTools.RefusalFor(commands, config.Python, advice, Messages.BatchPythonDisabled)) is { } refused)
+        if ((OperatorTools.RefusalFor(commands, services) ?? OperatorTools.RefusalFor(commands, config.Python, advice, Messages.BatchPythonDisabled)) is { } refused)
         {
             return refused;
         }
@@ -55,8 +55,8 @@ public sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, Script
         var started = await background.StartBatchAsync(BridgeCommands.BatchJob, BridgeCommands.BatchStatus, arguments, cancellationToken).ConfigureAwait(false);
 
         return started.Job is { } job
-            ? ToolResponse.Job(await job.ForAsync(TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false))
-            : ToolResponse.From(started.First);
+            ? BridgeAnswers.Job(await job.ForAsync(TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false))
+            : BridgeAnswers.From(started.First);
     }
 
     [McpServerTool(Name = "blender_batches", ReadOnly = true, OpenWorld = false)]

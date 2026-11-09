@@ -3,16 +3,16 @@
 149 tools in 44 families: 42 always on, the rest in skills that load on demand.
 The names, descriptions and schemas are generated from the server itself, so they are exactly what the model receives in `tools/list`.
 
-Skills load with `blender_enable_skill`, or through `find_tool` for the tools a search returns. A loaded skill stays loaded until `blender_disable_skill`, unless `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` unloads idle ones; `farm` stays while a render job runs. The table shows the first sentence of each description.
+Skills load with `blender_enable_skill`, or through `find_tool` for the tools a search returns. A loaded skill stays loaded until `blender_disable_skill`, unless `SNAIL_MCP_BLENDER_SKILL_IDLE_MINUTES` unloads idle ones; calling a tool of a skill that is not loaded loads it. The table shows the first sentence of each description.
 
 | Tool | Family | Skill | What it does |
 | --- | --- | --- | --- |
 | [`blender_diagnose`](diagnostics.md#blender_diagnose) | Diagnostics | — | Reports the server version, whether the add-on inside Blender answers (with the Blender version and whether it is busy), the machine Blender runs on — platfo… |
 | [`blender_install_addon`](diagnostics.md#blender_install_addon) | Diagnostics | — | Builds the add-on zip in the data directory and returns the path with the steps to install it in Blender (Preferences → Get Extensions → Install from Disk). |
-| [`blender_skills`](skills.md#blender_skills) | Skills | — | Lists the skills: named groups of tools that are loaded on demand, with what each covers, whether it is loaded and the tools it brings. |
-| [`blender_enable_skill`](skills.md#blender_enable_skill) | Skills | — | Loads a skill: its tools appear in the tool list right away (the client is notified). |
-| [`blender_disable_skill`](skills.md#blender_disable_skill) | Skills | — | Unloads a skill, removing its tools from the tool list. |
-| [`find_tool`](discovery.md#find_tool) | Finding a tool | — | Finds the tools for a task. |
+| [`blender_skills`](skills.md#blender_skills) | Skills | — | Lists this server's skills — groups of tools loaded on demand — with whether each is loaded and its tools. |
+| [`blender_enable_skill`](skills.md#blender_enable_skill) | Skills | — | Loads a skill: its tools join this session's tool list. |
+| [`blender_disable_skill`](skills.md#blender_disable_skill) | Skills | — | Unloads a skill: its tools leave this session's tool list until it is loaded again. |
+| [`find_tool`](discovery.md#find_tool) | Finding a tool | — | Finds tools of this server for a task in words, best first, with the parameters of each. |
 | [`run_program`](programs.md#run_program) | Programs | — | Runs a small JavaScript program that calls the commands itself: blender.add_primitive({kind: "cube", name: "Crate"}) and so on for every command of the catal… |
 | [`run_tools`](sequence.md#run_tools) | Sequences | — | Runs a list of bridge commands in this Blender, in order, in one call: what to use for a build that takes many steps. |
 | [`blender_upload`](transfer.md#blender_upload) | Files between machines | — | Copies a file, or every file under a folder, from this machine to the machine Blender runs on: textures, HDRIs, models and .blend files a remote Blender cann… |
@@ -45,7 +45,7 @@ Skills load with `blender_enable_skill`, or through `find_tool` for the tools a 
 | [`blender_journal`](team.md#blender_journal) | Journal, leases and batches | — | What changed in this Blender and by whom: every mutating command with its agent, time, targets and outcome, newest last. |
 | [`blender_lease`](team.md#blender_lease) | Journal, leases and batches | — | Claims objects or collections for this agent for a while: mutating commands from other agents on them are refused with Leased until the lease is released or … |
 | [`blender_batch`](team.md#blender_batch) | Journal, leases and batches | — | Runs a list of bridge commands in a separate headless Blender on a copy of the file (or a given .blend) and saves the result to a .blend: parallel work that … |
-| [`blender_batch_status`](team.md#blender_batch_status) | Journal, leases and batches | — | Progress of a batch: state, how many steps finished and the last 20 with their results or errors, the output file and the log tail. |
+| [`blender_batches`](team.md#blender_batches) | Journal, leases and batches | — | The recent batches the add-on holds, newest first: each one's state, steps finished of total, output file and log tail, and which are still running. |
 | [`blender_run_operator`](operators.md#blender_run_operator) | Operators and Python | — | Runs any bpy operator with its properties: everything Blender's menus do, thousands of operators. |
 | [`blender_describe_operator`](operators.md#blender_describe_operator) | Operators and Python | — | Documents an operator: label, description, and every property with type, default, limits and enum values. |
 | [`blender_python`](operators.md#blender_python) | Operators and Python | — | Runs Python inside Blender with bpy available and returns stdout plus the value assigned to result. |
@@ -131,7 +131,7 @@ Skills load with `blender_enable_skill`, or through `find_tool` for the tools a 
 | [`blender_inspect_image`](shots.md#blender_inspect_image) | Product shots, captures and bakes | rendering | Looks at an image file: a preview the model can see, plus exposure statistics (mean luminance, clipped highlights and shadows, a histogram). |
 | [`blender_bake_texture`](shots.md#blender_bake_texture) | Product shots, captures and bakes | rendering | Bakes a material channel (colour, normal, AO, roughness, combined) into a PNG through the mesh's UVs with Cycles; the way to take procedural materials into g… |
 | [`blender_render_job`](jobs.md#blender_render_job) | Background render jobs and the pre-flight check | farm | Starts a background render: the file is saved as a copy and a second Blender renders it, so this Blender and the tools stay free. |
-| [`blender_render_job_status`](jobs.md#blender_render_job_status) | Background render jobs and the pre-flight check | farm | Progress of a background render: state, frames done of total, current frame and camera, elapsed and estimated remaining seconds, peak memory, the files writt… |
+| [`blender_render_jobs`](jobs.md#blender_render_jobs) | Background render jobs and the pre-flight check | farm | The recent background renders the add-on holds, newest first, with each one's state, frames done of total, elapsed seconds and files written, and which are s… |
 | [`blender_render_job_cancel`](jobs.md#blender_render_job_cancel) | Background render jobs and the pre-flight check | farm | Stops a background render; frames already written stay on disk. |
 | [`blender_render_check`](jobs.md#blender_render_check) | Background render jobs and the pre-flight check | farm | Pre-flight before a long render: camera, writable output and free disk, unsaved file or changes, missing textures and libraries, disabled view layers, frame … |
 | [`blender_render_budget`](budget.md#blender_render_budget) | Render budget | farm | What the frame will cost before rendering it: texture memory by size and depth, geometry after modifiers, instances, particles and hair, the Cycles devices a… |

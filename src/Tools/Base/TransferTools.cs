@@ -6,12 +6,14 @@ using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Application.Transfer;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting;
+using Snail.Sdk.Mcp.Hosting.Sessions;
 
 namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Files between this machine and the one Blender runs on: what a remote Blender needs to see, and what it rendered.</summary>
 [McpServerToolType]
-public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, ServerConfig config, LocalProject project, ClientCommands commands, ClientSessions clients)
+public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, ServerConfig config, LocalProject project, ClientCommands commands, ClientSessions clients, IServiceProvider services)
     : BridgeToolBase(bridge)
 {
     private TimeSpan Basis => TimeSpan.FromSeconds(config.Bridge.RequestTimeoutSeconds);
@@ -26,10 +28,10 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
     {
         if (overwrite && !clients.Current.May(Scopes.Delete))
         {
-            return ToolResponse.Failure(ToolScopes.Refusal("blender_upload with overwrite", Scopes.Delete, clients.Current.Name), Messages.ScopeHint);
+            return ToolAnswer.Failed(ToolScopes.Refusal("blender_upload with overwrite", Scopes.Delete, clients.Current.Name), ToolForwarding.Hint(services, "blender_upload"), GrantOptions.NotGranted);
         }
 
-        if (config.Transport is Transport.Http)
+        if (config.Transport is McpTransport.Http)
         {
             return UploadCommand(localPath, remotePath, overwrite);
         }
@@ -38,7 +40,7 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
         var target = remotePath ?? project.UploadTarget(local);
 
         return config.Python == PythonAccess.Off && RemotePaths.IsAbsolute(target)
-            ? ToolResponse.Failure(Messages.UploadOutsideFilesRefused, Messages.UploadOutsideFilesHint)
+            ? ToolAnswer.Failed(Messages.UploadOutsideFilesRefused, Messages.UploadOutsideFilesHint)
             : Report(await transfer.UploadAsync(local, target, overwrite, chunk => ExchangeAsync(BridgeCommands.FilePut, chunk, TransferTimeouts.ForChunk(chunk, Basis), cancellationToken), cancellationToken)
                 .ConfigureAwait(false));
     }
@@ -50,7 +52,7 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
         [Description("Where it lands on this machine: absolute, or relative to the project; the matching place in the project otherwise.")] string? localPath = null,
         [Description("Replace local files that already exist.")] bool overwrite = false,
         CancellationToken cancellationToken = default) =>
-        config.Transport is Transport.Http
+        config.Transport is McpTransport.Http
             ? await DownloadCommandAsync(remotePath, localPath, overwrite, cancellationToken).ConfigureAwait(false)
             : Report(await transfer.DownloadAsync(
                     remotePath,
@@ -64,7 +66,7 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
     /// <summary>Over HTTP nothing is copied here: the client gets the command that uploads through a signed link, into a path of the files area.</summary>
     private CallToolResult UploadCommand(string localPath, string? remotePath, bool overwrite) =>
         remotePath is null || RemotePaths.IsAbsolute(remotePath)
-            ? ToolResponse.Failure(Messages.HttpUploadNeedsAPlace, Messages.HttpUploadHint)
+            ? ToolAnswer.Failed(Messages.HttpUploadNeedsAPlace, Messages.HttpUploadHint)
             : Command(commands.Upload(localPath, remotePath.Trim('/'), overwrite), remotePath.Trim('/'), null);
 
     /// <summary>Over HTTP the file or folder is looked up first, so the command fits what it is and says how much will arrive.</summary>
@@ -72,7 +74,7 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
     {
         if (RemotePaths.IsAbsolute(remotePath))
         {
-            return ToolResponse.Failure(Messages.HttpDownloadOutsideFiles, Messages.HttpUploadHint);
+            return ToolAnswer.Failed(Messages.HttpDownloadOutsideFiles, Messages.HttpUploadHint);
         }
 
         var relative = remotePath.Trim('/');
@@ -80,7 +82,7 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
 
         if (!listing.IsOk)
         {
-            return ToolResponse.From(listing);
+            return BridgeAnswers.From(listing);
         }
 
         var isFolder = listing.Result?["kind"]?.GetValue<string>() == "directory";
@@ -108,7 +110,7 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
             data[key] = value?.DeepClone();
         }
 
-        return ToolResponse.Success(data);
+        return ToolAnswer.Ok(data);
     }
 
     /// <summary>Every file that made it, and the error that stopped the rest; a failure still says what arrived before it.</summary>
@@ -130,12 +132,12 @@ public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, 
 
         if (outcome.Error is null)
         {
-            return ToolResponse.Success(summary);
+            return ToolAnswer.Ok(summary);
         }
 
         summary["type"] = outcome.Error.Type;
         summary["details"] = outcome.Error.Details?.DeepClone();
 
-        return ToolResponse.Failure(outcome.Error.Message, Messages.HintFor(outcome.Error), summary);
+        return ToolAnswer.Failed(outcome.Error.Message, Messages.HintFor(outcome.Error), outcome.Error.Type, summary);
     }
 }

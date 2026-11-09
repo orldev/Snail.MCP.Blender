@@ -137,15 +137,17 @@ the next answer.
 Both sides carry a digest of the add-on's Python, so `blender_diagnose` says whether the add-on installed in
 Blender is the build the server ships — and, when it is not, which commands it lacks.
 
-Towards the client, every tool answers with `structuredContent` next to the text, flags a failed call with
-`isError`, and declares through its annotations whether it is read-only, destructive or open-world. Two
+Towards the client, every tool answers in one JSON envelope with an `ok` flag: a success carries its data as
+`structuredContent` next to the text, a failure comes as text alone with `error`, `hint` and `type`, flagged
+`isError`. Every tool declares through its annotations whether it is read-only, destructive or open-world. Two
 resources, `snail://renders/last` and `snail://journal`, hand the last picture and the journal to clients
 that read resources.
 
-Tools live in four layers, from most to least specific: the dedicated tools, found by intent with
-`find_tool`, which opens the skill they live in; `run_tools`, which sends a list of them to the
-open Blender in one call, so a build of hundreds of steps stays inside the guards instead of becoming a
-script; `blender_run_operator` for any of Blender's thousands of operators with `blender_describe_operator`
+Tools live in five layers, from most to least specific: the dedicated tools, found by intent with
+`find_tool`, which opens the skill they live in; `run_program`, a small JavaScript program that calls the commands
+itself with loops and the results in hand, for a build that decides as it goes; `run_tools`, which sends a list of
+bridge commands to the open Blender in one call, so a build of hundreds of steps stays inside the guards instead of
+becoming a script; `blender_run_operator` for any of Blender's thousands of operators with `blender_describe_operator`
 for their properties; and `blender_python` for what none of them reaches. 42 tools are always on; the other
 107 arrive with a skill. A script skips validation and leases, and the journal records only that it ran, not what it
 touched, so its reply names the tools that cover what it did, and `blender_diagnose` reports how much of the traffic went that way.

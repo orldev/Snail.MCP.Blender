@@ -26,6 +26,13 @@ public sealed class CommandSemantics(string? addOnDirectory = null)
     /// <summary>Reaches past Blender: the file system, another process, the network.</summary>
     public bool IsOpenWorld(string command) => IsFlagSet(command, "open_world");
 
+    /// <summary>Whether the command reads a parameter of this name, as the schema lists its parameters; null when the schema does not know the
+    /// command or lists none for it.</summary>
+    public bool? Takes(string command, string parameter) =>
+        _commands.TryGetValue(command, out var meaning) && meaning["params"] is JsonArray parameters
+            ? parameters.Any(each => each is JsonValue value && value.TryGetValue<string>(out var name) && string.Equals(name, parameter, StringComparison.Ordinal))
+            : null;
+
     private bool IsFlagSet(string command, string name) =>
         _commands.TryGetValue(command, out var meaning) && meaning[name] is JsonValue value && value.TryGetValue<bool>(out var set) && set;
 

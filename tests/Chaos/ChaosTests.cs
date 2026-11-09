@@ -87,12 +87,12 @@ public class ChaosTests : IDisposable
         var scopes = new ToolScopes(new CommandSemantics(Path.Combine(_data, "no-add-on-here")));
         var (clients, serving) = Access.Serving("lighting", Scopes.Read, Scopes.Write);
         using var _ = serving;
-        var tools = new SequenceTools(bridge, new ServerConfig(), new ScriptAdvice(new ToolIndex(typeof(SequenceTools).Assembly)), scopes, clients);
+        var tools = new SequenceTools(bridge, new ServerConfig(), Access.Advice(), Access.Served(clients, scopes));
         var steps = new JsonArray(new JsonObject { ["command"] = "delete_objects", ["params"] = new JsonObject { ["names"] = new JsonArray("Cube") } });
 
         var answer = await tools.RunAsync(steps);
 
-        Assert.True(answer.Failed(), "a key without the delete scope deleted an object through run_tools");
+        Assert.False(answer.IsOk(), "a key without the delete scope deleted an object through run_tools");
         Assert.Empty(bridge.Sent);
     }
 

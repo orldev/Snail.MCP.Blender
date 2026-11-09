@@ -2,6 +2,7 @@ using Microsoft.Extensions.Options;
 using Snail.MCP.Blender.Application.Access;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Web.Access;
 
@@ -9,7 +10,7 @@ namespace Snail.MCP.Blender.Web.Access;
 public sealed class HttpAccessValidation : IValidateOptions<ServerConfig>
 {
     public ValidateOptionsResult Validate(string? name, ServerConfig options) =>
-        options.Transport is Transport.Http && ClientToken.Read(options.Http) is null
+        options.Transport is McpTransport.Http && ClientToken.Read(options.Http) is null
             ? ValidateOptionsResult.Fail(Messages.HttpTokenMissing)
             : ValidateOptionsResult.Success;
 }

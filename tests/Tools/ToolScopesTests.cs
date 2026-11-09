@@ -19,14 +19,14 @@ public class ToolScopesTests
     {
         var (clients, serving) = Access.Serving("lighting", Scopes.Read, Scopes.Write, Scopes.Delete);
         using var _ = serving;
-        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Allow }, Advice(), Access.Scopes, clients);
+        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Allow }, Advice(), Access.Served(clients));
 
         var refused = await tools.RunAsync([
             new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } },
             new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "import os" } },
         ]);
 
-        Assert.True(refused.Failed());
+        Assert.False(refused.IsOk());
         Assert.Contains("does not open it", refused.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
     }
@@ -37,11 +37,11 @@ public class ToolScopesTests
     {
         var (clients, serving) = Access.Serving("modeling", Scopes.Read, Scopes.Write, Scopes.Farm);
         using var _ = serving;
-        var tools = new TeamTools(_bridge, new ServerConfig(), Advice(), Access.Scopes, clients, TestJobs.AddOn(_bridge));
+        var tools = new TeamTools(_bridge, new ServerConfig(), Advice(), Access.Served(clients), TestJobs.AddOn(_bridge));
 
         var refused = await tools.BatchAsync([new JsonObject { ["command"] = "delete_objects", ["params"] = new JsonObject { ["names"] = new JsonArray("Cube") } }]);
 
-        Assert.True(refused.Failed());
+        Assert.False(refused.IsOk());
         Assert.Contains("delete work", refused.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
     }
@@ -52,11 +52,11 @@ public class ToolScopesTests
     {
         var (clients, serving) = Access.Serving("lighting", Scopes.Read, Scopes.Write);
         using var _ = serving;
-        var tools = new SequenceTools(_bridge, new ServerConfig(), Advice(), Access.Scopes, clients);
+        var tools = new SequenceTools(_bridge, new ServerConfig(), Advice(), Access.Served(clients));
 
         var ran = await tools.RunAsync([new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } }]);
 
-        Assert.False(ran.Failed());
+        Assert.True(ran.IsOk());
         Assert.Equal([BridgeCommands.Run.Name], _bridge.Sent.Select(sent => sent.Command.Name));
     }
 
@@ -73,5 +73,5 @@ public class ToolScopesTests
         Assert.Equal(Scopes.Write, Access.Scopes.For(BridgeCommands.AddPrimitive.Name));
     }
 
-    private static ScriptAdvice Advice() => new(new ToolIndex(typeof(SequenceTools).Assembly));
+    private static ScriptAdvice Advice() => Access.Advice();
 }

@@ -1,3 +1,6 @@
+using Snail.MCP.Blender.Configuration;
+using Snail.Sdk.Mcp.Hosting;
+
 namespace Snail.MCP.Blender.Tools.Prompts;
 
 /// <summary>Human-facing texts: errors and hints in tool responses, seen by the model after the call; tool descriptions live in <see cref="ToolDescriptions"/>.</summary>
@@ -87,9 +90,6 @@ public static class Messages
         _ => null,
     };
 
-    public const string ProgramStoppedHint =
-        "What the program sent before it stopped stands: read the commands list in the reply, then send a shorter program that carries on from there.";
-
     public const string TokenUnreadableHint =
         "This server's user needs to read the token file; in Docker both containers read one secret, so its mode must let both of their users read it.";
 
@@ -100,8 +100,9 @@ public static class Messages
 
     public const string PythonDisabled = "blender_python is switched off by configuration on this server.";
 
-    public const string HttpTokenMissing =
-        "The HTTP server needs the token clients present: set SNAIL_MCP_BLENDER_HTTP__TOKEN, or SNAIL_MCP_BLENDER_HTTP__TOKEN_FILE to a file that holds it.";
+    public static readonly string HttpTokenMissing =
+        $"The HTTP server needs the token clients present: set {ServerSettings.NameOfSetting(ServerPaths.ShortName, "Http:Token")}, " +
+        $"or {ServerSettings.NameOfSetting(ServerPaths.ShortName, "Http:TokenFile")} to a file that holds it.";
 
     public const string ScopeHint =
         "This is about the key, not the scene: the same call with a key that opens this kind of work will go through. " +
@@ -166,18 +167,12 @@ public static class Messages
         "Call the tools the data names — find_tool loads the skills they live in — or send them as one run_tools sequence. " +
         "blender_python stays open for API this server has no tool for; an administrator relaxes this with SNAIL_MCP_BLENDER_PYTHON=allow.";
 
-    public const string NoToolForHint =
-        "Ask in English words for what the tool would do, not for an identifier: \"bevel the edges\" rather than \"bmesh.ops.bevel\". " +
-        "blender_skills lists the areas the catalogue covers; blender_run_operator reaches any operator Blender has.";
-
     /// <summary>Why a script was refused where the catalogue already does its work; the covered operations travel with it as data.</summary>
     public static string PythonCovered(int operations) =>
         $"This script does {operations} things this server has tools for, and blender_python is configured as the fallback for what the tools cannot do.";
 
     public static string StepPythonCovered(int step, int operations) =>
         $"Step {step} is a script that does {operations} things this server has tools for, and blender_python is configured as the fallback for what the tools cannot do; no step was sent.";
-
-    public static string NoToolFor(string intent) => $"No tool of this server matches '{intent}'.";
 
     public const string TimeoutOutOfRange = "timeoutSeconds is outside the 1 to 600 range this server accepts.";
 
@@ -187,12 +182,5 @@ public static class Messages
 
     public const string NoRenderYetHint = "Call blender_render_image, blender_render_object, blender_viewport_capture or blender_inspect_image first.";
 
-    public const string ArgumentsHint =
-        "The names are in the tool's own schema, which tools/list carries and find_tool repeats for every tool it answers with; send the call again with them.";
-
     public const string ResolutionHint = "Keep both edges at 4096 or below; render tiles or upscale outside Blender for more.";
-
-    public static string UnknownSkill(string name) => $"There is no skill named '{name}'.";
-
-    public static string KnownSkills(IEnumerable<string> names) => $"blender_skills lists them: {string.Join(", ", names)}.";
 }

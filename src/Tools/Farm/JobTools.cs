@@ -2,7 +2,7 @@ using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Rendering;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
 
@@ -14,7 +14,7 @@ namespace Snail.MCP.Blender.Tools.Farm;
 /// ends. The add-on keeps the job and its files, so <c>blender_render_jobs</c> still lists what it holds across a restart of this server.</remarks>
 [McpServerToolType]
 [Skill(Skills.Farm, SkillDescriptions.Farm)]
-public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, RenderJobs jobs, AddOnJobs background)
+public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, AddOnJobs background)
 {
     [McpServerTool(Name = "blender_render_job", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Jobs.Start)]
@@ -32,7 +32,7 @@ public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, RenderJ
     {
         if (!ToolLimits.IsRenderable(output?.ResolutionX) || !ToolLimits.IsRenderable(output?.ResolutionY))
         {
-            return ToolResponse.Failure(Messages.ResolutionTooLarge, Messages.ResolutionHint);
+            return ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint);
         }
 
         var arguments = new JsonObject().With("output_path", outputPath).With("frames", frames).With("cameras", cameras).With("view_layers", viewLayers).With("engine", engine)
@@ -44,8 +44,8 @@ public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, RenderJ
         var started = await background.StartRenderAsync(BridgeCommands.RenderJob, BridgeCommands.RenderJobStatus, arguments, cancellationToken).ConfigureAwait(false);
 
         return started.Job is { } job
-            ? ToolResponse.Job(await job.ForAsync(TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false))
-            : ToolResponse.From(started.First);
+            ? BridgeAnswers.Job(await job.ForAsync(TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false))
+            : BridgeAnswers.From(started.First);
     }
 
     [McpServerTool(Name = "blender_render_jobs", ReadOnly = true, OpenWorld = false)]
@@ -68,8 +68,8 @@ public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, RenderJ
         [Description("Output path to check instead of the scene's; a template with #### works.")] string? outputPath = null,
         [Description(ToolDescriptions.Parameters.Scene)] string? scene = null,
         CancellationToken cancellationToken = default) =>
-        ToolResponse.From(await bridge.SendAsync(BridgeCommands.RenderCheck, new JsonObject().With("output_path", outputPath).With("scene", scene), null, cancellationToken).ConfigureAwait(false));
+        BridgeAnswers.From(await bridge.SendAsync(BridgeCommands.RenderCheck, new JsonObject().With("output_path", outputPath).With("scene", scene), null, cancellationToken).ConfigureAwait(false));
 
     private async Task<CallToolResult> TrackAsync(BridgeCommand command, JsonObject arguments, TimeSpan? timeout, CancellationToken cancellationToken) =>
-        ToolResponse.From(jobs.Observe(await bridge.SendAsync(command, arguments, timeout, cancellationToken).ConfigureAwait(false)));
+        BridgeAnswers.From(await bridge.SendAsync(command, arguments, timeout, cancellationToken).ConfigureAwait(false));
 }

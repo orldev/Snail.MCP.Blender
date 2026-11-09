@@ -22,20 +22,12 @@ public class ToolInvocationTests
     private static readonly string[] AnsweredWithoutBlender =
     [
         "blender_diagnose",
-        "blender_disable_skill",
-        "blender_enable_skill",
         "blender_install_addon",
-        "blender_skills",
         "blender_upload",
-        "find_tool",
-        "run_program",
     ];
 
     private static readonly Dictionary<string, Dictionary<string, object?>> Arguments = new(StringComparer.Ordinal)
     {
-        ["blender_enable_skill"] = new(StringComparer.Ordinal) { ["name"] = "modeling" },
-        ["blender_disable_skill"] = new(StringComparer.Ordinal) { ["name"] = "modeling" },
-        ["blender_find_tool"] = new(StringComparer.Ordinal) { ["intent"] = "render the scene" },
         ["blender_run_tools"] = new(StringComparer.Ordinal) { ["steps"] = new JsonArray(new JsonObject { ["command"] = "scene_info" }) },
     };
 
@@ -112,7 +104,7 @@ public class ToolInvocationTests
         services.AddLogging();
         services.AddSingleton(new ServerConfig { DataDirectory = TestFolder.Create() });
         services.AddSingleton(provider => provider.GetRequiredService<ServerConfig>().Bridge);
-        services.AddBlenderBridge().AddSkills().AddMcpTransport();
+        services.AddBlenderBridge().AddAccess().AddMcpTransport(new ServerConfig());
         services.AddSingleton<IBlenderBridge>(bridge);
 
         return services.BuildServiceProvider();

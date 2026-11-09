@@ -10,7 +10,7 @@ public class BaseToolsTests
 {
     private readonly ScriptedBridge _bridge = new ScriptedBridge().Answer(BridgeCommands.AddPrimitive, new JsonObject { ["name"] = "Cube" });
 
-    private static readonly ScriptAdvice Advice = new(new ToolIndex(typeof(ToolIndex).Assembly));
+    private static readonly ScriptAdvice Advice = Access.Advice();
 
     [Fact]
     public async Task AddPrimitive_OnlyKindAndLocation_SendsThoseAndNothingElse()
@@ -85,7 +85,7 @@ public class BaseToolsTests
 
         var result = await tools.RunOperatorAsync("mesh.primitive_cube_add", new JsonObject { ["size"] = 2 }, timeoutSeconds: 5000);
 
-        Assert.True(result.Failed());
+        Assert.False(result.IsOk());
         Assert.Contains(ToolLimits.MaxTimeoutSeconds.ToString(), result.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
     }
@@ -169,7 +169,7 @@ public class BaseToolsTests
     [Fact]
     public async Task Batch_LeavesTheDirectoryToTheAddOn_AndLeaseDefaultsToList()
     {
-        var tools = new TeamTools(_bridge, new ServerConfig { DataDirectory = "/data/snail" }, Advice, Access.Scopes, Access.Sessions(), TestJobs.AddOn(_bridge));
+        var tools = new TeamTools(_bridge, new ServerConfig { DataDirectory = "/data/snail" }, Advice, Access.Served(), TestJobs.AddOn(_bridge));
 
         (await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } }), output: "/out/crate.blend")).Text();
         (await tools.LeaseAsync()).Text();
@@ -206,9 +206,9 @@ public class BaseToolsTests
         var trusted = await tools.RunOperatorAsync("wm.open_mainfile", new JsonObject { ["filepath"] = "/tmp/x.blend", ["use_scripts"] = true });
         await tools.RunOperatorAsync("wm.open_mainfile", new JsonObject { ["filepath"] = "/tmp/x.blend" });
 
-        Assert.True(install.Failed());
-        Assert.True(extension.Failed());
-        Assert.True(trusted.Failed());
+        Assert.False(install.IsOk());
+        Assert.False(extension.IsOk());
+        Assert.False(trusted.IsOk());
         Assert.Single(_bridge.Sent);
         Assert.True(ScriptAccess.ContainsPython(new JsonArray(new JsonObject { ["command"] = "run_operator", ["params"] = new JsonObject { ["name"] = "preferences.addon_enable", ["params"] = new JsonObject { ["module"] = "x" } } })));
     }
@@ -216,11 +216,11 @@ public class BaseToolsTests
     [Fact]
     public async Task Batch_InFallback_AStepScriptTheToolsCouldDo_IsRefused()
     {
-        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Advice, Access.Scopes, Access.Sessions(), TestJobs.AddOn(_bridge));
+        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Advice, Access.Served(), TestJobs.AddOn(_bridge));
 
         var result = await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "import bpy\nbpy.context.scene.cycles.samples = 64\nbpy.context.scene.render.resolution_x = 1920" } }));
 
-        Assert.True(result.Failed());
+        Assert.False(result.IsOk());
         Assert.Contains("blender_set_cycles", result.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
     }
@@ -228,7 +228,7 @@ public class BaseToolsTests
     [Fact]
     public async Task Batch_WithAPythonStep_IsRefusedWhenPythonIsOff()
     {
-        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Off }, Advice, Access.Scopes, Access.Sessions(), TestJobs.AddOn(_bridge));
+        var tools = new TeamTools(_bridge, new ServerConfig { Python = PythonAccess.Off }, Advice, Access.Served(), TestJobs.AddOn(_bridge));
 
         var refused = JsonNode.Parse((await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "1" } }))).Text())!;
         (await tools.BatchAsync(new JsonArray(new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } }))).Text();

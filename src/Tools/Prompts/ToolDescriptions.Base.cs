@@ -35,36 +35,6 @@ public static partial class ToolDescriptions
         public const string Journal = "The add-on's journal of mutating commands with their agents, newest last, as blender_journal returns it.";
     }
 
-    /// <summary><c>SkillTools</c>.</summary>
-    public static class Skills
-    {
-        /// <summary><c>blender_skills</c></summary>
-        public const string List =
-            "Lists the skills: named groups of tools that are loaded on demand, with what each covers, whether it is " +
-            "loaded and the tools it brings.";
-
-        /// <summary><c>blender_enable_skill</c></summary>
-        public const string Enable =
-            "Loads a skill: its tools appear in the tool list right away (the client is notified). A skill stays " +
-            "loaded until blender_disable_skill, unless this server is configured to unload idle ones.";
-
-        /// <summary><c>blender_disable_skill</c></summary>
-        public const string Disable = "Unloads a skill, removing its tools from the tool list.";
-    }
-
-    /// <summary><c>DiscoveryTools</c>.</summary>
-    public static class Discovery
-    {
-        /// <summary><c>find_tool</c></summary>
-        public const string FindTool =
-            "Finds the tools for a task. Ask in plain English words for what you are about to do (\"bevel the edges\", \"warm key light\", " +
-            "\"render four frames in the background\"); the answer names the tools with their descriptions, the skill each belongs to, the " +
-            "command each sends and every parameter it takes. That is enough to call them at once through run_program, which needs no " +
-            "skill loaded; pass enable to put the tools themselves in the tool list instead. Most of this server's tools are not in the tool " +
-            "list until their skill is enabled, so a tool you cannot see is not a tool that does not exist: ask here before reaching for " +
-            "blender_python.";
-    }
-
     /// <summary><c>TransferTools</c>.</summary>
     public static class Transfer
     {
@@ -291,16 +261,5 @@ public static partial class ToolDescriptions
             "of many steps, blender_run_operator for a single operator. What a script does passes no validation, ignores the leases other " +
             "agents hold and lands in the journal as unguarded, so nobody can see which objects it touched; the reply names the tools that " +
             "already cover what it did. Blender's Python API is fully reachable, which is what this is for: what no tool of this server does.";
-
-        /// <summary><c>run_program</c></summary>
-        public const string Program =
-            "Runs a small JavaScript program that calls the commands itself: blender.add_primitive({kind: \"cube\", name: \"Crate\"}) and so on for " +
-            "every command of the catalog, with loops, conditions and the results in hand. Use it when a build takes many steps, when each step " +
-            "depends on what the last one answered, or when only a summary of a long listing matters: the steps run here, and only what the " +
-            "program returns comes back, instead of one call and one reply per step. Return a value from the program; log(...) adds a line to " +
-            "the reply. A failed command throws {type, message, details}, which the program may catch and carry on. This is not Blender's " +
-            "Python: the program reaches nothing but the commands, and blender_python stays the last resort for what no command does. " +
-            "The reply lists every command it sent. Limits: 200 commands, 1000000 statements, calls nested 256 " +
-            "deep, the timeout it was given, and one program's memory.";
     }
 }

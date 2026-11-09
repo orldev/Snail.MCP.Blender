@@ -46,13 +46,20 @@ public static class ServerConfigExtensions
         new ConfigurationBuilder().AddServerSettings(ServerPaths.ShortName, file, variables).Build();
 
     /// <summary>The settings as a host would bind them, read before one is built: stdio and HTTP need different hosts.</summary>
+    /// <remarks>No host is there yet to refuse a value of the wrong type, so <see cref="ServerSettings.Bind(string, IConfiguration, Action{IConfiguration})"/>
+    /// says it as a <see cref="StartRefusedException"/> naming the variable, where the binder crashed the process with a trace.</remarks>
+    /// <exception cref="StartRefusedException">A setting holds a value its property's type cannot hold.</exception>
     public static ServerConfig Peek(IConfiguration? configuration = null)
     {
         configuration ??= Settings();
 
         var config = new ServerConfig();
-        configuration.GetSection(ServerConfig.SectionName).Bind(config);
-        configuration.Bind(config);
+
+        ServerSettings.Bind(ServerPaths.ShortName, configuration, settings =>
+        {
+            settings.GetSection(ServerConfig.SectionName).Bind(config);
+            settings.Bind(config);
+        });
 
         return config;
     }
@@ -72,7 +79,7 @@ public static class ServerConfigExtensions
             config.Bridge.TokenFile = config.TokenFile;
         }
 
-        config.ProjectDirectory = config.Transport is Transport.Http ? null : Path.GetFullPath(ExpandUser(config.ProjectDirectory) ?? Environment.CurrentDirectory);
+        config.ProjectDirectory = config.Transport is McpTransport.Http ? null : Path.GetFullPath(ExpandUser(config.ProjectDirectory) ?? Environment.CurrentDirectory);
         config.Bridge.TokenFile = ExpandUser(config.Bridge.TokenFile);
         config.Http.TokenFile = ExpandUser(config.Http.TokenFile);
         config.Bridge.Tunnel.Key = ExpandUser(config.Bridge.Tunnel.Key);
@@ -84,31 +91,7 @@ public static class ServerConfigExtensions
     }
 
     /// <summary>Expands a leading <c>~</c> in a path that may be absent; unlike the data directory, an absent one stays absent.</summary>
-    private static string? ExpandUser(string? path) =>
-        string.IsNullOrWhiteSpace(path) ? null
-        : path == "~" ? ServerPaths.Home
-        : path.StartsWith("~/", StringComparison.Ordinal) || path.StartsWith(@"~\", StringComparison.Ordinal) ? Path.Combine(ServerPaths.Home, path[2..])
-        : path;
+    private static string? ExpandUser(string? path) => string.IsNullOrWhiteSpace(path) ? null : ServerFolders.ExpandHome(path);
 
-    private static string ExpandHome(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return ServerPaths.DefaultDataDirectory;
-        }
-
-        path = path.Trim();
-
-        if (path == "~")
-        {
-            return ServerPaths.Home;
-        }
-
-        if (path.StartsWith("~/", StringComparison.Ordinal) || path.StartsWith(@"~\", StringComparison.Ordinal))
-        {
-            return Path.Combine(ServerPaths.Home, path[2..]);
-        }
-
-        return Path.GetFullPath(path);
-    }
+    private static string ExpandHome(string path) => ServerFolders.FullPath(path, ServerPaths.DefaultDataDirectory);
 }

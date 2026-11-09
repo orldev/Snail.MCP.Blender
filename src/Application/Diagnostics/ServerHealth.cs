@@ -2,6 +2,7 @@ using Snail.MCP.Blender.Application.Sessions;
 using Snail.MCP.Blender.Application.Transfer;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tools.Prompts;
+using Snail.Sdk.Mcp.Hosting;
 
 namespace Snail.MCP.Blender.Application.Diagnostics;
 
@@ -23,8 +24,8 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
         {
             ["server"] = new JsonObject
             {
-                ["name"] = ThisAssembly.Name,
-                ["version"] = ThisAssembly.InformationalVersion,
+                ["name"] = ServerIdentity.NameOf(typeof(ServerHealth).Assembly),
+                ["version"] = ServerIdentity.VersionOf(typeof(ServerHealth).Assembly),
             },
             ["blender"] = Describe(ping, lifetime.Describe()),
             ["bridge"] = new JsonObject
@@ -44,7 +45,7 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
             ["dataDirectory"] = config.DataDirectory,
         };
 
-        if (config.Transport is Configuration.Transport.Stdio)
+        if (config.Transport is McpTransport.Stdio)
         {
             report["idleTimeoutMinutes"] = config.IdleTimeoutMinutes;
         }
@@ -84,7 +85,7 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
 
         if (project.Directory is null)
         {
-            state["note"] = config.Transport is Configuration.Transport.Http ? Messages.HttpProjectNote : Messages.NoProjectNote;
+            state["note"] = config.Transport is McpTransport.Http ? Messages.HttpProjectNote : Messages.NoProjectNote;
         }
 
         return state;
@@ -92,7 +93,7 @@ public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, B
 
     /// <summary>How clients reach this server; over HTTP also the address links are built on and how long they last.</summary>
     private JsonObject Transport() =>
-        config.Transport is Configuration.Transport.Http
+        config.Transport is McpTransport.Http
             ? new JsonObject { ["kind"] = "http", ["publicUrl"] = config.Http.PublicUrl ?? config.Http.Url, ["linkMinutes"] = config.Http.LinkMinutes }
             : new JsonObject { ["kind"] = "stdio" };
 

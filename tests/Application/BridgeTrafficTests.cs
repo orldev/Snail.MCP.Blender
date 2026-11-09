@@ -10,10 +10,9 @@ public class BridgeTrafficTests
     {
         var traffic = new BridgeTraffic();
         var clients = Access.Sessions();
-        var lighting = clients.Open(new ModelContextProtocol.Server.McpServerOptions(), "lighting");
         var bridge = new TracedBridge(new ScriptedBridge().Answer(BridgeCommands.SceneInfo, new JsonObject()), traffic, NullLogger<TracedBridge>.Instance, clients);
 
-        using (clients.Serve(lighting))
+        using (clients.Serve(clientName: null, "lighting"))
         {
             await bridge.SendAsync(BridgeCommands.SceneInfo);
         }

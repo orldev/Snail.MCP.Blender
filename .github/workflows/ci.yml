@@ -61,14 +61,14 @@ jobs:
           echo "images=$(touched '^(src|addon|deploy)/|^(global\.json|\.mcp/server\.json|Directory\.Build\.props|\.editorconfig|README\.md|LICENSE|\.github/workflows/ci\.yml)$')" >> "$GITHUB_OUTPUT"
 
   # The shared server CI of Snail.Sdk: the tests, the conformance check, the tool reference the build writes, and the
-  # framework-dependent publication asked over stdio. The live tests skip themselves there, as no Blender is installed.
+  # framework-dependent publication asked over stdio and HTTP. The live tests skip themselves there, as no Blender is installed.
   ci:
     uses: orldev/Snail.Sdk/.github/workflows/mcp-ci.yml@v1
     with:
       test-filter: FullyQualifiedName!~.Tests.Live.
       project: src
       contract-variable: SNAIL_BLENDER_SERVER
-      contract-filter: FullyQualifiedName~StdioContract
+      contract-filter: FullyQualifiedName~StdioContract|FullyQualifiedName~HttpContract
 
   addon:
     name: Lint the add-on

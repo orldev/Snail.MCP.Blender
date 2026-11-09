@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
-using Snail.MCP.Blender.Application.Skills;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 using Snail.MCP.Blender.Tools.Prompts;
 
 namespace Snail.MCP.Blender.Tools.Video;
@@ -56,7 +56,7 @@ public sealed class EditTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
                 new JsonObject().With("fps", fps).With("sync_mode", syncMode).With("pixel_aspect", pixelAspect).With("resolution_x", resolutionX).With("resolution_y", resolutionY)
                     .With("percentage", percentage).With("start", start).With("end", end).With("audio", audio),
                 cancellationToken)
-            : Task.FromResult(ToolResponse.Failure(Messages.ResolutionTooLarge, Messages.ResolutionHint));
+            : Task.FromResult(ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint));
 
     [McpServerTool(Name = "blender_sequencer_grade", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Cuts.Grade)]

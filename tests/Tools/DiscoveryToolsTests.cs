@@ -1,86 +1,169 @@
-using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+using System.Text.Json;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Diagnostics;
 using Snail.MCP.Blender.Application.Discovery;
-using Snail.MCP.Blender.Application.Skills;
 using Snail.MCP.Blender.Configuration;
+using Snail.MCP.Blender.Tools;
 using Snail.MCP.Blender.Tools.Base;
+using Snail.Sdk.Mcp.Hosting.Discovery;
 
 namespace Snail.MCP.Blender.Tests.Tools;
 
-/// <summary>Finding a tool instead of writing a script: what the model is offered when it does not know the catalogue, and what a script is answered with when it writes one anyway.</summary>
+/// <summary>Finding a tool instead of writing a script: what find_tool ranks for the server's own words, and what a script is answered with when
+/// it writes one anyway.</summary>
 public class DiscoveryToolsTests
 {
-    private static readonly ToolIndex Index = new(typeof(ToolIndex).Assembly);
-
     private readonly ScriptedBridge _bridge = new();
 
+    /// <summary>A tool that lives in a skill is found all the same, with the skill that loads it.</summary>
     [Fact]
-    public async Task Find_AnIntentWhoseToolLivesInAClosedSkill_NamesIt_AndOpensTheSkillWhenAsked()
+    public void Find_AnIntentWhoseToolLivesInASkill_NamesIt_WithItsSkill()
     {
-        var (tools, skills) = Build();
+        var found = ToolCatalog.Find(Access.Catalog, "bevel the edges of a mesh", 8, Access.Discovery());
+        var bevel = found.Single(tool => tool.Name == "blender_mesh_bevel");
 
-        var answer = JsonNode.Parse((await tools.FindAsync("bevel the edges of a mesh", enable: true)).Text())!["data"]!;
-
-        Assert.Contains("blender_mesh_bevel", answer["tools"]!.AsArray().Select(tool => tool!["tool"]!.ToString()), StringComparer.Ordinal);
-        Assert.Contains("modeling", answer["enabledSkills"]!.AsArray().Select(name => name!.ToString()), StringComparer.Ordinal);
-        Assert.True(skills.Status().Single(skill => skill.Name == "modeling").IsEnabled);
+        Assert.Equal("modeling", bevel.Skill);
     }
 
-    /// <summary>Finding a tool is enough to call it: the command and its parameters come back, so a program can send it without the skill being
-    /// loaded — which is also what keeps the tool list, and the prompt built on it, unchanged.</summary>
+    /// <summary>Finding a tool is enough to call it: its parameters come back, and the command a program sends for it, so a program can send it
+    /// without the skill being loaded.</summary>
     [Fact]
-    public async Task Find_ByDefault_AnswersWithTheCommandAndItsParameters_AndLeavesTheSkillClosed()
+    public void Find_AnswersWithTheParameters_AndTheCommandAProgramSends()
     {
-        var (tools, skills) = Build();
+        var bevel = ToolCatalog.Find(Access.Catalog, "bevel the edges of a mesh", 8, Access.Discovery()).Single(tool => tool.Name == "blender_mesh_bevel");
+        var parameters = bevel.Parameters.ToDictionary(parameter => parameter.Name);
 
-        var answer = JsonNode.Parse((await tools.FindAsync("bevel the edges of a mesh")).Text())!["data"]!;
-        var bevel = answer["tools"]!.AsArray().Single(tool => tool!["tool"]!.ToString() == "blender_mesh_bevel")!;
-        var parameters = bevel["parameters"]!.AsArray().ToDictionary(parameter => parameter!["name"]!.ToString(), parameter => parameter!);
-
-        Assert.Equal("modeling", bevel["skill"]!.ToString());
-        Assert.False(bevel["loaded"]!.GetValue<bool>());
-        Assert.Equal("mesh_bevel", bevel["command"]!.ToString());
-        Assert.True(parameters["name"]!["required"]!.GetValue<bool>());
-        Assert.Equal("string", parameters["name"]!["type"]!.ToString());
-        Assert.NotNull(parameters["width"]!["description"]);
-        Assert.Empty(answer["enabledSkills"]!.AsArray());
-        Assert.False(skills.Status().Single(skill => skill.Name == "modeling").IsEnabled);
+        Assert.Equal("mesh_bevel", Access.Discovery().CommandOf!(bevel.Name));
+        Assert.True(parameters["name"].IsRequired);
+        Assert.Equal("string", parameters["name"].Type);
+        Assert.NotNull(parameters["width"].Description);
     }
 
-    /// <summary>The server's own tools — discovery, skills, transfers — send no command, and a program cannot call them; the answer says so
+    /// <summary>The server's own tools — discovery, skills, transfers — send no command, and a program cannot call them; the catalog says so
     /// with a null rather than inventing a name.</summary>
     [Fact]
-    public void Index_AToolThatSendsNoCommand_NamesNone()
+    public void Command_OfAToolThatSendsNone_IsNone()
     {
-        Assert.Null(Index.Named("find_tool")!.Command);
-        Assert.Equal("add_primitive", Index.Named("blender_add_primitive")!.Command);
+        Assert.Null(BridgeCommands.CommandOf("find_tool"));
+        Assert.Null(BridgeCommands.CommandOf("blender_upload"));
+        Assert.Equal("add_primitive", BridgeCommands.CommandOf("blender_add_primitive"));
     }
 
+    /// <summary>Words no tool answers find nothing: a form needs four letters on both sides, so the "z" of "+z" in blender_mesh_extrude's
+    /// description no longer answers "zzzz", nor the "e" and "g" of "e.g." every word that starts with them.</summary>
     [Fact]
-    public async Task Find_WordsNoToolAnswers_FailsWithAHint_RatherThanGuessing()
+    public void Find_WordsNoToolAnswers_FindsNothing_RatherThanGuessing()
     {
-        var (tools, _) = Build();
+        Assert.Empty(ToolCatalog.Find(Access.Catalog, "zzzz qqqq", 8, Access.Discovery()));
+    }
 
-        var result = await tools.FindAsync("zzzz qqqq");
+    /// <summary>A program written from <c>find_tool</c>'s answer sends the parameters as the add-on reads them: snake_case, and only those the
+    /// command takes, since the add-on ignores a name it does not read.</summary>
+    [Fact]
+    public void Parameter_OfACommand_IsNamedAsTheAddOnReadsIt()
+    {
+        var parameterOf = Access.Discovery().ParameterOf!;
 
-        Assert.True(result.Failed());
-        Assert.Contains("blender_run_operator", result.Text(), StringComparison.Ordinal);
+        Assert.Equal("size_y", parameterOf("blender_add_light", "sizeY"));
+        Assert.Equal("ies_path", parameterOf("blender_add_light", "iesPath"));
+        Assert.Equal("type", parameterOf("blender_add_light", "type"));
+        Assert.Null(parameterOf("blender_journal", "agent"));
+        Assert.Equal("since", parameterOf("blender_journal", "since"));
+    }
+
+    /// <summary>A field of a block is asked by its path: a block the command takes keeps its fields inside it in snake_case, and a block the
+    /// command does not take is one the tool spreads over the command, so its fields answer by their top-level names and the block by none.</summary>
+    [Fact]
+    public void Parameter_AFieldOfABlock_IsPlacedWhereTheCommandReadsIt()
+    {
+        var parameterOf = Access.Discovery().ParameterOf!;
+
+        Assert.Equal("focus.distance", parameterOf("blender_set_camera_optics", "focus.distance"));
+        Assert.Equal("pack_for_farm.pack_external", parameterOf("blender_render_budget", "packForFarm.packExternal"));
+        Assert.Equal("apply.simplify.child_particles", parameterOf("blender_render_budget", "apply.simplify.childParticles"));
+        Assert.Null(parameterOf("blender_render_job", "output"));
+        Assert.Equal("file_format", parameterOf("blender_render_job", "output.fileFormat"));
+        Assert.Equal("max_parallel", parameterOf("blender_render_job", "queue.maxParallel"));
+    }
+
+    /// <summary>blender_render_job takes what it writes and how it runs as two blocks and spreads their fields over the render_job command, so
+    /// <c>find_tool</c> names those fields at the top, where a program sends them, and not the blocks, which the add-on would never read.</summary>
+    [Fact]
+    public void Find_RenderJob_NamesTheFieldsOfItsBlocks_AtTheTopOfTheCommand()
+    {
+        using var server = Access.Server();
+
+        var job = ToolCatalog.Find(server, "render four frames in the background", 8).Single(tool => tool.Name == "blender_render_job");
+        var names = job.Parameters.Select(parameter => parameter.Name).ToList();
+
+        Assert.Equal("render_job", job.Command);
+        Assert.Contains("file_format", names, StringComparer.Ordinal);
+        Assert.Contains("samples", names, StringComparer.Ordinal);
+        Assert.Contains("chunks", names, StringComparer.Ordinal);
+        Assert.Contains("retries", names, StringComparer.Ordinal);
+        Assert.DoesNotContain("output", names, StringComparer.Ordinal);
+        Assert.DoesNotContain("queue", names, StringComparer.Ordinal);
+    }
+
+    /// <summary>A block the add-on reads whole comes with its fields, in the names the add-on reads inside it, instead of a bare object a
+    /// program could only guess at.</summary>
+    [Fact]
+    public void Find_CameraOptics_NamesTheFieldsOfFocus_AsTheAddOnReadsThem()
+    {
+        using var server = Access.Server();
+
+        var optics = ToolCatalog.Find(server, "focus distance and aperture of the camera", 8).Single(tool => tool.Name == "blender_set_camera_optics");
+        var focus = optics.Parameters.Single(parameter => parameter.Name == "focus");
+
+        Assert.Equal("object", focus.Type);
+        Assert.Equal(["distance", "object", "bone"], focus.Fields!.Select(field => field.Name));
+    }
+
+    /// <summary>Every block a tool sends whole is answered with the fields <see cref="Block.ToWire"/> writes, and every block a tool spreads
+    /// over its command with those fields among the command's own parameters: a field renamed on one side only would hand a program a name
+    /// the add-on ignores without a word.</summary>
+    [Fact]
+    public void Find_EveryBlockParameter_IsAnsweredWithTheFieldsTheAddOnReceives()
+    {
+        using var server = Access.Server();
+        var catalog = ToolCatalog.Of(server).ToDictionary(tool => tool.Name, StringComparer.Ordinal);
+        var blocks = BlockParameters();
+        var wrong = new List<string>();
+
+        foreach (var (tool, parameter, block) in blocks)
+        {
+            var parameters = catalog[tool].Parameters;
+            var sent = Paths(Filled(block).ToWire().AsObject());
+            var whole = parameters.SingleOrDefault(each => each.Name == JsonNamingPolicy.SnakeCaseLower.ConvertName(parameter));
+            var answered = whole is null ? parameters.Select(each => each.Name).Where(sent.Contains).ToHashSet(StringComparer.Ordinal) : Paths(whole.Fields ?? []);
+
+            if (!answered.SetEquals(sent))
+            {
+                wrong.Add($"{tool} {parameter}: sends {string.Join(", ", sent.Order(StringComparer.Ordinal))}; answered {string.Join(", ", answered.Order(StringComparer.Ordinal))}");
+            }
+        }
+
+        Assert.True(blocks.Count >= 38, $"only {blocks.Count} block parameters were found");
+        Assert.True(wrong.Count == 0, string.Join(Environment.NewLine, wrong));
     }
 
     [Fact]
     public void Covering_AnOperator_AnswersOnlyWhenEveryWordStandsInTheName()
     {
-        Assert.Equal("blender_mesh_bevel", Index.Covering("bevel")!.Name);
-        Assert.Equal("blender_insert_keyframe", Index.Covering("keyframe_insert")!.Name);
-        Assert.Null(Index.Covering("frobnicate"));
+        var advice = Access.Advice();
+
+        Assert.Equal("blender_mesh_bevel", advice.Covering("bevel")!.Name);
+        Assert.Equal("blender_insert_keyframe", advice.Covering("keyframe_insert")!.Name);
+        Assert.Null(advice.Covering("frobnicate"));
     }
 
     /// <summary>The table promises tools by name; a rename would otherwise turn advice into a lie the analyser silently swallows.</summary>
     [Fact]
     public void EveryToolTheAdviceTableNames_IsAToolOfThisServer()
     {
-        var missing = ScriptAdvice.Covers.Where(tool => Index.Named(tool) is null).ToList();
+        var names = Access.Catalog.Select(tool => tool.Name).ToHashSet(StringComparer.Ordinal);
+        var missing = ScriptAdvice.Covers.Where(tool => !names.Contains(tool)).ToList();
 
         Assert.True(missing.Count == 0, $"advice names tools that do not exist: {string.Join(", ", missing)}");
     }
@@ -89,7 +172,7 @@ public class DiscoveryToolsTests
     [Fact]
     public void Read_AScriptFromARealSession_NamesTheToolsThatDoTheSameWork()
     {
-        var advice = new ScriptAdvice(Index);
+        var advice = Access.Advice();
 
         var found = advice.Read(
             """
@@ -118,7 +201,7 @@ public class DiscoveryToolsTests
     [Fact]
     public void Read_AScriptSpacedAroundItsDots_StillNamesTheTools()
     {
-        var found = new ScriptAdvice(Index).Read("import bpy\nbpy.context.scene.render .resolution_x = 1920\nbpy.context.scene.cycles . samples = 64");
+        var found = Access.Advice().Read("import bpy\nbpy.context.scene.render .resolution_x = 1920\nbpy.context.scene.cycles . samples = 64");
 
         Assert.Contains(found, finding => finding.Tool == "blender_set_output");
         Assert.Contains(found, finding => finding.Tool == "blender_set_cycles");
@@ -127,7 +210,7 @@ public class DiscoveryToolsTests
     [Fact]
     public void Read_ApiNoToolCovers_AnswersNothing()
     {
-        var found = new ScriptAdvice(Index).Read("import bpy\nresult = [object.name for object in bpy.data.objects if object.users == 0]");
+        var found = Access.Advice().Read("import bpy\nresult = [object.name for object in bpy.data.objects if object.users == 0]");
 
         Assert.Empty(found);
     }
@@ -135,11 +218,11 @@ public class DiscoveryToolsTests
     [Fact]
     public async Task Python_InFallback_AScriptTheToolsCouldDo_IsRefused_NamingThem()
     {
-        var tools = new OperatorTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, new ScriptAdvice(Index));
+        var tools = new OperatorTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Access.Advice());
 
         var result = await tools.PythonAsync("import bpy\nbpy.context.scene.cycles.samples = 64\nbpy.context.scene.render.resolution_x = 1920");
 
-        Assert.True(result.Failed());
+        Assert.False(result.IsOk());
         Assert.Contains("blender_set_cycles", result.Text(), StringComparison.Ordinal);
         Assert.Contains("run_tools", result.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
@@ -149,11 +232,11 @@ public class DiscoveryToolsTests
     public async Task Python_InFallback_ApiNoToolCovers_StillRuns()
     {
         _bridge.Answer(BridgeCommands.Python, new JsonObject { ["stdout"] = string.Empty });
-        var tools = new OperatorTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, new ScriptAdvice(Index));
+        var tools = new OperatorTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Access.Advice());
 
         var result = await tools.PythonAsync("import bpy\nresult = bpy.app.version_string");
 
-        Assert.False(result.Failed());
+        Assert.True(result.IsOk());
         Assert.Single(_bridge.Sent);
     }
 
@@ -161,9 +244,9 @@ public class DiscoveryToolsTests
     public async Task Python_WhenAllowed_RunsAndCarriesTheAdviceInTheReply()
     {
         _bridge.Answer(BridgeCommands.Python, new JsonObject { ["stdout"] = "done" });
-        var tools = new OperatorTools(_bridge, new ServerConfig(), new ScriptAdvice(Index));
+        var tools = new OperatorTools(_bridge, new ServerConfig(), Access.Advice());
 
-        var answer = JsonNode.Parse((await tools.PythonAsync("import bpy\nbpy.data.materials.new(\"Steel\")")).Text())!["data"]!;
+        var answer = ((await tools.PythonAsync("import bpy\nbpy.data.materials.new(\"Steel\")"))).Data()!;
 
         Assert.Equal("done", answer["stdout"]!.ToString());
         Assert.Equal("blender_create_material", answer["advice"]!["tools"]![0]!["tool"]!.ToString());
@@ -174,7 +257,7 @@ public class DiscoveryToolsTests
     public async Task Run_SendsEveryStepAsOneCommand_WithTheContinueFlag()
     {
         _bridge.Answer(BridgeCommands.Run, new JsonObject { ["ran"] = 2 });
-        var tools = new SequenceTools(_bridge, new ServerConfig(), new ScriptAdvice(Index), Access.Scopes, Access.Sessions());
+        var tools = new SequenceTools(_bridge, new ServerConfig(), Access.Advice(), Access.Served());
 
         var steps = new JsonArray(
             new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } },
@@ -193,14 +276,14 @@ public class DiscoveryToolsTests
     [Fact]
     public async Task Run_InFallback_AStepScriptTheToolsCouldDo_IsRefused_NamingTheStepAndTheTools()
     {
-        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, new ScriptAdvice(Index), Access.Scopes, Access.Sessions());
+        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Access.Advice(), Access.Served());
         var steps = new JsonArray(
             new JsonObject { ["command"] = "add_primitive", ["params"] = new JsonObject { ["kind"] = "cube" } },
             new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "import bpy\nbpy.context.scene.cycles.samples = 64\nbpy.context.scene.render.resolution_x = 1920" } });
 
         var result = await tools.RunAsync(steps);
 
-        Assert.True(result.Failed());
+        Assert.False(result.IsOk());
         Assert.Contains("Step 2", result.Text(), StringComparison.Ordinal);
         Assert.Contains("blender_set_cycles", result.Text(), StringComparison.Ordinal);
         Assert.Empty(_bridge.Sent);
@@ -210,22 +293,22 @@ public class DiscoveryToolsTests
     public async Task Run_InFallback_AStepScriptNoToolCovers_IsSent()
     {
         _bridge.Answer(BridgeCommands.Run, new JsonObject { ["ran"] = 1 });
-        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, new ScriptAdvice(Index), Access.Scopes, Access.Sessions());
+        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Fallback }, Access.Advice(), Access.Served());
 
         var result = await tools.RunAsync(new JsonArray(new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "import bpy\nresult = bpy.app.version_string" } }));
 
-        Assert.False(result.Failed());
+        Assert.True(result.IsOk());
         Assert.Single(_bridge.Sent);
     }
 
     [Fact]
     public async Task Run_WithAPythonStep_IsRefusedWhenPythonIsOff()
     {
-        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Off }, new ScriptAdvice(Index), Access.Scopes, Access.Sessions());
+        var tools = new SequenceTools(_bridge, new ServerConfig { Python = PythonAccess.Off }, Access.Advice(), Access.Served());
 
         var result = await tools.RunAsync(new JsonArray(new JsonObject { ["command"] = "python", ["params"] = new JsonObject { ["code"] = "1" } }));
 
-        Assert.True(result.Failed());
+        Assert.False(result.IsOk());
         Assert.Empty(_bridge.Sent);
     }
 
@@ -246,12 +329,83 @@ public class DiscoveryToolsTests
         Assert.Equal(0.25, report["pythonShare"]!.GetValue<double>());
     }
 
-    private static (DiscoveryTools Tools, SkillCatalog Skills) Build()
+    /// <summary>Every parameter of a tool that takes a block, or a list of blocks, with the block's type.</summary>
+    private static List<(string Tool, string Parameter, Type Block)> BlockParameters()
     {
-        var collection = new McpServerPrimitiveCollection<McpServerTool>();
-        var services = new ServiceCollection().BuildServiceProvider();
-        var skills = new SkillCatalog(SkillCatalog.Discover(typeof(ToolIndex).Assembly), collection, services, TimeProvider.System);
+        var tools = typeof(Block).Assembly.GetTypes()
+            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+            .Select(method => (Method: method, Name: method.GetCustomAttribute<McpServerToolAttribute>()?.Name));
+        var parameters = tools
+            .Where(tool => tool.Name is not null)
+            .SelectMany(tool => tool.Method.GetParameters().Select(parameter => (Tool: tool.Name!, Parameter: parameter.Name!, Block: BlockOf(parameter.ParameterType))));
 
-        return (new DiscoveryTools(Index, skills), skills);
+        return [.. parameters.Where(each => each.Block is not null).Select(each => (each.Tool, each.Parameter, each.Block!))];
+    }
+
+    private static Type? BlockOf(Type type)
+    {
+        var element = type.IsArray ? type.GetElementType()! : type;
+
+        return element.IsSubclassOf(typeof(Block)) ? element : null;
+    }
+
+    /// <summary>A block with every field set, the blocks inside it filled too, so its wire form carries every name it can carry.</summary>
+    private static Block Filled(Type block)
+    {
+        var filled = (Block)Activator.CreateInstance(block, nonPublic: true)!;
+
+        foreach (var property in block.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(property => property.CanWrite))
+        {
+            property.SetValue(filled, Sample(Nullable.GetUnderlyingType(property.PropertyType) ?? property.PropertyType));
+        }
+
+        return filled;
+    }
+
+    private static object? Sample(Type type) =>
+        type == typeof(string) ? "x"
+        : type == typeof(int) ? 1
+        : type == typeof(double) ? 1.0
+        : type == typeof(bool) ? true
+        : type.IsEnum ? Enum.GetValues(type).GetValue(0)
+        : type.IsArray ? Array.CreateInstance(type.GetElementType()!, 0)
+        : type.IsSubclassOf(typeof(Block)) ? Filled(type)
+        : null;
+
+    /// <summary>The dotted paths of every name a block's wire form carries, the blocks inside it included.</summary>
+    private static HashSet<string> Paths(JsonObject wire, string prefix = "")
+    {
+        HashSet<string> paths = new(StringComparer.Ordinal);
+
+        foreach (var (name, value) in wire)
+        {
+            paths.Add(prefix + name);
+
+            if (value is JsonObject inner)
+            {
+                paths.UnionWith(Paths(inner, $"{prefix}{name}."));
+            }
+        }
+
+        return paths;
+    }
+
+    /// <summary>The dotted paths of every field <c>find_tool</c> answers for a block, the fields of a block inside it included and those of a
+    /// list's items left to the items.</summary>
+    private static HashSet<string> Paths(IReadOnlyList<ToolParameter> fields, string prefix = "")
+    {
+        HashSet<string> paths = new(StringComparer.Ordinal);
+
+        foreach (var field in fields)
+        {
+            paths.Add(prefix + field.Name);
+
+            if (field.Fields is { } inner && !field.Type.EndsWith("[]", StringComparison.Ordinal))
+            {
+                paths.UnionWith(Paths(inner, $"{prefix}{field.Name}."));
+            }
+        }
+
+        return paths;
     }
 }

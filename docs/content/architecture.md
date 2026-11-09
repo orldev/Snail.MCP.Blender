@@ -263,12 +263,11 @@ client's folders, so it has no project folder; a piece of work is a folder under
 walks through the set-up.
 
 A client that opens with `initialize` keeps a session, and the session carries `tools/list_changed` when a skill loads.
-A client of the sessionless protocol revision is served per request and has no session to be notified on, so the tools
-that load or unload a skill — `blender_enable_skill`, `blender_disable_skill`, `find_tool` — also send the notice
-through the server bound to the request, into the reply the client is already reading. The listen stream such a client
-opens is acknowledged with no notifications and held open until the client closes it: closed at once, Claude Code took
-its end for the end of the connection and lost the tool list it was still fetching. Either way every session gets options of its own from the SDK, and with them a client of its own here: a tool
-collection holding the always-on tools and nothing else, and a name.
+A client of the sessionless protocol revision is served per request and has no session to be notified on: the listen
+stream it opens carries the notice instead, beside the updates of the jobs it follows, and is held open until the client
+closes it — closed at once, Claude Code took its end for the end of the connection and lost the tool list it was still
+fetching. Which skills a client has loaded is Snail.Sdk's (`WithSkills`), kept by the client's name over HTTP and by its
+MCP session otherwise; the farm stays loaded while a background render the server follows runs.
 
 A client is named by the key it presents, not by anything it writes for itself: that name is what the add-on's leases
 and journal record, so two people working in one Blender are told apart there, and `blender_diagnose` reports it back
@@ -277,8 +276,7 @@ under `bridge.agent`. Only the token the server was configured with may still na
 configured `SNAIL_MCP_BLENDER_BRIDGE__AGENT`.
 
 The name matters twice over for a client of the sessionless revision, which is handed a fresh session on every request:
-it is how such a client is recognised again, and so how the skills it loaded are still there on the next call. At most
-64 named clients are kept.
+it is how such a client is recognised again, and so how the skills it loaded are still there on the next call.
 
 Three schemes let requests in. A bearer key opens `/mcp` and the files: one key per client, each with a name and the
 kinds of work it opens, kept as digests under `state/clients.json` so a copy of that file opens nothing. The key names
@@ -373,7 +371,7 @@ The guards live in `tests/Contracts`; the tests of the tools and the live scenar
   call with `isError`, never writes anything but JSON-RPC to stdout, and sends a picture as valid base64 image content.
 - The server process, started over HTTP, answers `/healthz` to anyone and turns away a request without its token or
   with the wrong one, serves the same instructions and base tools as over stdio, tells a session client on its own
-  stream and a sessionless client in the reply to the call that a skill's tools arrived, and refuses to start without
+  stream and a sessionless client on its listen stream that a skill's tools arrived, and refuses to start without
   a client token, naming the setting.
 - The commands `blender_upload` and `blender_download` return over HTTP are run by a real shell against the server: a file
   larger than a part arrives whole, a folder arrives with its layout, files that exist are kept unless `overwrite`, and a

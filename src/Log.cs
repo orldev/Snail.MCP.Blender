@@ -22,9 +22,6 @@ internal static partial class Log
     [LoggerMessage(EventId = 5, Level = LogLevel.Information, Message = "Connected to the Blender add-on on {Host}:{Port} with {TokenSource} token")]
     internal static partial void AddOnConnected(ILogger logger, string host, int port, string tokenSource);
 
-    [LoggerMessage(EventId = 6, Level = LogLevel.Warning, Message = "No MCP tool has been called for {IdleFor}; the process looks orphaned, shutting down")]
-    internal static partial void ShuttingDownOrphaned(ILogger logger, TimeSpan idleFor);
-
     [LoggerMessage(EventId = 7, Level = LogLevel.Warning, Message = "{Command} was cancelled after {ElapsedMs} ms; Blender is still running it — a command already on the main thread cannot be interrupted, and a render finishes whatever the caller does")]
     internal static partial void CommandCancelled(ILogger logger, string command, double elapsedMs);
 
@@ -39,9 +36,6 @@ internal static partial class Log
 
     [LoggerMessage(EventId = 11, Level = LogLevel.Warning, Message = "The add-on installed in Blender ({Installed}) is not the one this server ships ({Bundled}); run blender_install_addon and reinstall the zip. Commands it does not have: {Missing}")]
     internal static partial void AddOnStale(ILogger logger, string installed, string bundled, string missing);
-
-    [LoggerMessage(EventId = 12, Level = LogLevel.Information, Message = "Unloaded idle skills: {Skills}")]
-    internal static partial void SkillsUnloaded(ILogger logger, string skills);
 
     [LoggerMessage(EventId = 13, Level = LogLevel.Warning, Message = "Blender answers from a different process than before ({Previous} → {Pid}): it restarted, its scene came back from the file on disk, and anything unsaved is gone. Crash report: {CrashReport}")]
     internal static partial void BlenderRestarted(ILogger logger, int previous, int pid, string crashReport);

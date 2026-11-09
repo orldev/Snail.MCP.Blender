@@ -1,6 +1,4 @@
 using System.Diagnostics;
-using System.Net;
-using System.Net.Sockets;
 using Snail.MCP.Blender.Configuration;
 using Snail.MCP.Blender.Tests.Contracts;
 
@@ -28,7 +26,7 @@ public sealed class HeadlessBlender : IDisposable
     public static async Task<HeadlessBlender> StartAsync(string? packageName = null, string? token = null, IReadOnlyList<string>? commandLine = null)
     {
         var binary = BlenderInstallation.Find() ?? throw new InvalidOperationException("Blender is not installed");
-        var port = FreePort();
+        var port = Ports.Free();
         var driverPath = Path.Combine(AppContext.BaseDirectory, "Support", "headless_driver.py");
         var (root, package) = packageName is null ? (RepositoryRoot(), "addon") : (CopyAddOnAs(packageName), packageName);
         var dataDirectory = TestFolder.Create();
@@ -111,16 +109,6 @@ public sealed class HeadlessBlender : IDisposable
         }
 
         return root;
-    }
-
-    private static int FreePort()
-    {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-
-        return port;
     }
 
     public void Dispose()

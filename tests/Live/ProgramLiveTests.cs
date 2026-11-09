@@ -1,9 +1,8 @@
 using Snail.MCP.Blender.Adapters.Blender;
-using Snail.MCP.Blender.Adapters.Programs;
-using Snail.MCP.Blender.Application.Diagnostics;
-using Snail.MCP.Blender.Application.Discovery;
 using Snail.MCP.Blender.Configuration;
-using Snail.MCP.Blender.Tools.Base;
+using Snail.MCP.Blender.Extensions;
+using Snail.MCP.Blender.Tools;
+using Snail.Sdk.Mcp.Programs;
 
 namespace Snail.MCP.Blender.Tests.Live;
 
@@ -13,7 +12,7 @@ public sealed class ProgramLiveTests : IAsyncLifetime
 {
     private HeadlessBlender _blender = null!;
     private BlenderConnection _link = null!;
-    private ProgramTools _tools = null!;
+    private ProgramRunner _runner = null!;
 
     public async Task InitializeAsync()
     {
@@ -24,7 +23,9 @@ public sealed class ProgramLiveTests : IAsyncLifetime
 
         _blender = await HeadlessBlender.StartAsync();
         _link = new BlenderConnection(_blender.Link, NullLogger<BlenderConnection>.Instance);
-        _tools = new ProgramTools(new JavaScriptPrograms(_link, new ServerConfig(), new ScriptAdvice(new ToolIndex(typeof(ProgramTools).Assembly)), Access.Scopes, Access.Sessions()), new BridgeTraffic());
+        var options = new ProgramOptions();
+        TransportRegistrationExtensions.Programming(options);
+        _runner = new ProgramRunner(options);
     }
 
     public async Task DisposeAsync()
@@ -49,12 +50,12 @@ public sealed class ProgramLiveTests : IAsyncLifetime
             return { made: made, objects: scene.objects.length };
             """;
 
-        var built = JsonNode.Parse((await _tools.ProgramAsync(code)).Text())!;
+        var built = await RunAsync(code);
 
-        Assert.True(built["ok"]!.GetValue<bool>(), built.ToJsonString());
-        Assert.Equal(5, built["data"]!["result"]!["made"]!.AsArray().Count);
-        Assert.Equal(7, built["data"]!["calls"]!.GetValue<int>());
-        Assert.Equal(["built 5"], built["data"]!["log"]!.AsArray().Select(line => line!.ToString()));
+        Assert.True(built.Failure is null, built.Failure?.Error);
+        Assert.Equal(5, built.Result!["made"]!.AsArray().Count);
+        Assert.Equal(7, built.Calls.Count);
+        Assert.Equal(["built 5"], built.Log);
     }
 
     /// <summary>The add-on answers a program's commands the way it answers a tool's, so a lease another agent holds stops it at that step.</summary>
@@ -65,14 +66,16 @@ public sealed class ProgramLiveTests : IAsyncLifetime
         await lighting.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Hero" });
         await lighting.SendAsync(BridgeCommands.Lease, new JsonObject { ["action"] = "claim", ["names"] = new JsonArray("Hero") });
 
-        var stopped = JsonNode.Parse((await _tools.ProgramAsync("""
+        var stopped = await RunAsync("""
             blender.add_primitive({ kind: "cube", name: "Mine" });
             blender.transform_object({ name: "Hero", location: [5, 0, 0] });
             return "moved";
-            """)).Text())!;
+            """);
 
-        Assert.False(stopped["ok"]!.GetValue<bool>());
-        Assert.Contains("Leased", stopped["error"]!.ToString(), StringComparison.Ordinal);
-        Assert.Equal(["add_primitive", "transform_object"], stopped["data"]!["commands"]!.AsArray().Select(call => call!["command"]!.ToString()));
+        Assert.Equal("Leased", stopped.Failure!.Type);
+        Assert.Equal(["add_primitive", "transform_object"], stopped.Calls.Select(call => call.Command));
     }
+
+    private Task<ProgramRun> RunAsync(string code) =>
+        _runner.RunAsync(new ProgramCommands(_link, new ServerConfig(), Access.Advice()), code, timeout: TimeSpan.FromSeconds(120));
 }
