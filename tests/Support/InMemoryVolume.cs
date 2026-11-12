@@ -42,7 +42,7 @@ public sealed class InMemoryVolume : IAsyncDisposable
             "storage_list" => Folder(area, key),
             "storage_delete" => Delete(key),
             "render_job_cancel" => new JsonObject { ["id"] = parameters["id"]?.DeepClone(), ["state"] = "cancelled" },
-            _ => Error("UnknownCommand", "not a command this volume answers"),
+            _ => Error("unknownCommand", "not a command this volume answers"),
         };
 
         return result["error"] is not null
@@ -60,7 +60,7 @@ public sealed class InMemoryVolume : IAsyncDisposable
         var under = Under(key).ToList();
 
         return under.Count == 0
-            ? Error("NotFound", $"nothing at {key}")
+            ? Error("notFound", $"nothing at {key}")
             : new JsonObject
             {
                 ["kind"] = "directory",
@@ -96,7 +96,7 @@ public sealed class InMemoryVolume : IAsyncDisposable
 
         if (!_arriving.TryGetValue(key, out var arrived) || arrived.Count != offset)
         {
-            return Error("BadRequest", $"a chunk at {offset} does not follow the bytes that arrived");
+            return Error("badRequest", $"a chunk at {offset} does not follow the bytes that arrived");
         }
 
         arrived.AddRange(Convert.FromBase64String(parameters["data"]!.GetValue<string>()));
@@ -113,7 +113,7 @@ public sealed class InMemoryVolume : IAsyncDisposable
         {
             _arriving.Remove(key);
 
-            return Error("Corrupt", "digest differs");
+            return Error("corrupt", "digest differs");
         }
 
         Files[key] = bytes;
@@ -146,7 +146,7 @@ public sealed class InMemoryVolume : IAsyncDisposable
 
         if (names.Count == 0 && key.Contains('/'))
         {
-            return Error("NotFound", $"no folder '{key}'");
+            return Error("notFound", $"no folder '{key}'");
         }
 
         var entries = names.Select(name =>
@@ -177,14 +177,14 @@ public sealed class InMemoryVolume : IAsyncDisposable
     {
         if (OpenFile is not null && (OpenFile == key || OpenFile.StartsWith($"{key}/", StringComparison.Ordinal)))
         {
-            return Error("InUse", $"'{key}' holds the file open in Blender; open another file before deleting it");
+            return Error("inUse", $"'{key}' holds the file open in Blender; open another file before deleting it");
         }
 
         var doomed = Files.Keys.Where(path => path == key || path.StartsWith($"{key}/", StringComparison.Ordinal)).ToList();
 
         if (doomed.Count == 0)
         {
-            return Error("NotFound", $"nothing at '{key}'");
+            return Error("notFound", $"nothing at '{key}'");
         }
 
         var bytes = doomed.Sum(path => Files[path].Length);

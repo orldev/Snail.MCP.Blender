@@ -30,7 +30,7 @@ public class BridgeMetricsTests
         traffic.Record(BridgeCommands.SceneInfo, TimeSpan.FromMilliseconds(4), null, "lighting");
         traffic.Record(BridgeCommands.ObjectInfo, TimeSpan.FromMilliseconds(2), RecordedAnswers.Error("object_info for a name no object has"), "modeling");
 
-        Assert.Equal([("scene_info", "ok", "lighting"), ("object_info", "NotFound", "modeling")], seen);
+        Assert.Equal([("scene_info", "ok", "lighting"), ("object_info", "notFound", "modeling")], seen);
     }
 
     /// <summary>A host without a meter factory — the stdio server — keeps its counters and publishes nowhere, rather than refusing to start.</summary>

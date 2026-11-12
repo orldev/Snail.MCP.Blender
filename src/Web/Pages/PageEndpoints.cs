@@ -97,14 +97,14 @@ public static class PageEndpoints
             return Page<BrowsePage>(new { View = PageViews.Browse(area, relative, folder, flash) });
         }
 
-        if (listing.Error?.Type == "NotFound" && relative.Length > 0 && await volume.FindAsync(area, relative, cancellationToken) is { Item: { IsFolder: false } file })
+        if (listing.Error?.Type == "notFound" && relative.Length > 0 && await volume.FindAsync(area, relative, cancellationToken) is { Item: { IsFolder: false } file })
         {
             var text = PageViews.IsText(relative) && file.Bytes <= PageViews.LargestTextPreview ? await ReadTextAsync(volume, area, relative, file.Bytes, cancellationToken) : null;
 
             return Page<FilePage>(new { View = PageViews.File(area, relative, file.Bytes, text), Flash = flash });
         }
 
-        return Page<BrowsePage>(new { View = PageViews.Unavailable(area, relative, listing.Error ?? new BridgeError("NotFound", $"nothing at '{relative}'"), flash) });
+        return Page<BrowsePage>(new { View = PageViews.Unavailable(area, relative, listing.Error ?? new BridgeError("notFound", $"nothing at '{relative}'"), flash) });
     }
 
     /// <summary>The form is read whole: a list of ticked names does not bind to a string array on this framework, which looks for a parser on string.</summary>

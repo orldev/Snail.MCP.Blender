@@ -193,7 +193,7 @@ def _apply(scene, spec):
             devices = list(preferences.preferences.devices) if preferences else []
             match = [device for device in devices if device.name == wanted or device.type == wanted.upper()]
             if not match:
-                raise CommandError("NotFound", f"no Cycles device '{wanted}'", {"known": [device.name for device in devices]})
+                raise CommandError("notFound", f"no Cycles device '{wanted}'", {"known": [device.name for device in devices]})
             for device in devices:
                 device.use = device in match or device.type == "CPU"
             cycles.device = "GPU"
@@ -208,7 +208,7 @@ def _pack(spec):
         result["packed"] = True
     if spec.get("relative_paths"):
         if not bpy.data.filepath:
-            raise CommandError("BadRequest", "relative paths need a saved file; blender_save_file first")
+            raise CommandError("badRequest", "relative paths need a saved file; blender_save_file first")
         bpy.ops.file.make_paths_relative()
         result["relative_paths"] = True
     if spec.get("copy_to"):

@@ -42,7 +42,7 @@ public static class ScriptAccess
         if (access == PythonAccess.Off)
         {
             return command.Name == BridgeCommands.Python.Name || isScriptOperator
-                ? new BridgeError("PythonDisabled", $"'{command.Name}' is switched off by configuration on this server.")
+                ? new BridgeError("pythonDisabled", $"'{command.Name}' is switched off by configuration on this server.")
                 : null;
         }
 

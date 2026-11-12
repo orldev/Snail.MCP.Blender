@@ -225,7 +225,7 @@ class locked:
                     _remove(self._path)
                     continue
                 if time.monotonic() > deadline:
-                    raise CommandError("Busy", f"'{os.path.basename(self._path)}' is held by another process; try again") from None
+                    raise CommandError("busy", f"'{os.path.basename(self._path)}' is held by another process; try again") from None
                 time.sleep(0.01)
 
     def __exit__(self, *_):

@@ -108,7 +108,7 @@ public sealed class FileTransferTests : IDisposable
             _ => Task.FromResult(BridgeReply.Ok(new JsonObject { ["data"] = Convert.ToBase64String([9, 9]), ["eof"] = true, ["sha256"] = new string('0', 64) })),
             CancellationToken.None);
 
-        Assert.Equal("Corrupt", outcome.Error!.Type);
+        Assert.Equal("corrupt", outcome.Error!.Type);
         Assert.False(File.Exists(local));
         Assert.False(File.Exists($"{local}.part"));
     }
@@ -248,7 +248,7 @@ public sealed class FileTransferTests : IDisposable
         var outcome = await new FileTransfer().DownloadAsync("/r/keep.png", local, false, _ => Listing("/r", "file", "keep.png"),
             _ => { asked++; return Task.FromResult(BridgeReply.Ok(new JsonObject())); }, CancellationToken.None);
 
-        Assert.Equal("Exists", outcome.Error!.Type);
+        Assert.Equal("exists", outcome.Error!.Type);
         Assert.Equal(0, asked);
         Assert.Equal("mine", await File.ReadAllTextAsync(local));
     }

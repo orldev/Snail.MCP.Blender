@@ -128,7 +128,7 @@ def _glare(stack, spec, label="Glare", default_type="BLOOM"):
     node = stack.node("CompositorNodeGlare", label)
     kind = str(spec.get("type", default_type)).upper()
     if kind not in GLARE_TYPES:
-        raise CommandError("BadRequest", f"unknown glare type '{kind}'", {"known": list(GLARE_TYPES)})
+        raise CommandError("badRequest", f"unknown glare type '{kind}'", {"known": list(GLARE_TYPES)})
     stack.socket(node, "Type", GLARE_TYPES[kind])
     stack.socket(node, "Quality", QUALITIES.get(str(spec.get("quality", "MEDIUM")).upper(), "Medium"))
     stack.socket(node, "Threshold", spec.get("threshold"))
@@ -254,10 +254,10 @@ def cryptomatte_matte(params):
     layer = bpy.context.view_layer if scene == bpy.context.scene else scene.view_layers[0]
     kind = (params.get("layer") or "object").lower()
     if kind not in MATTE_LAYERS:
-        raise CommandError("BadRequest", "layer must be object, material or asset")
+        raise CommandError("badRequest", "layer must be object, material or asset")
     names = list(params.get("names") or [])
     if not names:
-        raise CommandError("BadRequest", "names is required: the objects, materials or assets to matte")
+        raise CommandError("badRequest", "names is required: the objects, materials or assets to matte")
     setattr(layer, f"use_pass_cryptomatte_{kind}", True)
     tree = _compositor_tree()
     node_name = params.get("name") or f"Matte {', '.join(names)}"[:60]
@@ -336,7 +336,7 @@ def lens_effects(params):
     blocks = {name: params.get(name) for name in ORDER}
     if not any(_enabled(spec) for spec in blocks.values()) and not params.get("clear"):
         raise CommandError(
-            "BadRequest",
+            "badRequest",
             "lens_effects builds the compositor stack: name at least one effect, or pass clear to take the stack down. To see the chain that is "
             "there, read it with the compositor command and action info",
             {"effects": list(ORDER)})

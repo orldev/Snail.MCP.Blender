@@ -43,7 +43,7 @@ SHADING_MODES = ("WIREFRAME", "SOLID", "MATERIAL", "RENDERED")
 def _existing(name):
     material = bpy.data.materials.get(name)
     if material is None:
-        raise CommandError("NotFound", f"no material named '{name}'", {"materials": [item.name for item in bpy.data.materials][:100]})
+        raise CommandError("notFound", f"no material named '{name}'", {"materials": [item.name for item in bpy.data.materials][:100]})
     return material
 
 
@@ -101,14 +101,14 @@ def _socket_names(sockets):
 def _socket(node, name, fallback=None):
     socket = _find_socket(node.inputs, name) or (_find_socket(node.inputs, fallback) if fallback else None)
     if socket is None:
-        raise CommandError("UnknownParameter", f"node '{node.name}' has no input '{name}'; name one by its name, its identifier or its index",
+        raise CommandError("unknownParameter", f"node '{node.name}' has no input '{name}'; name one by its name, its identifier or its index",
                            {"inputs": _socket_names(node.inputs)})
     return socket
 
 
 def _set_socket(socket, value):
     if socket.type == "SHADER":
-        raise CommandError("BadRequest", f"'{socket.name}' is a shader socket; link a node into it instead")
+        raise CommandError("badRequest", f"'{socket.name}' is a shader socket; link a node into it instead")
     if socket.type == "RGBA":
         color = list(value)
         if len(color) == 3:
@@ -190,7 +190,7 @@ def assign_material(params):
     item = _object(_require(params, "object"))
     material = _material(_require(params, "material"))
     if not hasattr(item.data, "materials"):
-        raise CommandError("BadRequest", f"'{item.name}' ({item.type}) takes no materials")
+        raise CommandError("badRequest", f"'{item.name}' ({item.type}) takes no materials")
     chosen_faces = bool(params.get("selected_faces")) and item.type == "MESH"
     adding = bool(params.get("append")) or chosen_faces
     slot = params.get("slot")
@@ -254,14 +254,14 @@ def _node_summary(node):
 def _node_type(kind):
     idname = kind if kind.startswith(("ShaderNode", "NodeGroup", "NodeReroute", "NodeFrame")) else f"ShaderNode{kind}"
     if not hasattr(bpy.types, idname):
-        raise CommandError("BadRequest", f"unknown node type '{kind}'", {"hint": "use the bl_idname, e.g. ShaderNodeTexNoise, or its suffix TexNoise"})
+        raise CommandError("badRequest", f"unknown node type '{kind}'", {"hint": "use the bl_idname, e.g. ShaderNodeTexNoise, or its suffix TexNoise"})
     return idname
 
 
 def _node(material, name):
     node = material.node_tree.nodes.get(name)
     if node is None:
-        raise CommandError("NotFound", f"material '{material.name}' has no node '{name}'", {"nodes": [node.name for node in material.node_tree.nodes]})
+        raise CommandError("notFound", f"material '{material.name}' has no node '{name}'", {"nodes": [node.name for node in material.node_tree.nodes]})
     return node
 
 
@@ -317,7 +317,7 @@ def _link(material, from_name, from_socket, to_name, to_socket):
     target = _node(material, to_name)
     output = _find_socket(source.outputs, from_socket)
     if output is None:
-        raise CommandError("UnknownParameter", f"node '{source.name}' has no output '{from_socket}'; name one by its name, its identifier or its index",
+        raise CommandError("unknownParameter", f"node '{source.name}' has no output '{from_socket}'; name one by its name, its identifier or its index",
                            {"outputs": _socket_names(source.outputs)})
     socket = _socket(target, to_socket)
     material.node_tree.links.new(output, socket)
@@ -339,7 +339,7 @@ def build_node_graph(params):
     links = []
     for spec in params.get("links") or []:
         if not isinstance(spec, list) or len(spec) != 4:
-            raise CommandError("BadRequest", "each link is [from_id, from_socket, to_id, to_socket]")
+            raise CommandError("badRequest", "each link is [from_id, from_socket, to_id, to_socket]")
         links.append(_link(material, created.get(spec[0], spec[0]), spec[1], created.get(spec[2], spec[2]), spec[3]))
     return {"material": material.name, "nodes": list(created.values()), "links": links, "total_nodes": len(tree.nodes)}
 
@@ -349,7 +349,7 @@ def load_image_texture(params):
     material = _material(_require(params, "material"))
     path = _require(params, "path")
     if not os.path.isfile(path):
-        raise CommandError("NotFound", f"no image file at '{path}'")
+        raise CommandError("notFound", f"no image file at '{path}'")
     image = bpy.data.images.load(path, check_existing=True)
     if params.get("colorspace"):
         image.colorspace_settings.name = params["colorspace"]
@@ -372,7 +372,7 @@ def procedural_texture(params):
     material = _material(_require(params, "material"))
     kind = params.get("kind") or "noise"
     if kind not in PROCEDURAL_TEXTURES:
-        raise CommandError("BadRequest", f"unknown procedural texture '{kind}'", {"known": sorted(PROCEDURAL_TEXTURES)})
+        raise CommandError("badRequest", f"unknown procedural texture '{kind}'", {"known": sorted(PROCEDURAL_TEXTURES)})
     tree = material.node_tree
     texture = tree.nodes.new(PROCEDURAL_TEXTURES[kind])
     texture.name = params.get("name") or f"{kind.title()} Texture"
@@ -422,10 +422,10 @@ def _apply_ramp(ramp, stops):
 def unwrap_uv(params):
     item = _object(_require(params, "name"))
     if item.type != "MESH":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a mesh")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a mesh")
     method = params.get("method") or "smart"
     if method not in UV_METHODS:
-        raise CommandError("BadRequest", f"unknown method '{method}'", {"known": list(UV_METHODS)})
+        raise CommandError("badRequest", f"unknown method '{method}'", {"known": list(UV_METHODS)})
     margin = float(params.get("margin") if params.get("margin") is not None else 0.02)
     with _uv_override(item):
         bpy.ops.object.mode_set(mode="EDIT")
@@ -461,7 +461,7 @@ def _uv_override(item):
 def set_viewport_shading(params):
     mode = (params.get("mode") or "MATERIAL").upper()
     if mode not in SHADING_MODES:
-        raise CommandError("BadRequest", f"unknown shading mode '{mode}'", {"known": list(SHADING_MODES)})
+        raise CommandError("badRequest", f"unknown shading mode '{mode}'", {"known": list(SHADING_MODES)})
     changed = 0
     for window in bpy.context.window_manager.windows:
         for area in window.screen.areas:
@@ -469,5 +469,5 @@ def set_viewport_shading(params):
                 area.spaces.active.shading.type = mode
                 changed += 1
     if changed == 0:
-        raise CommandError("NoArea", "no 3D viewport is open in Blender")
+        raise CommandError("noArea", "no 3D viewport is open in Blender")
     return {"mode": mode, "viewports": changed}

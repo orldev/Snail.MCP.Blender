@@ -62,9 +62,9 @@ public sealed class BridgeLiveTests : IAsyncLifetime
         var dropped = await _link.SendAsync(BridgeCommands.SetMaterial, new JsonObject { ["name"] = "Material", ["objects"] = new JsonArray("Cube") });
         var named = await _link.SendAsync(BridgeCommands.SetCameraOptics, new JsonObject { ["name"] = "Camera", ["lens"] = 35 });
 
-        Assert.Equal("BadRequest", mistaken.Error?.Type);
+        Assert.Equal("badRequest", mistaken.Error?.Type);
         Assert.Contains("'shift'", mistaken.Error!.Message, StringComparison.Ordinal);
-        Assert.Equal("BadRequest", dropped.Error?.Type);
+        Assert.Equal("badRequest", dropped.Error?.Type);
         Assert.Contains("'objects'", dropped.Error!.Message, StringComparison.Ordinal);
         Assert.True(named.IsOk, $"{named.Error?.Type} {named.Error?.Message}");
         Assert.Equal("Camera", named.Result!["camera"]!.GetValue<string>());
@@ -98,7 +98,7 @@ public sealed class BridgeLiveTests : IAsyncLifetime
         var heard = await NextLineAsync(reader);
 
         Assert.False(heard.IsSilent, "no reply to a request that is valid JSON but not an object");
-        Assert.Equal("BadRequest", JsonNode.Parse(heard.Line!)!["error"]!["type"]!.ToString());
+        Assert.Equal("badRequest", JsonNode.Parse(heard.Line!)!["error"]!["type"]!.ToString());
     }
 
     /// <summary>The main thread answers the queue; writing a reply to a client that stopped reading used to happen there too, so one slow reader
@@ -188,7 +188,7 @@ public sealed class BridgeLiveTests : IAsyncLifetime
         var refused = await NextLineAsync(reader);
 
         Assert.True((await busy).IsOk);
-        Assert.Equal("Expired", JsonNode.Parse(refused.Line!)!["error"]?["type"]?.ToString());
+        Assert.Equal("expired", JsonNode.Parse(refused.Line!)!["error"]?["type"]?.ToString());
 
         var objects = await _link.SendAsync(BridgeCommands.ListObjects);
 
@@ -207,7 +207,7 @@ public sealed class BridgeLiveTests : IAsyncLifetime
         var refused = await NextLineAsync(reader);
         var after = await NextLineAsync(reader);
 
-        Assert.Equal("Unauthorized", JsonNode.Parse(refused.Line!)!["error"]!["type"]!.ToString());
+        Assert.Equal("unauthorized", JsonNode.Parse(refused.Line!)!["error"]!["type"]!.ToString());
         Assert.True(after.IsClosed, "the link stayed open after an unauthorized request");
     }
 

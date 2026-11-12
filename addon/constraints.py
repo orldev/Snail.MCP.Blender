@@ -14,10 +14,10 @@ def _holder(params):
     if not bone_name:
         return item, item
     if item.type != "ARMATURE":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}; only armatures have bones")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}; only armatures have bones")
     bone = item.pose.bones.get(bone_name)
     if bone is None:
-        raise CommandError("NotFound", f"no bone named '{bone_name}'", {"bones": [bone.name for bone in item.pose.bones]})
+        raise CommandError("notFound", f"no bone named '{bone_name}'", {"bones": [bone.name for bone in item.pose.bones]})
     return item, bone
 
 
@@ -38,7 +38,7 @@ def _constraint_types():
 def _find(holder, name):
     constraint = holder.constraints.get(name)
     if constraint is None:
-        raise CommandError("NotFound", f"no constraint named '{name}'", {"constraints": [constraint.name for constraint in holder.constraints]})
+        raise CommandError("notFound", f"no constraint named '{name}'", {"constraints": [constraint.name for constraint in holder.constraints]})
     return constraint
 
 
@@ -47,7 +47,7 @@ def add_constraint(params):
     item, holder = _holder(params)
     kind = _require(params, "type").upper()
     if kind not in _constraint_types():
-        raise CommandError("BadRequest", f"unknown constraint type '{kind}'", {"known": _constraint_types()})
+        raise CommandError("badRequest", f"unknown constraint type '{kind}'", {"known": _constraint_types()})
     constraint = holder.constraints.new(kind)
     if params.get("constraint_name"):
         constraint.name = params["constraint_name"]
@@ -91,7 +91,7 @@ def describe_constraint(params):
     wanted = f"{kind.replace('_', '').lower()}constraint"
     cls = next((getattr(bpy.types, name) for name in dir(bpy.types) if name.lower() == wanted), None)
     if cls is None:
-        raise CommandError("BadRequest", f"unknown constraint type '{kind}'", {"known": _constraint_types()})
+        raise CommandError("badRequest", f"unknown constraint type '{kind}'", {"known": _constraint_types()})
     return {
         "type": kind.upper(),
         "label": cls.bl_rna.name,

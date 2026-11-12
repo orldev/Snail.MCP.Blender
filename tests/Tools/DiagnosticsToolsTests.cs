@@ -188,7 +188,7 @@ public class DiagnosticsToolsTests
 
         Assert.Equal("none", report["bridge"]!["token"]!.ToString());
         Assert.Equal(2, report["traffic"]!["requests"]!.GetValue<int>());
-        Assert.Equal(1, report["traffic"]!["failuresByType"]!["NotFound"]!.GetValue<int>());
+        Assert.Equal(1, report["traffic"]!["failuresByType"]!["notFound"]!.GetValue<int>());
         Assert.Equal("object_info", report["traffic"]!["lastFailure"]!["command"]!.ToString());
     }
 
@@ -289,7 +289,7 @@ public class DiagnosticsToolsTests
         Assert.False(result.IsOk());
         Assert.False(response["ok"]!.GetValue<bool>());
         Assert.Contains("cannot run in the current context", response["error"]!.ToString(), StringComparison.Ordinal);
-        Assert.Equal("PollFailed", response["type"]!.ToString());
+        Assert.Equal("pollFailed", response["type"]!.ToString());
         Assert.Equal("OBJECT", response["data"]!["mode"]!.ToString());
         Assert.Contains("area=VIEW_3D", response["hint"]!.ToString(), StringComparison.Ordinal);
     }

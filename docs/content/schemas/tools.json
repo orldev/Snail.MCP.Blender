@@ -169,7 +169,7 @@
   },
   {
     "name": "run_tools",
-    "description": "Runs a list of bridge commands in this Blender, in order, in one call: what to use for a build that takes many steps. A step is a command name and its params \u2014 the tool name without blender_, so add_primitive, transform_object, create_material \u2014 with the params named as the add-on reads them, the tool\u0027s parameter names in snake_case: adaptive_threshold, not adaptiveThreshold. A key the command does not read fails the step as BadRequest, naming the key it was probably meant to be, rather than vanishing from it. Each step passes the add-on\u0027s own checks, the same lease guard and the same journal as a direct tool call. Generate the list with a loop instead of writing a script: this, not blender_python, is what makes repetitive building cheap. Stops at the first failed step unless told to continue, and returns every step that ran with its result or its error; up to 500 steps, whose results are dropped from the reply once it grows past half a megabyte, each dropped one marked omitted.",
+    "description": "Runs a list of bridge commands in this Blender, in order, in one call: what to use for a build that takes many steps. A step is a command name and its params \u2014 the tool name without blender_, so add_primitive, transform_object, create_material \u2014 with the params named as the add-on reads them, the tool\u0027s parameter names in snake_case: adaptive_threshold, not adaptiveThreshold. A key the command does not read fails the step as badRequest, naming the key it was probably meant to be, rather than vanishing from it. Each step passes the add-on\u0027s own checks, the same lease guard and the same journal as a direct tool call. Generate the list with a loop instead of writing a script: this, not blender_python, is what makes repetitive building cheap. Stops at the first failed step unless told to continue, and returns every step that ran with its result or its error; up to 500 steps, whose results are dropped from the reply once it grows past half a megabyte, each dropped one marked omitted.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -1638,7 +1638,7 @@
   },
   {
     "name": "blender_lease",
-    "description": "Claims objects or collections for this agent for a while: mutating commands from other agents on them are refused with Leased until the lease is released or expires. list shows holders; clear drops every lease.",
+    "description": "Claims objects or collections for this agent for a while: mutating commands from other agents on them are refused with leased until the lease is released or expires. list shows holders; clear drops every lease.",
     "inputSchema": {
       "type": "object",
       "properties": {

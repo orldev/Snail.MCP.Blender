@@ -154,7 +154,7 @@ public sealed class Volume(IBlenderVolume link)
 
             if (lookup.Item is not { IsFolder: false } tar)
             {
-                return new VolumeWrite([], lookup.Error ?? new BridgeError("NotFound", $"the staged tar '{staged}' is gone"));
+                return new VolumeWrite([], lookup.Error ?? new BridgeError("notFound", $"the staged tar '{staged}' is gone"));
             }
 
             await using var source = OpenRead(area, staged, tar.Bytes);
@@ -190,7 +190,7 @@ public sealed class Volume(IBlenderVolume link)
 
             if (relative.Length == 0 || !AreaPaths.IsConfined(relative))
             {
-                return new VolumeWrite(written, new BridgeError("BadRequest", $"the tar entry '{entry.Name}' leaves the folder it unpacks into"));
+                return new VolumeWrite(written, new BridgeError("badRequest", $"the tar entry '{entry.Name}' leaves the folder it unpacks into"));
             }
 
             var target = path.Length == 0 ? relative : RemotePaths.Join(path, relative);

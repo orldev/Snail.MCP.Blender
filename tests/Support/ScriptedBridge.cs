@@ -47,7 +47,7 @@ public sealed class ScriptedBridge : IBlenderBridge
         var answer = _answers.TryGetValue(command.Name, out var scripted) ? scripted : _anything;
         var reply = answer is not null
             ? answer(parameters)
-            : BridgeReply.Failed(new BridgeError("Unscripted", $"no scripted answer for '{command.Name}'"));
+            : BridgeReply.Failed(new BridgeError("unscripted", $"no scripted answer for '{command.Name}'"));
 
         return Task.FromResult(reply);
     }

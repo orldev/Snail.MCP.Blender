@@ -11,14 +11,14 @@ use, and the traffic so far.
 - The ports differ. The add-on preferences and `SNAIL_MCP_BLENDER_BRIDGE__PORT` must agree; 9876 by default.
 - Another program holds the port. Change it on both sides.
 
-## "Blender did not answer 'command' within N s; the link was reset" (`Timeout`)
+## "Blender did not answer 'command' within N s; the link was reset" (`timeout`)
 
 Blender was busy: a render, a heavy import, a modal operator waiting for input, or a dialog. Finish it in
 Blender; the next call reconnects. Pass a longer `timeoutSeconds` for imports. A render that timed out is still
 going — see [I stopped the agent and Blender keeps rendering](#i-stopped-the-agent-and-blender-keeps-rendering) — and
 the next one that long belongs in a background job.
 
-## "Blender went down while the command was running" (`Dropped`)
+## "Blender went down while the command was running" (`dropped`)
 
 Blender's process no longer exists: it crashed, was killed, or was stopped from outside. The next call reconnects by
 itself, but to a Blender that starts from the file on disk, so treat the scene as unknown and read it again rather than
@@ -33,25 +33,25 @@ carrying on from what it was — everything since the last save went with the pr
 - In Docker the container is restarted for you and `docker inspect` says `RestartCount`; `OOMKilled` tells a scene that
   outgrew `BLENDER_MEMORY` from a crash, which is a different fault with a different fix.
 
-## "the add-on expects the token set in its preferences" (`Unauthorized`)
+## "the add-on expects the token set in its preferences" (`unauthorized`)
 
 The add-on has a token in its preferences (Edit → Preferences → Get Extensions → Snail Bridge → Token) and
 the server sent none or another one. Set `SNAIL_MCP_BLENDER_BRIDGE__TOKEN` on the server to the same value, or clear the
 field in Blender and press Stop, then Start, in the **Snail** tab: the add-on reads its token when it starts listening,
 and then uses the one it generated, which the server reads when both use the same data directory.
 
-## "requests are already waiting for Blender's main thread" (`Busy`)
+## "requests are already waiting for Blender's main thread" (`busy`)
 
 The add-on holds at most 64 queued commands. A render inside a tool call keeps the main thread for its whole
 length, so calls behind it pile up. Wait for it, or move renders longer than a preview to `blender_render_job`.
 
-## "the link to Blender stayed busy with another request" (`Busy`)
+## "the link to Blender stayed busy with another request" (`busy`)
 
 The server sends one command at a time, and this one's own timeout ran out while another was still in flight —
 a blocking render, say. Nothing of it was sent, so nothing of it ran: repeat it once the long call is done, or give it
 a longer `timeoutSeconds` than the call it waits behind.
 
-## "the add-on's token file cannot be read" (`TokenUnreadable`)
+## "the add-on's token file cannot be read" (`tokenUnreadable`)
 
 The server found the file but was not allowed to read it, or something else holds it. In Docker both containers read
 the same secret, so its mode has to let both of their users read it; on one machine, the file under the add-on's data
@@ -63,23 +63,23 @@ The per-call timeout is refused rather than quietly corrected, so a call meant t
 back after ten minutes as if the render had failed. Renders longer than 600 seconds belong in
 `blender_render_job`, which returns at once and is polled.
 
-## "cannot run in the current context" (`PollFailed`)
+## "cannot run in the current context" (`pollFailed`)
 
 The operator's poll rejected the state Blender is in: wrong mode, no active object, nothing selected.
 Check `blender_scene_info`, select with `blender_select_objects`, and pass `area=VIEW_3D` to
 `blender_run_operator` for editors that need a 3D viewport. Mesh edits are easier through the `modeling`
 skill, which works on the mesh data directly and needs no viewport.
 
-## "step N (command) failed" (`StepFailed`)
+## "step N (command) failed" (`stepFailed`)
 
 One step of a `run_tools` sequence was refused; the error carries `steps` with every step that ran, its
 result or its error, and `failed` with the indexes. The sequence stops there unless it was sent with
 `continueOnError`, in which case it runs to the end and fails as `N of M steps failed` with the same `steps` and
 `failed`; either way the scene holds the steps that succeeded. Fix the step the error names and send the rest.
-A step refused as `Leased` means another agent holds that object: the guard applies inside a sequence exactly
+A step refused as `leased` means another agent holds that object: the guard applies inside a sequence exactly
 as it does to a direct call.
 
-## "'command' takes no 'parameter'" (`BadRequest`)
+## "'command' takes no 'parameter'" (`badRequest`)
 
 The command does not read that parameter, so it would have been dropped and the work left undone. The error names the
 parameter, suggests the one it was probably meant to be, and carries `accepted` with every parameter the command does
@@ -119,7 +119,7 @@ The server runs with `SNAIL_MCP_BLENDER_PYTHON=off`, which also refuses the oper
 batches with a `python` step, and uploads outside the add-on's `files` folder. Use the dedicated tools or
 `blender_run_operator`; an administrator enables Python with `SNAIL_MCP_BLENDER_PYTHON=allow`.
 
-## `Unauthorized` through an SSH tunnel
+## `unauthorized` through an SSH tunnel
 
 The add-on generated its token into the data directory of its own machine, and the server looked for it in its own.
 Read it there (`type %USERPROFILE%\.s3l-mcp-blender\state\token` on Windows, `cat ~/.s3l-mcp-blender/state/token`
@@ -146,9 +146,9 @@ The client was started in the home folder or at the root, and neither counts as 
 server's own folder instead of scattering across your home. Start the client in the project's folder, or set
 `SNAIL_MCP_BLENDER_PROJECT_DIRECTORY`; `blender_diagnose` shows under `project` where downloads go.
 
-## `Exists` or `Corrupt` from a transfer
+## `exists` or `corrupt` from a transfer
 
-`Exists`: the target is already there and the transfer keeps it; pass `overwrite`. `Corrupt`: the file that arrived
+`exists`: the target is already there and the transfer keeps it; pass `overwrite`. `corrupt`: the file that arrived
 does not match the SHA-256 of the one sent, so it was not kept under its name — send it again; the files before it in
 the same folder did arrive and are listed. `TooManyFiles`: the folder holds more than 20,000 files, more than one transfer
 carries, so nothing was downloaded; download its folders one by one. A folder below that comes down page by page.
@@ -169,7 +169,7 @@ by default. Call the tool again for a fresh command. A link also stops working w
 ## `curl` from the command answers `409`, `403`, `400` or `413`
 
 `409`: the file is already there — call `blender_upload` again with `overwrite` — or, on a deletion, it is the file open in
-Blender or a job or batch still queued or running (`InUse`); open another file, or cancel or wait, first. `403`: only the
+Blender or a job or batch still queued or running (`inUse`); open another file, or cancel or wait, first. `403`: only the
 `files` area takes uploads. `400`: the path climbs out of its area, or a part does not follow the last one that arrived —
 run the whole command again. `413`: the folder holds more than 5,000 files; download its folders one by one.
 
@@ -249,7 +249,7 @@ as its resource `job://blender/render/<id>`, which carries frames done, the esti
 `blender_render_job_cancel`. Run `blender_render_check` first: it names the missing camera, texture or
 codec before an hour of rendering does.
 
-## "building them needs the Video Sequencer editor open" (`NoArea`)
+## "building them needs the Video Sequencer editor open" (`noArea`)
 
 Proxy settings are stored on the strips, but Blender builds proxies only from the sequencer editor. Open
 a Video Sequencer area in Blender and call `blender_sequencer_proxy` again, or build them in Blender with
@@ -266,7 +266,7 @@ it.`; a missing or empty token file counts as none. A value that is not a number
 `InvalidOperationException` instead. Fix the environment variable or the settings file; see
 [Configuration](configuration.md).
 
-## "is not a bridge command" (`UnknownCommand`), or `blender_diagnose` says the add-on `differs`
+## "is not a bridge command" (`unknownCommand`), or `blender_diagnose` says the add-on `differs`
 
 The add-on inside Blender is not the build this server ships. Run `blender_install_addon`, reinstall the zip
 it names (**Edit → Preferences → Get Extensions → Install from Disk**), and restart Blender. The `addOn` block

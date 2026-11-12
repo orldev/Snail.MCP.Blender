@@ -13,9 +13,9 @@ ASSET_TYPES = {"objects": "objects", "collections": "collections", "materials": 
 
 def _library(path):
     if not os.path.isfile(path):
-        raise CommandError("NotFound", f"no .blend file at '{path}'")
+        raise CommandError("notFound", f"no .blend file at '{path}'")
     if not path.lower().endswith(".blend"):
-        raise CommandError("BadRequest", "assets come from .blend files; blender_import_file handles other formats")
+        raise CommandError("badRequest", "assets come from .blend files; blender_import_file handles other formats")
     return path
 
 
@@ -33,7 +33,7 @@ def append_assets(params):
     path = _library(_require(params, "path"))
     kind = (params.get("type") or "objects").lower()
     if kind not in ASSET_TYPES:
-        raise CommandError("BadRequest", f"unknown asset type '{kind}'", {"known": sorted(ASSET_TYPES)})
+        raise CommandError("badRequest", f"unknown asset type '{kind}'", {"known": sorted(ASSET_TYPES)})
     link = bool(params.get("link", False))
     scene = _scene(params)
     with bpy.data.libraries.load(path, link=link) as (source, target):
@@ -41,7 +41,7 @@ def append_assets(params):
         names = list(params.get("names") or available)
         missing = [name for name in names if name not in available]
         if missing:
-            raise CommandError("NotFound", f"'{path}' has no {kind} named {', '.join(missing)}", {"available": sorted(available)})
+            raise CommandError("notFound", f"'{path}' has no {kind} named {', '.join(missing)}", {"available": sorted(available)})
         setattr(target, kind, names)
     loaded = [item for item in getattr(target, kind) if item is not None]
     collection = bpy.data.collections.get(params["collection"]) if params.get("collection") else None

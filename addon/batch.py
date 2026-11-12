@@ -30,10 +30,10 @@ def _package():
 def batch_job(params):
     steps = params.get("commands")
     if not isinstance(steps, list) or not steps or not all(isinstance(step, dict) and isinstance(step.get("command"), str) for step in steps):
-        raise CommandError("BadRequest", "commands must be a list of {command, params}")
+        raise CommandError("badRequest", "commands must be a list of {command, params}")
     unknown = sorted({step["command"] for step in steps} - set(COMMANDS))
     if unknown:
-        raise CommandError("UnknownCommand", f"unknown commands: {', '.join(unknown)}")
+        raise CommandError("unknownCommand", f"unknown commands: {', '.join(unknown)}")
     root = _root(params)
     batch_id = time.strftime("batch-%Y%m%d-%H%M%S") + f"-{int(time.time() * 1000) % 1000:03d}"
     directory = os.path.join(root, batch_id)
@@ -43,7 +43,7 @@ def batch_job(params):
         source = os.path.join(directory, "input.blend")
         bpy.ops.wm.save_as_mainfile(filepath=source, copy=True, relative_remap=True)
     elif not os.path.isfile(source):
-        raise CommandError("NotFound", f"no .blend file at '{source}'")
+        raise CommandError("notFound", f"no .blend file at '{source}'")
     package_parent, package_name = _package()
     spec = {
         "commands": steps, "input": source, "output": params.get("output") or os.path.join(directory, "output.blend"), "agent": params.get("agent"),
@@ -93,7 +93,7 @@ def batch_status(params):
     if params.get("id"):
         directory = os.path.join(root, params["id"])
         if not os.path.isdir(directory):
-            raise CommandError("NotFound", f"no batch '{params['id']}'", {"known": sorted(os.listdir(root))[-10:]})
+            raise CommandError("notFound", f"no batch '{params['id']}'", {"known": sorted(os.listdir(root))[-10:]})
         return _batch_status(params["id"], directory, lines)
     batches = sorted((entry for entry in os.listdir(root) if entry.startswith("batch-")), reverse=True)[:20]
     return {"batches": [_batch_status(batch_id, os.path.join(root, batch_id), 0) for batch_id in batches]}

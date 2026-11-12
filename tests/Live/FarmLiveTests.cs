@@ -92,7 +92,7 @@ public sealed class FarmLiveTests : IAsyncLifetime
         var refused = await _link.SendAsync(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = named, ["frames"] = "1", ["directory"] = jobs }, TimeSpan.FromSeconds(60));
         var suggested = refused.Error?.Details?["suggested"]?.ToString();
 
-        Assert.Equal("BadRequest", refused.Error?.Type);
+        Assert.Equal("badRequest", refused.Error?.Type);
         Assert.Equal(Path.Combine(_workDirectory, "named", "kb-19@2x_####.png"), suggested);
 
         var started = await Send(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = suggested, ["frames"] = "1", ["directory"] = jobs, ["file_format"] = "PNG", ["resolution_x"] = 32, ["resolution_y"] = 32 }, TimeSpan.FromSeconds(120));
@@ -139,7 +139,7 @@ public sealed class FarmLiveTests : IAsyncLifetime
 
         var refused = await _link.SendAsync(BridgeCommands.RenderJob, new JsonObject { ["output_path"] = "//renders/shot_####", ["frames"] = "1", ["directory"] = jobs }, TimeSpan.FromSeconds(60));
 
-        Assert.Equal("BadRequest", refused.Error?.Type);
+        Assert.Equal("badRequest", refused.Error?.Type);
         Assert.Contains("never been saved", refused.Error?.Message, StringComparison.Ordinal);
     }
 

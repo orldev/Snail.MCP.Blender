@@ -17,7 +17,7 @@ LIGHT_RIG_ROLES = ("key", "fill", "rim")
 def _bounds(items):
     corners = [item.matrix_world @ mathutils.Vector(corner) for item in items for corner in item.bound_box]
     if not corners:
-        raise CommandError("BadRequest", "the target has no geometry to frame")
+        raise CommandError("badRequest", "the target has no geometry to frame")
     center = sum(corners, mathutils.Vector()) / len(corners)
     radius = max((corner - center).length for corner in corners) or 1.0
     return center, radius
@@ -27,7 +27,7 @@ def _subjects(params):
     names = params.get("targets") or ([params["target"]] if params.get("target") else [])
     items = [_object(name) for name in names]
     if not items:
-        raise CommandError("BadRequest", "pass target or targets")
+        raise CommandError("badRequest", "pass target or targets")
     return items
 
 
@@ -68,13 +68,13 @@ def camera_move(params):
     scene = _scene(params)
     kind = _require(params, "type").lower()
     if kind not in MOVES:
-        raise CommandError("BadRequest", f"unknown move '{kind}'", {"known": list(MOVES)})
+        raise CommandError("badRequest", f"unknown move '{kind}'", {"known": list(MOVES)})
     targets = _subjects(params)
     center, radius = _bounds(targets)
     start = int(params.get("start") if params.get("start") is not None else scene.frame_start)
     end = int(params.get("end") if params.get("end") is not None else scene.frame_end)
     if end <= start:
-        raise CommandError("BadRequest", "end must be after start")
+        raise CommandError("badRequest", "end must be after start")
     revolutions = float(params.get("revolutions") or 1.0)
     interpolation = (params.get("interpolation") or "LINEAR").upper()
     if kind == "turntable":
@@ -150,7 +150,7 @@ def light_rig(params):
     created = []
     for role in params.get("roles") or LIGHT_RIG_ROLES:
         if role not in roles:
-            raise CommandError("BadRequest", f"unknown rig role '{role}'", {"known": list(LIGHT_RIG_ROLES)})
+            raise CommandError("badRequest", f"unknown rig role '{role}'", {"known": list(LIGHT_RIG_ROLES)})
         azimuth, elevation, energy, kelvin, size = roles[role]
         name = f"{prefix} {role.title()}"
         existing = bpy.data.objects.get(name)

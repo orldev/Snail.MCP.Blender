@@ -20,7 +20,7 @@ def _view_layer(scene, params, create):
     if layer is None and create:
         layer = scene.view_layers.new(name)
     if layer is None:
-        raise CommandError("NotFound", f"no view layer named '{name}'", {"known": [layer.name for layer in scene.view_layers]})
+        raise CommandError("notFound", f"no view layer named '{name}'", {"known": [layer.name for layer in scene.view_layers]})
     return layer
 
 
@@ -33,7 +33,7 @@ def _layer_collections(root):
 def _layer_collection_of(layer, name):
     match = next((item for item in _layer_collections(layer.layer_collection) if item.collection.name == name), None)
     if match is None:
-        raise CommandError("NotFound", f"the view layer has no collection '{name}'", {"known": [item.collection.name for item in _layer_collections(layer.layer_collection)]})
+        raise CommandError("notFound", f"the view layer has no collection '{name}'", {"known": [item.collection.name for item in _layer_collections(layer.layer_collection)]})
     return match
 
 
@@ -65,7 +65,7 @@ def _apply_passes(layer, passes):
         elif key in EEVEE_PASSES and hasattr(layer.eevee, EEVEE_PASSES[key]):
             setattr(layer.eevee, EEVEE_PASSES[key], bool(enabled))
         else:
-            raise CommandError("BadRequest", f"unknown render pass '{key}'", {"known": sorted(list(PASSES) + list(CYCLES_PASSES) + list(EEVEE_PASSES))})
+            raise CommandError("badRequest", f"unknown render pass '{key}'", {"known": sorted(list(PASSES) + list(CYCLES_PASSES) + list(EEVEE_PASSES))})
 
 
 def _apply_cryptomatte(layer, spec):
@@ -148,16 +148,16 @@ def view_layer(params):
     if action == "remove":
         layer = _view_layer(scene, params, False)
         if len(scene.view_layers) == 1:
-            raise CommandError("BadRequest", "a scene keeps at least one view layer")
+            raise CommandError("badRequest", "a scene keeps at least one view layer")
         name = layer.name
         scene.view_layers.remove(layer)
         return {"removed": name, "layers": [item.name for item in scene.view_layers]}
     if action not in ("configure", "create", "activate"):
-        raise CommandError("BadRequest", "action must be configure, create, activate, list or remove")
+        raise CommandError("badRequest", "action must be configure, create, activate, list or remove")
     layer = _view_layer(scene, params, action in ("configure", "create"))
     if action == "activate" or params.get("activate"):
         if scene != bpy.context.scene:
-            raise CommandError("BadRequest", "only a view layer of the current scene can be activated")
+            raise CommandError("badRequest", "only a view layer of the current scene can be activated")
         bpy.context.window.view_layer = layer
     if params.get("new_name"):
         layer.name = params["new_name"]
@@ -177,7 +177,7 @@ def view_layer(params):
         material = params["material_override"]
         layer.material_override = bpy.data.materials.get(material) if material else None
         if material and layer.material_override is None:
-            raise CommandError("NotFound", f"no material named '{material}'")
+            raise CommandError("notFound", f"no material named '{material}'")
     if "world_override" in params and hasattr(layer, "world_override"):
         world = params["world_override"]
         layer.world_override = bpy.data.worlds.get(world) if world else None
@@ -225,19 +225,19 @@ def _linking_summary(collection):
 def light_linking(params):
     light = _object(_require(params, "light"))
     if not hasattr(light, "light_linking"):
-        raise CommandError("Unsupported", "this Blender has no light linking")
+        raise CommandError("unsupported", "this Blender has no light linking")
     if params.get("clear"):
         light.light_linking.receiver_collection = None
         light.light_linking.blocker_collection = None
     if params.get("receivers"):
         state = (params.get("receiver_mode") or "include").upper()
         if state not in ("INCLUDE", "EXCLUDE"):
-            raise CommandError("BadRequest", "receiver_mode must be include or exclude")
+            raise CommandError("badRequest", "receiver_mode must be include or exclude")
         _link_members(_linking_collection(light, "receiver_collection", "Light Linking"), list(params["receivers"]), state)
     if params.get("blockers"):
         state = (params.get("blocker_mode") or "include").upper()
         if state not in ("INCLUDE", "EXCLUDE"):
-            raise CommandError("BadRequest", "blocker_mode must be include or exclude")
+            raise CommandError("badRequest", "blocker_mode must be include or exclude")
         _link_members(_linking_collection(light, "blocker_collection", "Shadow Linking"), list(params["blockers"]), state)
     return {
         "light": light.name,

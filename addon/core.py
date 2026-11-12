@@ -50,7 +50,7 @@ def dispatch(name, params):
     """Runs one command through the hooks: every BEFORE hook may refuse it, every AFTER hook sees how it ended."""
     handler = COMMANDS.get(name)
     if handler is None:
-        raise CommandError("UnknownCommand", f"'{name}' is not a bridge command", {"known": sorted(COMMANDS)})
+        raise CommandError("unknownCommand", f"'{name}' is not a bridge command", {"known": sorted(COMMANDS)})
     agent = params.pop("agent", None) if isinstance(params, dict) else None
     keep(name, params, agent)
     for before in BEFORE:
@@ -71,7 +71,7 @@ def dispatch(name, params):
 def _require(params, key, kind=str):
     value = params.get(key)
     if not isinstance(value, kind) or (kind is str and not value):
-        raise CommandError("BadRequest", f"'{key}' is required and must be a {kind.__name__}")
+        raise CommandError("badRequest", f"'{key}' is required and must be a {kind.__name__}")
     return value
 
 
@@ -82,14 +82,14 @@ def _scene(params):
         return bpy.context.scene
     scene = bpy.data.scenes.get(name)
     if scene is None:
-        raise CommandError("NotFound", f"no scene named '{name}'", {"scenes": [item.name for item in bpy.data.scenes]})
+        raise CommandError("notFound", f"no scene named '{name}'", {"scenes": [item.name for item in bpy.data.scenes]})
     return scene
 
 
 def _object(name):
     item = bpy.data.objects.get(name)
     if item is None:
-        raise CommandError("NotFound", f"no object named '{name}'", {"objects": [item.name for item in bpy.data.objects][:50]})
+        raise CommandError("notFound", f"no object named '{name}'", {"objects": [item.name for item in bpy.data.objects][:50]})
     return item
 
 
@@ -115,7 +115,7 @@ def _set_enum(target, attribute, value, label):
     try:
         setattr(target, attribute, value)
     except TypeError as error:
-        raise CommandError("BadRequest", f"unknown {label} '{value}'", {"known": _enum_from_error(error)}) from error
+        raise CommandError("badRequest", f"unknown {label} '{value}'", {"known": _enum_from_error(error)}) from error
 
 
 def _enum_from_error(error):

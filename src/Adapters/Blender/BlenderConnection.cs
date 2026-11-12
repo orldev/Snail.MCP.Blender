@@ -231,7 +231,7 @@ public sealed class BlenderConnection(BlenderLinkOptions options, ILogger<Blende
         var error = reply["error"] as JsonObject;
 
         return BridgeReply.Failed(new BridgeError(
-            error?["type"]?.ToString() ?? "Error",
+            BridgeError.Word(error?["type"]?.ToString() ?? "error"),
             error?["message"]?.ToString() ?? "The add-on reported a failure without a message.",
             error?["details"]?.DeepClone()));
     }

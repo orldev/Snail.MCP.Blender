@@ -61,7 +61,7 @@ def sweep_abandoned(now=None):
 
 def area_root(area):
     if area not in AREAS:
-        raise CommandError("BadRequest", f"'area' must be one of {', '.join(AREAS)}", {"known": list(AREAS)})
+        raise CommandError("badRequest", f"'area' must be one of {', '.join(AREAS)}", {"known": list(AREAS)})
     return os.path.join(state.data_directory(), area)
 
 
@@ -73,19 +73,19 @@ def inside(area, relative):
     """
     relative = (relative or "").strip()
     if os.path.isabs(relative) or relative.startswith(("~", "/", "\\")) or ":" in relative or "\0" in relative:
-        raise CommandError("BadRequest", f"'{relative}' must be relative to the {area} area")
+        raise CommandError("badRequest", f"'{relative}' must be relative to the {area} area")
     if any(segment.strip() in (".", "..") for segment in relative.replace("\\", "/").split("/")):
-        raise CommandError("BadRequest", f"'{relative}' names a folder by '.' or '..'; name it by its path inside the {area} area")
+        raise CommandError("badRequest", f"'{relative}' names a folder by '.' or '..'; name it by its path inside the {area} area")
     root = area_root(area)
     resolved = os.path.normpath(os.path.join(root, relative.replace("\\", "/")))
     if os.path.commonpath([root, resolved]) != root:
-        raise CommandError("BadRequest", f"'{relative}' climbs out of the {area} area")
+        raise CommandError("badRequest", f"'{relative}' climbs out of the {area} area")
     return resolved
 
 
 def _resolve(path, area=None):
     if not isinstance(path, str) or not path.strip():
-        raise CommandError("BadRequest", "'path' is required")
+        raise CommandError("badRequest", "'path' is required")
     if area is not None:
         return inside(area, path)
     path = os.path.expanduser(path.strip())
@@ -94,7 +94,7 @@ def _resolve(path, area=None):
     root = files_root()
     resolved = os.path.normpath(os.path.join(root, path))
     if os.path.commonpath([root, resolved]) != root:
-        raise CommandError("BadRequest", f"'{path}' climbs out of the add-on's files directory; pass an absolute path instead")
+        raise CommandError("badRequest", f"'{path}' climbs out of the add-on's files directory; pass an absolute path instead")
     return resolved
 
 
@@ -129,7 +129,7 @@ def _from_the_open_file(key, value):
     if threading.current_thread() is not threading.main_thread():
         return value
     if not bpy.data.filepath:
-        raise CommandError("BadRequest", f"'{key}' starts with //, which Blender reads from the folder of the open file, and this file has "
+        raise CommandError("badRequest", f"'{key}' starts with //, which Blender reads from the folder of the open file, and this file has "
                                          f"never been saved: '{value}'",
                            {"hint": "save the file with blender_save_file first, or pass a path that does not start with //"})
     absolute = os.path.normpath(bpy.path.abspath(value))
@@ -153,18 +153,18 @@ def file_put(bridge, params):
     try:
         data = base64.b64decode(params.get("data") or "", validate=True)
     except binascii.Error as error:
-        raise CommandError("BadRequest", f"'data' is not base64: {error}") from error
+        raise CommandError("badRequest", f"'data' is not base64: {error}") from error
     partial = target + PARTIAL_SUFFIX
     if offset == 0:
         sweep_abandoned()
         if os.path.exists(target) and not params.get("overwrite"):
-            raise CommandError("Exists", f"'{target}' already exists; pass overwrite to replace it", {"path": target})
+            raise CommandError("exists", f"'{target}' already exists; pass overwrite to replace it", {"path": target})
         os.makedirs(os.path.dirname(target) or ".", exist_ok=True)
         mode = "wb"
     else:
         arrived = os.path.getsize(partial) if os.path.exists(partial) else 0
         if arrived != offset:
-            raise CommandError("BadRequest", f"a chunk at {offset} does not follow the {arrived} bytes that arrived", {"received": arrived})
+            raise CommandError("badRequest", f"a chunk at {offset} does not follow the {arrived} bytes that arrived", {"received": arrived})
         mode = "ab"
     with open(partial, mode) as handle:
         handle.write(data)
@@ -175,7 +175,7 @@ def file_put(bridge, params):
     expected = params.get("sha256")
     if expected and expected != digest:
         os.remove(partial)
-        raise CommandError("Corrupt", "the file that arrived is not the file that was sent", {"expected": expected, "received": digest})
+        raise CommandError("corrupt", "the file that arrived is not the file that was sent", {"expected": expected, "received": digest})
     os.replace(partial, target)
     return {"path": target, "size": received, "sha256": digest}
 
@@ -185,7 +185,7 @@ def file_get(bridge, params):
     """One chunk of a file on its way out; the last one carries the digest of the whole file, so the receiver can check what it assembled."""
     source = _resolve(params.get("path"), params.get("area"))
     if not os.path.isfile(source):
-        raise CommandError("NotFound", f"no file at '{source}'")
+        raise CommandError("notFound", f"no file at '{source}'")
     size = os.path.getsize(source)
     offset = max(0, int(params.get("offset") or 0))
     length = max(1, min(MAX_CHUNK_BYTES, int(params.get("length") or MAX_CHUNK_BYTES)))
@@ -210,7 +210,7 @@ def file_list(bridge, params):
     if os.path.isfile(root):
         return {"root": os.path.dirname(root), "kind": "file", "files": [_entry(os.path.dirname(root), root)], "total_bytes": os.path.getsize(root), "total": 1, "offset": 0, "truncated": False}
     if not os.path.isdir(root):
-        raise CommandError("NotFound", f"no file or directory at '{root}'")
+        raise CommandError("notFound", f"no file or directory at '{root}'")
     offset = max(0, int(params.get("offset") or 0))
     limit = max(1, min(LIST_LIMIT, int(params.get("limit") or LIST_LIMIT)))
     files = sorted(

@@ -38,7 +38,7 @@ public class BridgeTrafficTests
         Assert.Equal(2, sceneInfo["count"]!.GetValue<int>());
         Assert.Equal(20, sceneInfo["averageMs"]!.GetValue<double>());
         Assert.Equal(30, sceneInfo["slowestMs"]!.GetValue<double>());
-        Assert.Equal(1, report["failuresByType"]!["NotFound"]!.GetValue<int>());
+        Assert.Equal(1, report["failuresByType"]!["notFound"]!.GetValue<int>());
         Assert.Equal("python", report["lastFailure"]!["command"]!.ToString());
     }
 
@@ -65,7 +65,7 @@ public class BridgeTrafficTests
         var failed = await bridge.SendAsync(BridgeCommands.ObjectInfo);
 
         Assert.Equal("Scene", answered.Result!["name"]!.ToString());
-        Assert.Equal("NotFound", failed.Error!.Type);
+        Assert.Equal("notFound", failed.Error!.Type);
         Assert.Equal(TimeSpan.FromSeconds(9), inner.Sent[0].Timeout);
         Assert.Equal(2, traffic.Report()["requests"]!.GetValue<int>());
         Assert.Equal(1, traffic.Report()["failures"]!.GetValue<int>());

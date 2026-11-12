@@ -42,7 +42,7 @@ def set_world(params):
     if params.get("hdri_path"):
         path = params["hdri_path"]
         if not os.path.isfile(path):
-            raise CommandError("NotFound", f"no image file at '{path}'")
+            raise CommandError("notFound", f"no image file at '{path}'")
         environment = next((node for node in tree.nodes if node.bl_idname == "ShaderNodeTexEnvironment"), None) or tree.nodes.new("ShaderNodeTexEnvironment")
         environment.image = bpy.data.images.load(path, check_existing=True)
         environment.location = (-400, 0)

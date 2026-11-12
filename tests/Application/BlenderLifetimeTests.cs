@@ -64,7 +64,7 @@ public class BlenderLifetimeTests
 
         lifetime.Seen(BridgeReply.Ok(new JsonObject { ["machine"] = new JsonObject { ["platform"] = "linux" } }));
         lifetime.Seen(BridgeReply.Ok(new JsonObject { ["machine"] = new JsonObject { ["platform"] = "linux" } }));
-        lifetime.Seen(BridgeReply.Failed(new BridgeError("Unavailable", "no answer")));
+        lifetime.Seen(BridgeReply.Failed(new BridgeError("unavailable", "no answer")));
 
         Assert.Null(lifetime.Describe());
     }

@@ -72,7 +72,7 @@ public sealed class ProgramLiveTests : IAsyncLifetime
             return "moved";
             """);
 
-        Assert.Equal("Leased", stopped.Failure!.Type);
+        Assert.Equal("leased", stopped.Failure!.Type);
         Assert.Equal(["add_primitive", "transform_object"], stopped.Calls.Select(call => call.Command));
     }
 

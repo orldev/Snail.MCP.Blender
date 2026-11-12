@@ -83,7 +83,7 @@ public sealed class AddOnAnswersLiveTests : IAsyncLifetime
         ("a file asked for where there is none", BridgeCommands.FileGet, new JsonObject { ["area"] = VolumeAreas.Files, ["path"] = "nothing/here.png" }, ["message"]),
         ("a path that climbs out of its area", BridgeCommands.FileList, new JsonObject { ["area"] = VolumeAreas.Files, ["path"] = "../.." }, ["message"]),
         ("an area of the data directory there is none of", BridgeCommands.StorageList, new JsonObject { ["area"] = "secrets", ["path"] = "." }, []),
-        ("a lease on an object another agent holds", BridgeCommands.TransformObject, new JsonObject { ["name"] = "Leased", ["location"] = new JsonArray(1, 0, 0) }, ["message"]),
+        ("a lease on an object another agent holds", BridgeCommands.TransformObject, new JsonObject { ["name"] = "leased", ["location"] = new JsonArray(1, 0, 0) }, ["message"]),
         ("a file put where one already is", BridgeCommands.FilePut, Chunk("answers/twice.txt"), ["message", "details"]),
         ("a command of a name the add-on has never registered", Unknown, [], []),
     ];
@@ -96,8 +96,8 @@ public sealed class AddOnAnswersLiveTests : IAsyncLifetime
         {
             await using var holder = new BlenderConnection(Signed("lighting"), NullLogger<BlenderConnection>.Instance);
 
-            await holder.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Leased" });
-            await holder.SendAsync(BridgeCommands.Lease, new JsonObject { ["action"] = "claim", ["names"] = new JsonArray("Leased"), ["ttl_seconds"] = 300 });
+            await holder.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "leased" });
+            await holder.SendAsync(BridgeCommands.Lease, new JsonObject { ["action"] = "claim", ["names"] = new JsonArray("leased"), ["ttl_seconds"] = 300 });
 
             await using var stranger = new BlenderConnection(Signed("modeling"), NullLogger<BlenderConnection>.Instance);
 

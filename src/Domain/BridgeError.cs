@@ -3,17 +3,23 @@ namespace Snail.MCP.Blender.Domain;
 /// <summary>Why a command did not produce a result: the add-on's own error, or a failure of the link itself.</summary>
 public sealed record BridgeError(string Type, string Message, JsonNode? Details = null)
 {
-    public const string UnavailableType = "Unavailable";
+    public const string UnavailableType = "unavailable";
 
-    public const string TimeoutType = "Timeout";
+    public const string TimeoutType = "timeout";
 
-    public const string DroppedType = "Dropped";
+    public const string DroppedType = "dropped";
 
-    public const string MalformedType = "Malformed";
+    public const string MalformedType = "malformed";
 
-    public const string BusyType = "Busy";
+    public const string BusyType = "busy";
 
-    public const string TokenUnreadableType = "TokenUnreadable";
+    public const string TokenUnreadableType = "tokenUnreadable";
+
+    /// <summary>A type as every Snail server spells one, camelCase: <c>notFound</c>, <c>badRequest</c>.</summary>
+    /// <remarks>An add-on older than this server still answers <c>NotFound</c>; it is told apart by its first letter alone, so a client and
+    /// the hints read one spelling whichever add-on is installed.</remarks>
+    public static string Word(string type) =>
+        type.Length > 0 && char.IsUpper(type[0]) ? string.Concat(char.ToLowerInvariant(type[0]).ToString(), type.AsSpan(1)) : type;
 
     public static BridgeError Unavailable(string host, int port, string reason) =>
         new(UnavailableType, $"The Blender add-on is not answering on {host}:{port} ({reason}).");
@@ -31,7 +37,7 @@ public sealed record BridgeError(string Type, string Message, JsonNode? Details 
 
     /// <summary>JSON has no NaN or infinity, so a request carrying one cannot be written at all.</summary>
     public static BridgeError NotFinite(BridgeCommand command) =>
-        new("BadRequest", $"A number sent with '{command.Name}' is not finite (NaN or infinity), which JSON cannot carry.", Of(command));
+        new("badRequest", $"A number sent with '{command.Name}' is not finite (NaN or infinity), which JSON cannot carry.", Of(command));
 
     public static BridgeError Dropped(BridgeCommand command) =>
         new(DroppedType, $"Blender closed the link while '{command.Name}' was running.", Of(command));

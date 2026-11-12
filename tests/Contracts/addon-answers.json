@@ -43,7 +43,7 @@
       "command": "object_info",
       "ok": false,
       "error": {
-        "type": "NotFound",
+        "type": "notFound",
         "message": "no object named \u0027Ghost\u0027",
         "details": {
           "objects": [
@@ -59,7 +59,7 @@
       "command": "delete_objects",
       "ok": false,
       "error": {
-        "type": "NotFound",
+        "type": "notFound",
         "message": "no object named \u0027Ghost\u0027",
         "details": {
           "objects": [
@@ -75,7 +75,7 @@
       "command": "run_operator",
       "ok": false,
       "error": {
-        "type": "UnknownOperator",
+        "type": "unknownOperator",
         "message": "bpy.ops.mesh.primitive_teapot_add does not exist",
         "details": null
       }
@@ -85,7 +85,7 @@
       "command": "run_operator",
       "ok": false,
       "error": {
-        "type": "UnknownParameter",
+        "type": "unknownParameter",
         "message": "bpy.ops.mesh.primitive_cube_add has no property radius",
         "details": {
           "known": [
@@ -108,7 +108,7 @@
       "command": "run_operator",
       "ok": false,
       "error": {
-        "type": "PollFailed",
+        "type": "pollFailed",
         "message": "bpy.ops.mesh.extrude_region_move cannot run in the current context",
         "details": {
           "mode": "OBJECT",
@@ -121,7 +121,7 @@
       "command": "add_primitive",
       "ok": false,
       "error": {
-        "type": "BadRequest",
+        "type": "badRequest",
         "message": "unknown primitive \u0027dodecahedron\u0027",
         "details": {
           "known": [
@@ -144,7 +144,7 @@
       "command": "material_info",
       "ok": false,
       "error": {
-        "type": "NotFound",
+        "type": "notFound",
         "message": "no material named \u0027Ghost\u0027",
         "details": {
           "materials": [
@@ -159,7 +159,7 @@
       "command": "set_camera_optics",
       "ok": false,
       "error": {
-        "type": "BadRequest",
+        "type": "badRequest",
         "message": "\u0027set_camera_optics\u0027 takes no \u0027shift_x\u0027 (did you mean \u0027shift\u0027?)",
         "details": {
           "unknown": [
@@ -195,7 +195,7 @@
       "command": "render_job_status",
       "ok": false,
       "error": {
-        "type": "NotFound",
+        "type": "notFound",
         "message": "no render job \u0027job-that-never-was\u0027",
         "details": {
           "known": []
@@ -210,7 +210,7 @@
       "command": "file_get",
       "ok": false,
       "error": {
-        "type": "NotFound",
+        "type": "notFound",
         "message": "no file at \u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-64b441451d2b40f4a57aab366fc1c099/files/nothing/here.png\u0027",
         "details": null
       },
@@ -223,7 +223,7 @@
       "command": "file_list",
       "ok": false,
       "error": {
-        "type": "BadRequest",
+        "type": "badRequest",
         "message": "\u0027../..\u0027 names a folder by \u0027.\u0027 or \u0027..\u0027; name it by its path inside the files area",
         "details": null
       },
@@ -236,7 +236,7 @@
       "command": "storage_list",
       "ok": false,
       "error": {
-        "type": "BadRequest",
+        "type": "badRequest",
         "message": "\u0027.\u0027 names a folder by \u0027.\u0027 or \u0027..\u0027; name it by its path inside the secrets area",
         "details": null
       }
@@ -246,7 +246,7 @@
       "command": "transform_object",
       "ok": false,
       "error": {
-        "type": "Leased",
+        "type": "leased",
         "message": "\u0027Leased\u0027 is held by agent \u0027lighting\u0027 until 04:42:45",
         "details": {
           "agent": "lighting",
@@ -264,7 +264,7 @@
       "command": "file_put",
       "ok": false,
       "error": {
-        "type": "Exists",
+        "type": "exists",
         "message": "\u0027/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-64b441451d2b40f4a57aab366fc1c099/files/answers/twice.txt\u0027 already exists; pass overwrite to replace it",
         "details": {
           "path": "/var/folders/v1/tm42_4nd31v68z9l8_jmq0rw0000gn/T/snail-data-64b441451d2b40f4a57aab366fc1c099/files/answers/twice.txt"
@@ -280,7 +280,7 @@
       "command": "no_such_command",
       "ok": false,
       "error": {
-        "type": "UnknownCommand",
+        "type": "unknownCommand",
         "message": "\u0027no_such_command\u0027 is not a bridge command",
         "details": {
           "known": [

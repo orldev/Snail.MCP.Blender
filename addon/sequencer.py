@@ -35,7 +35,7 @@ def _strip(name):
     editor = _editor()
     strip = editor.strips_all.get(name)
     if strip is None:
-        raise CommandError("NotFound", f"no strip named '{name}'", {"strips": [strip.name for strip in editor.strips_all]})
+        raise CommandError("notFound", f"no strip named '{name}'", {"strips": [strip.name for strip in editor.strips_all]})
     return strip
 
 
@@ -162,7 +162,7 @@ def sequencer_info(params):
 def sequencer_add_strip(params):
     kind = _require(params, "type").lower()
     if kind not in STRIP_KINDS:
-        raise CommandError("BadRequest", f"unknown strip type '{kind}'", {"known": list(STRIP_KINDS)})
+        raise CommandError("badRequest", f"unknown strip type '{kind}'", {"known": list(STRIP_KINDS)})
     strips = _editor().strips
     name = params.get("name") or kind.title()
     channel = int(params.get("channel") or _free_channel())
@@ -170,7 +170,7 @@ def sequencer_add_strip(params):
     if kind in ("movie", "sound") or (kind == "image" and not params.get("files")):
         path = _require(params, "path")
         if not os.path.exists(path):
-            raise CommandError("NotFound", f"no file at '{path}'")
+            raise CommandError("notFound", f"no file at '{path}'")
     if kind == "movie":
         strip = strips.new_movie(name=name, filepath=params["path"], channel=channel, frame_start=frame_start)
         if params.get("with_sound", True):
@@ -189,7 +189,7 @@ def sequencer_add_strip(params):
         scene_name = params.get("scene") or bpy.context.scene.name
         source = bpy.data.scenes.get(scene_name)
         if source is None:
-            raise CommandError("NotFound", f"no scene named '{scene_name}'", {"scenes": [scene.name for scene in bpy.data.scenes]})
+            raise CommandError("notFound", f"no scene named '{scene_name}'", {"scenes": [scene.name for scene in bpy.data.scenes]})
         strip = strips.new_scene(name=name, scene=source, channel=channel, frame_start=frame_start)
     else:
         length = int(params.get("length") or 48)
@@ -216,12 +216,12 @@ def _image_files(params):
         path = params["path"]
         files = sorted(os.path.join(path, entry) for entry in os.listdir(path) if entry.lower().endswith(IMAGE_EXTENSIONS)) if os.path.isdir(path) else [path]
     if not files:
-        raise CommandError("NotFound", f"no image files in '{params.get('path')}'")
+        raise CommandError("notFound", f"no image files in '{params.get('path')}'")
     missing = [path for path in files if not os.path.isfile(path)]
     if missing:
-        raise CommandError("NotFound", f"missing image files: {', '.join(missing[:5])}")
+        raise CommandError("notFound", f"missing image files: {', '.join(missing[:5])}")
     if len({os.path.dirname(path) for path in files}) > 1:
-        raise CommandError("BadRequest", "an image sequence lives in one folder")
+        raise CommandError("badRequest", "an image sequence lives in one folder")
     return files
 
 
@@ -234,10 +234,10 @@ def _free_channel():
 def sequencer_add_effect(params):
     kind = _require(params, "type").upper()
     if kind not in EFFECT_TYPES:
-        raise CommandError("BadRequest", f"unknown effect '{kind}'", {"known": list(EFFECT_TYPES)})
+        raise CommandError("badRequest", f"unknown effect '{kind}'", {"known": list(EFFECT_TYPES)})
     inputs = [_strip(name) for name in params.get("inputs") or []]
     if kind in TWO_INPUT_EFFECTS and len(inputs) != 2:
-        raise CommandError("BadRequest", f"{kind} needs exactly two input strips")
+        raise CommandError("badRequest", f"{kind} needs exactly two input strips")
     channel = int(params.get("channel") or _free_channel())
     arguments = {"name": params.get("name") or kind.title(), "type": kind, "channel": channel}
     if inputs:
@@ -285,12 +285,12 @@ def sequencer_render(params):
     scene = bpy.context.scene
     editor = _editor()
     if not editor.strips_all:
-        raise CommandError("BadRequest", "the sequencer has no strips; add some with sequencer_add_strip")
+        raise CommandError("badRequest", "the sequencer has no strips; add some with sequencer_add_strip")
     path = _require(params, "path")
     stem, extension = os.path.splitext(path)
     container = CONTAINERS.get(extension.lstrip(".").lower())
     if container is None:
-        raise CommandError("BadRequest", f"unsupported container '{extension}'", {"known": sorted(CONTAINERS)})
+        raise CommandError("badRequest", f"unsupported container '{extension}'", {"known": sorted(CONTAINERS)})
     directory = os.path.dirname(path)
     if directory:
         os.makedirs(directory, exist_ok=True)
@@ -325,7 +325,7 @@ def sequencer_render(params):
         bpy.ops.render.render(animation=True)
     written = path if os.path.isfile(path) else next((os.path.join(directory or ".", entry) for entry in os.listdir(directory or ".") if entry not in previous and entry.startswith(os.path.basename(stem))), None)
     if written is None:
-        raise CommandError("RenderFailed", f"Blender encoded but no file appeared next to '{path}'")
+        raise CommandError("renderFailed", f"Blender encoded but no file appeared next to '{path}'")
     return {"path": written, "bytes": os.path.getsize(written), "frames": [scene.frame_start, scene.frame_end], "fps": render.fps,
             "container": render.ffmpeg.format, "codec": render.ffmpeg.codec, "resolution": [render.resolution_x, render.resolution_y], **_encode_summary(render)}
 
@@ -352,7 +352,7 @@ def _clone_source(strip, name, channel):
             if hasattr(strip, attribute):
                 setattr(clone, attribute, getattr(strip, attribute))
         return clone
-    raise CommandError("Unsupported", f"a {strip.type} strip cannot be split; split its inputs instead")
+    raise CommandError("unsupported", f"a {strip.type} strip cannot be split; split its inputs instead")
 
 
 def _copy_look(source, target):
@@ -372,10 +372,10 @@ def sequencer_split(params):
     strip = _strip(_require(params, "name"))
     frame = int(_require(params, "frame", int))
     if not strip.frame_final_start < frame < strip.frame_final_end:
-        raise CommandError("BadRequest", f"frame {frame} is not inside '{strip.name}' ({strip.frame_final_start}..{strip.frame_final_end})")
+        raise CommandError("badRequest", f"frame {frame} is not inside '{strip.name}' ({strip.frame_final_start}..{strip.frame_final_end})")
     keep = (params.get("keep") or "both").lower()
     if keep not in ("both", "left", "right"):
-        raise CommandError("BadRequest", "keep must be both, left or right")
+        raise CommandError("badRequest", "keep must be both, left or right")
     end = strip.frame_final_end
     right = _clone_source(strip, params.get("right_name") or f"{strip.name}.R", _free_channel())
     _copy_look(strip, right)
@@ -384,7 +384,7 @@ def sequencer_split(params):
     strip.frame_final_end = frame
     right.channel = strip.channel
     if right.frame_final_start != frame or strip.frame_final_end != frame:
-        raise CommandError("RenderFailed", f"Blender did not accept the cut at frame {frame}", {"left": [strip.frame_final_start, strip.frame_final_end], "right": [right.frame_final_start, right.frame_final_end]})
+        raise CommandError("renderFailed", f"Blender did not accept the cut at frame {frame}", {"left": [strip.frame_final_start, strip.frame_final_end], "right": [right.frame_final_start, right.frame_final_end]})
     editor = _editor()
     if keep == "left":
         editor.strips.remove(right)
@@ -413,7 +413,7 @@ def sequencer_proxy(params):
     sizes = [int(size) for size in params.get("sizes") or [25]]
     unknown = [size for size in sizes if size not in (25, 50, 75, 100)]
     if unknown:
-        raise CommandError("BadRequest", f"proxy sizes are 25, 50, 75 or 100 percent, not {unknown}")
+        raise CommandError("badRequest", f"proxy sizes are 25, 50, 75 or 100 percent, not {unknown}")
     if params.get("directory"):
         editor.proxy_storage = "PROJECT"
         editor.proxy_dir = params["directory"]
@@ -434,7 +434,7 @@ def sequencer_proxy(params):
     if params.get("build", True) and configured:
         override = _sequencer_override()
         if override is None:
-            raise CommandError("NoArea", "proxy settings are stored, but building them needs the Video Sequencer editor open in Blender (Strip → Rebuild Proxy and Timecode Indices)", {"configured": configured})
+            raise CommandError("noArea", "proxy settings are stored, but building them needs the Video Sequencer editor open in Blender (Strip → Rebuild Proxy and Timecode Indices)", {"configured": configured})
         with override:
             for strip in editor.strips_all:
                 strip.select = strip.name in configured
@@ -450,10 +450,10 @@ def sequencer_meta(params):
     action = (params.get("action") or "make").lower()
     override = _sequencer_override()
     if override is None:
-        raise CommandError("NoArea", "meta strips need the Video Sequencer editor open in Blender; open one and call again")
+        raise CommandError("noArea", "meta strips need the Video Sequencer editor open in Blender; open one and call again")
     names = list(params.get("names") or ([params["name"]] if params.get("name") else []))
     if not names:
-        raise CommandError("BadRequest", "pass names (make) or name (separate)")
+        raise CommandError("badRequest", "pass names (make) or name (separate)")
     strips = [_strip(name) for name in names]
     with override:
         for strip in editor.strips_all:
@@ -464,16 +464,16 @@ def sequencer_meta(params):
             bpy.ops.sequencer.meta_make()
             meta = next((strip for strip in editor.strips_all if strip.name not in before and strip.type == "META"), None)
             if meta is None:
-                raise CommandError("RenderFailed", "Blender made no meta strip")
+                raise CommandError("renderFailed", "Blender made no meta strip")
             if params.get("new_name"):
                 meta.name = params["new_name"]
             return _strip_summary(meta)
         if action == "separate":
             if strips[0].type != "META":
-                raise CommandError("BadRequest", f"'{strips[0].name}' is not a meta strip")
+                raise CommandError("badRequest", f"'{strips[0].name}' is not a meta strip")
             bpy.ops.sequencer.meta_separate()
             return {"separated": names[0], "strips": [strip.name for strip in editor.strips_all]}
-    raise CommandError("BadRequest", "action must be make or separate")
+    raise CommandError("badRequest", "action must be make or separate")
 
 
 def _rate(value):
@@ -536,7 +536,7 @@ def _apply_modifier(modifier, params):
         for channel, points in curves.items():
             index = CURVE_CHANNELS.get(str(channel).lower())
             if index is None or index >= len(modifier.curve_mapping.curves):
-                raise CommandError("BadRequest", f"unknown curve channel '{channel}'", {"known": ["R", "G", "B", "C"] if len(modifier.curve_mapping.curves) > 3 else ["H", "S", "V"]})
+                raise CommandError("badRequest", f"unknown curve channel '{channel}'", {"known": ["R", "G", "B", "C"] if len(modifier.curve_mapping.curves) > 3 else ["H", "S", "V"]})
             _apply_curve_points(modifier.curve_mapping.curves[index], points)
         modifier.curve_mapping.update()
     if params.get("mask_strip"):
@@ -567,11 +567,11 @@ def _strip_modifier_summary(modifier):
 def sequencer_grade(params):
     strip = _strip(_require(params, "name"))
     if not hasattr(strip, "modifiers"):
-        raise CommandError("BadRequest", f"'{strip.name}' takes no modifiers")
+        raise CommandError("badRequest", f"'{strip.name}' takes no modifiers")
     if params.get("remove"):
         modifier = strip.modifiers.get(params["remove"])
         if modifier is None:
-            raise CommandError("NotFound", f"'{strip.name}' has no modifier '{params['remove']}'", {"known": [modifier.name for modifier in strip.modifiers]})
+            raise CommandError("notFound", f"'{strip.name}' has no modifier '{params['remove']}'", {"known": [modifier.name for modifier in strip.modifiers]})
         strip.modifiers.remove(modifier)
     elif params.get("clear"):
         strip.modifiers.clear()
@@ -580,7 +580,7 @@ def sequencer_grade(params):
         if modifier is None:
             kind = (params.get("type") or "").upper()
             if kind not in STRIP_MODIFIERS:
-                raise CommandError("BadRequest", f"unknown strip modifier '{kind}'", {"known": list(STRIP_MODIFIERS)})
+                raise CommandError("badRequest", f"unknown strip modifier '{kind}'", {"known": list(STRIP_MODIFIERS)})
             modifier = strip.modifiers.new(params.get("modifier") or kind.replace("_", " ").title(), kind)
         _apply_modifier(modifier, params)
     return {"strip": strip.name, "modifiers": [_strip_modifier_summary(modifier) for modifier in strip.modifiers]}
@@ -614,10 +614,10 @@ def sequencer_encode(params):
         _set_enum(ffmpeg, "codec", params["codec"].upper(), "codec")
     if params.get("prores_profile"):
         if not hasattr(ffmpeg, "ffmpeg_prores_profile"):
-            raise CommandError("Unsupported", "this Blender has no ProRes profile setting")
+            raise CommandError("unsupported", "this Blender has no ProRes profile setting")
         profile = str(params["prores_profile"]).upper()
         if profile not in PRORES_PROFILES:
-            raise CommandError("BadRequest", f"unknown ProRes profile '{profile}'", {"known": list(PRORES_PROFILES)})
+            raise CommandError("badRequest", f"unknown ProRes profile '{profile}'", {"known": list(PRORES_PROFILES)})
         ffmpeg.codec = "PRORES"
         ffmpeg.ffmpeg_prores_profile = profile
     if params.get("quality"):
@@ -669,12 +669,12 @@ def sequencer_mixdown(params):
     scene = bpy.context.scene
     editor = _editor()
     if not any(strip.type in ("SOUND", "SCENE", "META") for strip in editor.strips_all):
-        raise CommandError("BadRequest", "the sequencer has no sound strips to mix down")
+        raise CommandError("badRequest", "the sequencer has no sound strips to mix down")
     path = _require(params, "path")
     extension = os.path.splitext(path)[1].lstrip(".").lower()
     container = AUDIO_CONTAINERS.get(extension)
     if container is None:
-        raise CommandError("BadRequest", f"unsupported audio container '{extension}'", {"known": sorted(AUDIO_CONTAINERS)})
+        raise CommandError("badRequest", f"unsupported audio container '{extension}'", {"known": sorted(AUDIO_CONTAINERS)})
     directory = os.path.dirname(path)
     if directory:
         os.makedirs(directory, exist_ok=True)
@@ -689,7 +689,7 @@ def sequencer_mixdown(params):
         with bpy.context.temp_override(scene=scene):
             bpy.ops.sound.mixdown(**arguments)
     if not os.path.isfile(path):
-        raise CommandError("RenderFailed", f"the mixdown ran but no file appeared at '{path}'")
+        raise CommandError("renderFailed", f"the mixdown ran but no file appeared at '{path}'")
     return {"path": path, "bytes": os.path.getsize(path), "container": container, "codec": arguments["codec"], "format": arguments["format"],
             "frames": [scene.frame_start, scene.frame_end], "sample_rate": scene.render.ffmpeg.audio_mixrate, "mixer": "aud" if bpy.app.background else "sequencer"}
 
@@ -714,7 +714,7 @@ def _mixdown_with_aud(scene, editor, arguments):
             sound = sound.delay(offset)
         mix = sound if mix is None else mix.mix(sound)
     if mix is None:
-        raise CommandError("BadRequest", "no unmuted sound strip to mix down")
+        raise CommandError("badRequest", "no unmuted sound strip to mix down")
     mix = mix.limit(0, (scene.frame_end - origin + 1) / fps)
     channels = getattr(aud, f"CHANNELS_{arguments.get('channels', 'STEREO')}")
     rate = scene.render.ffmpeg.audio_mixrate

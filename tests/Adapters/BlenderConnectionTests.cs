@@ -142,13 +142,13 @@ public class BlenderConnectionTests
     [Fact]
     public async Task Send_AddOnReportsAnError_ReturnsItsTypeMessageAndDetails()
     {
-        await using var addOn = new FakeAddOn(request => Task.FromResult<string?>(FakeAddOn.ErrorReply(request, "UnknownCommand", "'nope' is not a bridge command")));
+        await using var addOn = new FakeAddOn(request => Task.FromResult<string?>(FakeAddOn.ErrorReply(request, "unknownCommand", "'nope' is not a bridge command")));
         await using var link = Connect(addOn.Port);
 
         var reply = await link.SendAsync(new BridgeCommand("nope", AddOnModules.Operators));
 
         Assert.False(reply.IsOk);
-        Assert.Equal("UnknownCommand", reply.Error!.Type);
+        Assert.Equal("unknownCommand", reply.Error!.Type);
         Assert.Equal("'nope' is not a bridge command", reply.Error.Message);
         Assert.Equal("ping", reply.Error.Details!["known"]![0]!.ToString());
     }
@@ -265,8 +265,21 @@ public class BlenderConnectionTests
 
         var reply = await link.SendAsync(BridgeCommands.TransformObject, new JsonObject { ["location"] = new JsonArray(double.PositiveInfinity, 0.0, 0.0) });
 
-        Assert.Equal("BadRequest", reply.Error?.Type);
+        Assert.Equal("badRequest", reply.Error?.Type);
         Assert.Empty(addOn.Received);
+    }
+
+    /// <summary>An add-on installed before its types were spelled camelCase still answers <c>NotFound</c>; the server reads it as
+    /// <c>notFound</c>, so the hints and a client's branches hold whichever add-on is installed.</summary>
+    [Fact]
+    public async Task Send_AnOlderAddOnsPascalCaseType_IsReadInCamelCase()
+    {
+        await using var addOn = new FakeAddOn(request => Task.FromResult<string?>(FakeAddOn.ErrorReply(request, "UnknownCommand", "not a bridge command")));
+        await using var link = Connect(addOn.Port);
+
+        var reply = await link.SendAsync(BridgeCommands.Ping);
+
+        Assert.Equal("unknownCommand", reply.Error?.Type);
     }
 
     [Fact]

@@ -62,7 +62,7 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         var refused = await _link.SendAsync(BridgeCommands.RenderSettings, new JsonObject { ["engine"] = "NO_SUCH_ENGINE" });
 
         Assert.False(refused.IsOk);
-        Assert.Equal("BadRequest", refused.Error!.Type);
+        Assert.Equal("badRequest", refused.Error!.Type);
         Assert.Contains("CYCLES", refused.Error.Details!.ToJsonString(), StringComparison.Ordinal);
     }
 
@@ -80,7 +80,7 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         var climbing = await _link.SendAsync(BridgeCommands.RenderImage, new JsonObject { ["path"] = "../escaped.png", ["preview"] = false }, TimeSpan.FromSeconds(120));
 
         Assert.False(climbing.IsOk);
-        Assert.Equal("BadRequest", climbing.Error!.Type);
+        Assert.Equal("badRequest", climbing.Error!.Type);
     }
 
     /// <summary>A path from the open file, the way blender_open_project sets the output, lands beside that file: the handler made the folder
@@ -132,7 +132,7 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         var refused = await _link.SendAsync(BridgeCommands.SetColorManagement, new JsonObject { ["view_transform"] = "Nope" });
 
         Assert.False(refused.IsOk);
-        Assert.Equal("BadRequest", refused.Error!.Type);
+        Assert.Equal("badRequest", refused.Error!.Type);
         Assert.Contains("AgX", refused.Error.Details!["known"]!.AsArray().Select(node => node!.ToString()));
     }
 
@@ -262,7 +262,7 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         Assert.True(optics["hyperfocal_m"]!.GetValue<double>() > 10);
 
         var refused = await _link.SendAsync(BridgeCommands.SetCameraOptics, new JsonObject { ["aperture"] = new JsonObject { ["blades"] = 2 } });
-        Assert.Equal("BadRequest", refused.Error!.Type);
+        Assert.Equal("badRequest", refused.Error!.Type);
     }
 
     [BlenderFact]
@@ -279,7 +279,7 @@ public sealed class RenderingLiveTests : IAsyncLifetime
         Assert.Equal(1, orbit["height"]!.GetValue<double>());
 
         var refused = await _link.SendAsync(BridgeCommands.CameraMove, new JsonObject { ["type"] = "spiral", ["target"] = "Cube" });
-        Assert.Equal("BadRequest", refused.Error!.Type);
+        Assert.Equal("badRequest", refused.Error!.Type);
     }
 
     [BlenderFact]

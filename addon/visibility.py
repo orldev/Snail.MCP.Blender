@@ -45,7 +45,7 @@ def object_render_flags(params):
     names = params.get("names") or [_require(params, "name")]
     targets = _objects_named(names)
     if not targets:
-        raise CommandError("NotFound", "no objects matched", {"names": names})
+        raise CommandError("notFound", "no objects matched", {"names": names})
     for item in targets:
         if params.get("holdout") is not None:
             item.is_holdout = bool(params["holdout"])
@@ -55,7 +55,7 @@ def object_render_flags(params):
         if isinstance(visible, dict):
             for ray, value in visible.items():
                 if ray not in RAYS:
-                    raise CommandError("BadRequest", f"unknown ray type '{ray}'", {"known": list(RAYS)})
+                    raise CommandError("badRequest", f"unknown ray type '{ray}'", {"known": list(RAYS)})
                 setattr(item, f"visible_{ray}", bool(value))
         if params.get("pass_index") is not None:
             item.pass_index = int(params["pass_index"])

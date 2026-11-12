@@ -29,18 +29,18 @@ EXPORTERS = {
 def _format_of(path, explicit):
     extension = (explicit or os.path.splitext(path)[1].lstrip(".")).lower()
     if not extension:
-        raise CommandError("BadRequest", "pass a format or a path with an extension")
+        raise CommandError("badRequest", "pass a format or a path with an extension")
     return extension
 
 
 def _io_operator(table, extension, path):
     if extension not in table:
-        raise CommandError("BadRequest", f"unsupported format '{extension}'", {"known": sorted(table)})
+        raise CommandError("badRequest", f"unsupported format '{extension}'", {"known": sorted(table)})
     entry = table[extension]
     name = entry[0] if isinstance(entry, tuple) else entry
     operator = _find_operator(name)
     if operator is None or not operator.poll():
-        raise CommandError("Unsupported", f"this Blender has no working '{name}' operator for {extension}; enable the add-on in Preferences")
+        raise CommandError("unsupported", f"this Blender has no working '{name}' operator for {extension}; enable the add-on in Preferences")
     return operator
 
 
@@ -48,7 +48,7 @@ def _io_operator(table, extension, path):
 def import_file(params):
     path = _require(params, "path")
     if not os.path.isfile(path):
-        raise CommandError("NotFound", f"no file at '{path}'")
+        raise CommandError("notFound", f"no file at '{path}'")
     extension = _format_of(path, params.get("format"))
     operator = _io_operator(IMPORTERS, extension, path)
     before = {item.name for item in bpy.data.objects}
@@ -82,7 +82,7 @@ def export_file(params):
     with _window_override():
         operator(**arguments)
     if not os.path.isfile(path):
-        raise CommandError("ExportFailed", f"the exporter ran but no file appeared at '{path}'")
+        raise CommandError("exportFailed", f"the exporter ran but no file appeared at '{path}'")
     return {"path": path, "format": extension, "bytes": os.path.getsize(path), "selected_only": bool(params.get("selected_only"))}
 
 

@@ -128,7 +128,7 @@ def _render_arguments(params):
     if params.get("view_layer"):
         scene = _scene(params)
         if params["view_layer"] not in scene.view_layers:
-            raise CommandError("NotFound", f"no view layer named '{params['view_layer']}'", {"known": [layer.name for layer in scene.view_layers]})
+            raise CommandError("notFound", f"no view layer named '{params['view_layer']}'", {"known": [layer.name for layer in scene.view_layers]})
         arguments["layer"] = params["view_layer"]
     return arguments
 
@@ -177,14 +177,14 @@ def render_settings(params):
         if engine == "BLENDER_EEVEE_NEXT" and engine not in known and "BLENDER_EEVEE" in known:
             engine = "BLENDER_EEVEE"
         if engine not in known:
-            raise CommandError("BadRequest", f"unknown render engine '{params['engine']}'", {"known": known})
+            raise CommandError("badRequest", f"unknown render engine '{params['engine']}'", {"known": known})
         render.engine = engine
     for axis in ("x", "y"):
         key = f"resolution_{axis}"
         if params.get(key) is not None:
             value = int(params[key])
             if value < 1 or value > MAX_RESOLUTION:
-                raise CommandError("BadRequest", f"{key} must be between 1 and {MAX_RESOLUTION}")
+                raise CommandError("badRequest", f"{key} must be between 1 and {MAX_RESOLUTION}")
             setattr(render, key, value)
     if params.get("percentage") is not None:
         render.resolution_percentage = max(1, min(100, int(params["percentage"])))
@@ -209,7 +209,7 @@ def render_settings(params):
     if params.get("camera"):
         camera = _object(params["camera"])
         if camera.type != "CAMERA":
-            raise CommandError("BadRequest", f"'{camera.name}' is not a camera")
+            raise CommandError("badRequest", f"'{camera.name}' is not a camera")
         scene.camera = camera
     return _render_summary(scene)
 
@@ -218,7 +218,7 @@ def render_settings(params):
 def render_image(params):
     scene = _scene(params)
     if scene.camera is None:
-        raise CommandError("BadRequest", "the scene has no camera; blender_add_camera adds one")
+        raise CommandError("badRequest", "the scene has no camera; blender_add_camera adds one")
     path = _require(params, "path")
     directory = os.path.dirname(path)
     if directory:
@@ -234,7 +234,7 @@ def render_image(params):
         scene.render.filepath = previous
     written = path if os.path.isfile(path) else next((candidate for candidate in _candidates(path) if os.path.isfile(candidate)), None)
     if written is None:
-        raise CommandError("RenderFailed", f"Blender rendered but no file appeared at '{path}'")
+        raise CommandError("renderFailed", f"Blender rendered but no file appeared at '{path}'")
     result = {"path": written, "bytes": os.path.getsize(written), "frame": scene.frame_current, "engine": scene.render.engine,
               "resolution": [scene.render.resolution_x, scene.render.resolution_y], "percentage": scene.render.resolution_percentage,
               "scene": scene.name, "view_layer": arguments.get("layer"), **timing}
@@ -262,7 +262,7 @@ def _refuse_a_finished_name(template):
         return
     numbered = re.sub(r"\d+$", lambda digits: "#" * len(digits.group(0)), stem)
     suggested = (numbered if numbered != stem else f"{stem}_####") + extension
-    raise CommandError("BadRequest",
+    raise CommandError("badRequest",
                        f"output_path names a finished file, but frames are written from a template: '{os.path.basename(template)}' would become "
                        f"'{os.path.basename(stem)}{extension}0001{extension}'; pass '{suggested}', where #### is the frame number",
                        {"suggested": suggested})
@@ -272,7 +272,7 @@ def _refuse_a_finished_name(template):
 def render_animation(params):
     scene = _scene(params)
     if scene.camera is None:
-        raise CommandError("BadRequest", "the scene has no camera; blender_add_camera adds one")
+        raise CommandError("badRequest", "the scene has no camera; blender_add_camera adds one")
     output = _require(params, "output_path")
     _refuse_a_finished_name(output)
     directory = os.path.dirname(output)
@@ -301,7 +301,7 @@ def render_passes(params):
     for key, enabled in (params.get("passes") or {}).items():
         attribute = PASSES.get(key)
         if attribute is None or not hasattr(view_layer, attribute):
-            raise CommandError("BadRequest", f"unknown render pass '{key}'", {"known": sorted(name for name, attribute in PASSES.items() if hasattr(view_layer, attribute))})
+            raise CommandError("badRequest", f"unknown render pass '{key}'", {"known": sorted(name for name, attribute in PASSES.items() if hasattr(view_layer, attribute))})
         setattr(view_layer, attribute, bool(enabled))
     return {
         "view_layer": view_layer.name,
@@ -317,7 +317,7 @@ def render_object(params):
     path = _require(params, "path")
     corners = [item.matrix_world @ mathutils.Vector(corner) for item in subjects for corner in item.bound_box]
     if not corners:
-        raise CommandError("BadRequest", "the objects have no geometry to frame")
+        raise CommandError("badRequest", "the objects have no geometry to frame")
     center = sum(corners, mathutils.Vector()) / len(corners)
     radius = max((corner - center).length for corner in corners) or 1.0
     azimuth = math.radians(float(params.get("azimuth") if params.get("azimuth") is not None else 40.0))
@@ -384,9 +384,9 @@ def viewport_capture(params):
                 scene.render.filepath = previous
             written = path if os.path.isfile(path) else next((candidate for candidate in _candidates(path) if os.path.isfile(candidate)), None)
             if written is None:
-                raise CommandError("RenderFailed", f"the viewport was captured but no file appeared at '{path}'")
+                raise CommandError("renderFailed", f"the viewport was captured but no file appeared at '{path}'")
             return _with_preview({"path": written, "bytes": os.path.getsize(written), "shading": area.spaces.active.shading.type}, written, params)
-    raise CommandError("NoArea", "no 3D viewport is open in Blender; viewport capture needs the interface")
+    raise CommandError("noArea", "no 3D viewport is open in Blender; viewport capture needs the interface")
 
 
 BAKE_TYPES = ("COMBINED", "AO", "SHADOW", "POSITION", "NORMAL", "UV", "ROUGHNESS", "EMIT", "ENVIRONMENT", "DIFFUSE", "GLOSSY", "TRANSMISSION")
@@ -396,20 +396,20 @@ BAKE_TYPES = ("COMBINED", "AO", "SHADOW", "POSITION", "NORMAL", "UV", "ROUGHNESS
 def bake_texture(params):
     item = _object(_require(params, "name"))
     if item.type != "MESH":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a mesh")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a mesh")
     if not item.data.uv_layers:
-        raise CommandError("BadRequest", f"'{item.name}' has no UV map; unwrap it first")
+        raise CommandError("badRequest", f"'{item.name}' has no UV map; unwrap it first")
     kind = (params.get("type") or "DIFFUSE").upper()
     if kind not in BAKE_TYPES:
-        raise CommandError("BadRequest", f"unknown bake type '{kind}'", {"known": list(BAKE_TYPES)})
+        raise CommandError("badRequest", f"unknown bake type '{kind}'", {"known": list(BAKE_TYPES)})
     path = _require(params, "path")
     width = int(params.get("width") or 1024)
     height = int(params.get("height") or width)
     if width > MAX_RESOLUTION or height > MAX_RESOLUTION:
-        raise CommandError("BadRequest", f"bake size must be at most {MAX_RESOLUTION} per edge")
+        raise CommandError("badRequest", f"bake size must be at most {MAX_RESOLUTION} per edge")
     materials = [slot.material for slot in item.material_slots if slot.material]
     if not materials:
-        raise CommandError("BadRequest", f"'{item.name}' has no material to bake")
+        raise CommandError("badRequest", f"'{item.name}' has no material to bake")
     image = bpy.data.images.new(params.get("image_name") or f"{item.name}_{kind.lower()}", width, height, alpha=True)
     if kind in ("NORMAL", "ROUGHNESS", "AO", "POSITION", "UV"):
         image.colorspace_settings.name = "Non-Color"

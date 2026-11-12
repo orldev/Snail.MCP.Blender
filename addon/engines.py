@@ -42,7 +42,7 @@ EEVEE_BOKEH = {"max_size": "bokeh_max_size", "threshold": "bokeh_threshold", "ne
 
 def _assign(target, attribute, value, label):
     if attribute not in target.bl_rna.properties:
-        raise CommandError("Unsupported", f"this Blender has no setting '{attribute}' for {label}")
+        raise CommandError("unsupported", f"this Blender has no setting '{attribute}' for {label}")
     prop = target.bl_rna.properties[attribute]
     if prop.type == "ENUM":
         _set_enum(target, attribute, str(value).upper() if str(value).upper() in [item.identifier for item in prop.enum_items] else str(value), label)
@@ -62,7 +62,7 @@ def _apply_mapping(target, values, mapping, label):
             continue
         attribute = mapping.get(key)
         if attribute is None:
-            raise CommandError("UnknownParameter", f"{label} has no setting '{key}'", {"known": sorted(mapping)})
+            raise CommandError("unknownParameter", f"{label} has no setting '{key}'", {"known": sorted(mapping)})
         _assign(target, attribute, value, f"{label} {key}")
 
 
@@ -111,7 +111,7 @@ def _use_backend(backend):
     would otherwise read its own saved preferences and, on a fresh machine, render on the CPU."""
     addon = bpy.context.preferences.addons.get("cycles")
     if addon is None:
-        raise CommandError("NotFound", "the Cycles add-on is not enabled in this Blender")
+        raise CommandError("notFound", "the Cycles add-on is not enabled in this Blender")
     preferences = addon.preferences
     _set_enum(preferences, "compute_device_type", backend, "compute backend")
     preferences.get_devices()
@@ -160,7 +160,7 @@ def set_eevee(params):
     _apply_mapping(eevee, {key: params.get(key) for key in EEVEE}, EEVEE, "EEVEE")
     if params.get("raytracing_options"):
         if not hasattr(eevee, "ray_tracing_options"):
-            raise CommandError("Unsupported", "this Blender's EEVEE has no ray tracing options")
+            raise CommandError("unsupported", "this Blender's EEVEE has no ray tracing options")
         _apply_mapping(eevee.ray_tracing_options, params["raytracing_options"], EEVEE_RAYTRACING, "ray tracing")
     _apply_mapping(eevee, params.get("fast_gi_options"), EEVEE_FAST_GI, "fast GI")
     _apply_mapping(eevee, params.get("volumetrics"), EEVEE_VOLUMETRICS, "volumetrics")
@@ -199,7 +199,7 @@ def set_freestyle(params):
     if params.get("view_layer"):
         layer = scene.view_layers.get(params["view_layer"])
         if layer is None:
-            raise CommandError("NotFound", f"no view layer named '{params['view_layer']}'")
+            raise CommandError("notFound", f"no view layer named '{params['view_layer']}'")
     if params.get("enabled") is not None:
         scene.render.use_freestyle = bool(params["enabled"])
         layer.use_freestyle = bool(params["enabled"])
@@ -222,7 +222,7 @@ def set_freestyle(params):
         if spec.get("edges") is not None:
             unknown = [edge for edge in spec["edges"] if edge not in LINESET_EDGES]
             if unknown:
-                raise CommandError("BadRequest", f"unknown edge types {unknown}", {"known": list(LINESET_EDGES)})
+                raise CommandError("badRequest", f"unknown edge types {unknown}", {"known": list(LINESET_EDGES)})
             for edge in LINESET_EDGES:
                 setattr(lineset, f"select_{edge}", edge in spec["edges"])
         if spec.get("visibility"):

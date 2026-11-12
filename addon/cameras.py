@@ -21,7 +21,7 @@ def _camera_of(params):
     else:
         item = _scene(params).camera
     if item is None or item.type != "CAMERA":
-        raise CommandError("BadRequest", "no camera: pass camera or name, or set one with blender_render_settings")
+        raise CommandError("badRequest", "no camera: pass camera or name, or set one with blender_render_settings")
     return item
 
 
@@ -41,7 +41,7 @@ def add_camera(params):
 def set_camera(params):
     item = _object(_require(params, "name"))
     if item.type != "CAMERA":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a camera")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a camera")
     if params.get("make_active"):
         bpy.context.scene.camera = item
     return _apply_camera(item, params)

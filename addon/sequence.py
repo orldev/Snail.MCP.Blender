@@ -34,12 +34,12 @@ def run(params):
             budget = _trim(entry, budget)
             done.append(entry)
             if not entry["ok"] and not keep_going:
-                raise CommandError("StepFailed", f"step {index} ({step['command']}) failed: {entry['error']}", _summary(done, len(steps)))
+                raise CommandError("stepFailed", f"step {index} ({step['command']}) failed: {entry['error']}", _summary(done, len(steps)))
     finally:
         PROGRESS.update({"active": False, "phase": None, "step": 0, "steps": 0})
     failed = [entry for entry in done if not entry["ok"]]
     if failed:
-        raise CommandError("StepFailed", f"{len(failed)} of {len(steps)} steps failed", _summary(done, len(steps)))
+        raise CommandError("stepFailed", f"{len(failed)} of {len(steps)} steps failed", _summary(done, len(steps)))
     return _summary(done, len(steps))
 
 
@@ -81,19 +81,19 @@ def _summary(done, total):
 def _steps(params):
     steps = params.get("commands")
     if not isinstance(steps, list) or not steps or not all(isinstance(step, dict) and isinstance(step.get("command"), str) for step in steps):
-        raise CommandError("BadRequest", "commands must be a non-empty list of {command, params}")
+        raise CommandError("badRequest", "commands must be a non-empty list of {command, params}")
     if len(steps) > MAX_STEPS:
-        raise CommandError("BadRequest", f"a sequence runs at most {MAX_STEPS} steps; split it or send the rest in a second call", {"steps": len(steps)})
+        raise CommandError("badRequest", f"a sequence runs at most {MAX_STEPS} steps; split it or send the rest in a second call", {"steps": len(steps)})
     if any(step["command"] == "run" for step in steps):
-        raise CommandError("BadRequest", "a sequence may not contain 'run': flatten the steps into one list")
+        raise CommandError("badRequest", "a sequence may not contain 'run': flatten the steps into one list")
     asked = {step["command"] for step in steps}
     elsewhere = sorted(asked & set(IMMEDIATE))
     if elsewhere:
         raise CommandError(
-            "BadRequest",
+            "badRequest",
             f"{', '.join(elsewhere)} are answered beside Blender's main thread, not on it, so they cannot be steps of a sequence; send each as its own command",
             {"commands": elsewhere})
     unknown = sorted(asked - set(COMMANDS))
     if unknown:
-        raise CommandError("UnknownCommand", f"unknown commands: {', '.join(unknown)}", {"known": sorted(COMMANDS)})
+        raise CommandError("unknownCommand", f"unknown commands: {', '.join(unknown)}", {"known": sorted(COMMANDS)})
     return steps

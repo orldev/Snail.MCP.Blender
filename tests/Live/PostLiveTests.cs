@@ -47,7 +47,7 @@ public sealed class PostLiveTests : IAsyncLifetime
         Assert.True(linked["links"]!.GetValue<int>() >= 2);
 
         var moved = await _link.SendAsync(BridgeCommands.Compositor, new JsonObject { ["action"] = "grain" });
-        Assert.Equal("BadRequest", moved.Error!.Type);
+        Assert.Equal("badRequest", moved.Error!.Type);
 
         var path = Path.Combine(_workDirectory, "composited.png");
         var rendered = await Send(BridgeCommands.RenderImage, new JsonObject { ["path"] = path }, TimeSpan.FromSeconds(180));
@@ -127,7 +127,7 @@ public sealed class PostLiveTests : IAsyncLifetime
         var refused = await _link.SendAsync(BridgeCommands.LensEffects, []);
         var after = await Send(BridgeCommands.Compositor, new JsonObject { ["action"] = "info" });
 
-        Assert.Equal("BadRequest", refused.Error?.Type);
+        Assert.Equal("badRequest", refused.Error?.Type);
         Assert.Contains("clear", refused.Error!.Message, StringComparison.Ordinal);
         Assert.Contains("ByHand", after["nodes"]!.AsArray().Select(node => node!["name"]!.ToString()));
     }

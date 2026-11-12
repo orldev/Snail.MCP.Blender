@@ -93,7 +93,7 @@ def insert_keyframe(params):
         try:
             target.keyframe_insert(data_path=attribute, frame=frame)
         except (TypeError, RuntimeError) as error:
-            raise CommandError("BadRequest", f"cannot key '{path}' on '{item.name}': {error}") from error
+            raise CommandError("badRequest", f"cannot key '{path}' on '{item.name}': {error}") from error
         keyed.append(path)
     if params.get("interpolation"):
         _set_interpolation(item, {"channels": channels, "interpolation": params["interpolation"], "from_frame": frame, "to_frame": frame})
@@ -137,7 +137,7 @@ def set_interpolation(params):
 def _set_interpolation(item, params):
     interpolation = (params.get("interpolation") or "BEZIER").upper()
     if interpolation not in INTERPOLATIONS:
-        raise CommandError("BadRequest", f"unknown interpolation '{interpolation}'", {"known": list(INTERPOLATIONS)})
+        raise CommandError("badRequest", f"unknown interpolation '{interpolation}'", {"known": list(INTERPOLATIONS)})
     easing = (params.get("easing") or "").upper() or None
     changed = 0
     for curve in _chosen_curves(item, params):
@@ -176,10 +176,10 @@ def add_fcurve_modifier(params):
     item = _object(_require(params, "name"))
     kind = _require(params, "type").upper()
     if kind not in FCURVE_MODIFIERS:
-        raise CommandError("BadRequest", f"unknown F-Curve modifier '{kind}'", {"known": list(FCURVE_MODIFIERS)})
+        raise CommandError("badRequest", f"unknown F-Curve modifier '{kind}'", {"known": list(FCURVE_MODIFIERS)})
     curves = _chosen_curves(item, params)
     if not curves:
-        raise CommandError("NotFound", f"'{item.name}' has no animation curves to modify")
+        raise CommandError("notFound", f"'{item.name}' has no animation curves to modify")
     for curve in curves:
         modifier = curve.modifiers.new(kind)
         _apply_settings(modifier, params.get("settings") or {})
@@ -221,10 +221,10 @@ def parent_to_armature(params):
     item = _object(_require(params, "name"))
     armature = _object(_require(params, "armature"))
     if armature.type != "ARMATURE":
-        raise CommandError("BadRequest", f"'{armature.name}' is a {armature.type}, not an armature")
+        raise CommandError("badRequest", f"'{armature.name}' is a {armature.type}, not an armature")
     method = params.get("method") or "automatic"
     if method not in PARENT_METHODS:
-        raise CommandError("BadRequest", "method must be automatic, envelope or empty")
+        raise CommandError("badRequest", "method must be automatic, envelope or empty")
     _ensure_object_mode()
     with _object_override([item, armature], armature):
         bpy.ops.object.parent_set(type=PARENT_METHODS[method])
@@ -235,10 +235,10 @@ def parent_to_armature(params):
 def pose_bone(params):
     armature = _object(_require(params, "armature"))
     if armature.type != "ARMATURE":
-        raise CommandError("BadRequest", f"'{armature.name}' is a {armature.type}, not an armature")
+        raise CommandError("badRequest", f"'{armature.name}' is a {armature.type}, not an armature")
     bone = armature.pose.bones.get(_require(params, "bone"))
     if bone is None:
-        raise CommandError("NotFound", f"no bone named '{params['bone']}'", {"bones": [bone.name for bone in armature.pose.bones]})
+        raise CommandError("notFound", f"no bone named '{params['bone']}'", {"bones": [bone.name for bone in armature.pose.bones]})
     if params.get("location") is not None:
         bone.location = _vector(params, "location")
     if params.get("rotation") is not None:
@@ -260,7 +260,7 @@ def pose_bone(params):
 def set_vertex_weights(params):
     item = _object(_require(params, "name"))
     if item.type != "MESH":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a mesh")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a mesh")
     group = item.vertex_groups.get(_require(params, "group")) or item.vertex_groups.new(name=params["group"])
     weights = params.get("weights") or []
     if params.get("all") is not None:
@@ -277,7 +277,7 @@ def follow_path(params):
     item = _object(_require(params, "name"))
     curve = _object(_require(params, "curve"))
     if curve.type != "CURVE":
-        raise CommandError("BadRequest", f"'{curve.name}' is a {curve.type}, not a curve")
+        raise CommandError("badRequest", f"'{curve.name}' is a {curve.type}, not a curve")
     constraint = next((constraint for constraint in item.constraints if constraint.type == "FOLLOW_PATH" and constraint.target == curve), None)
     if constraint is None:
         constraint = item.constraints.new("FOLLOW_PATH")
@@ -307,7 +307,7 @@ def add_driver(params):
     try:
         fcurve = target.driver_add(data_path, int(index)) if index is not None else target.driver_add(data_path)
     except (TypeError, RuntimeError) as error:
-        raise CommandError("BadRequest", f"cannot drive '{params['data_path']}' on '{item.name}': {error}") from error
+        raise CommandError("badRequest", f"cannot drive '{params['data_path']}' on '{item.name}': {error}") from error
     driver = fcurve.driver
     driver.type = "SCRIPTED"
     driver.expression = params.get("expression") or "frame"
@@ -329,17 +329,17 @@ def add_driver(params):
 def add_shape_key(params):
     item = _object(_require(params, "name"))
     if item.type not in ("MESH", "CURVE", "LATTICE"):
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}; shape keys need a mesh, curve or lattice")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}; shape keys need a mesh, curve or lattice")
     if item.data.shape_keys is None:
         item.shape_key_add(name="Basis", from_mix=False)
     key_name = params.get("key_name") or "Key"
     key = item.shape_key_add(name=key_name, from_mix=bool(params.get("from_mix")))
     for entry in params.get("vertices") or []:
         if not isinstance(entry, list) or len(entry) != 4:
-            raise CommandError("BadRequest", "each entry is [index, x, y, z]")
+            raise CommandError("badRequest", "each entry is [index, x, y, z]")
         index = int(entry[0])
         if index < 0 or index >= len(key.data):
-            raise CommandError("BadRequest", f"vertex index {index} is out of range (0..{len(key.data) - 1})")
+            raise CommandError("badRequest", f"vertex index {index} is out of range (0..{len(key.data) - 1})")
         point = key.data[index]
         offset = tuple(float(component) for component in entry[1:])
         point.co = tuple(a + b for a, b in zip(point.co, offset, strict=False)) if params.get("relative", True) else offset
@@ -353,10 +353,10 @@ def set_shape_key(params):
     item = _object(_require(params, "name"))
     keys = item.data.shape_keys
     if keys is None:
-        raise CommandError("NotFound", f"'{item.name}' has no shape keys")
+        raise CommandError("notFound", f"'{item.name}' has no shape keys")
     key = keys.key_blocks.get(_require(params, "key_name"))
     if key is None:
-        raise CommandError("NotFound", f"no shape key named '{params['key_name']}'", {"keys": [block.name for block in keys.key_blocks]})
+        raise CommandError("notFound", f"no shape key named '{params['key_name']}'", {"keys": [block.name for block in keys.key_blocks]})
     if params.get("value") is not None:
         key.value = float(params["value"])
     if params.get("slider_min") is not None:
@@ -384,6 +384,6 @@ def add_marker(params):
     if params.get("camera"):
         camera = _object(params["camera"])
         if camera.type != "CAMERA":
-            raise CommandError("BadRequest", f"'{camera.name}' is not a camera")
+            raise CommandError("badRequest", f"'{camera.name}' is not a camera")
         marker.camera = camera
     return {"markers": [{"name": marker.name, "frame": marker.frame, "camera": _name(marker.camera)} for marker in scene.timeline_markers]}

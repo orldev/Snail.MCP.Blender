@@ -20,7 +20,7 @@ def move_to_collection(params):
     target = _collection(_require(params, "collection"))
     items = [_object(name) for name in params.get("names") or []]
     if not items:
-        raise CommandError("BadRequest", "'names' must list at least one object")
+        raise CommandError("badRequest", "'names' must list at least one object")
     for item in items:
         if not params.get("keep_others"):
             for collection in list(item.users_collection):
@@ -36,7 +36,7 @@ def _collection(name):
         return bpy.context.scene.collection
     collection = bpy.data.collections.get(name)
     if collection is None:
-        raise CommandError("NotFound", f"no collection named '{name}'", {"collections": [item.name for item in bpy.data.collections]})
+        raise CommandError("notFound", f"no collection named '{name}'", {"collections": [item.name for item in bpy.data.collections]})
     return collection
 
 
@@ -70,7 +70,7 @@ def update_collection(params):
     layer = _layer_collection(collection.name)
     if params.get("exclude") is not None:
         if layer is None:
-            raise CommandError("BadRequest", f"'{collection.name}' is not in the active view layer")
+            raise CommandError("badRequest", f"'{collection.name}' is not in the active view layer")
         layer.exclude = bool(params["exclude"])
     if params.get("new_name"):
         collection.name = params["new_name"]

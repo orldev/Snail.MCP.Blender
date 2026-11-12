@@ -194,10 +194,10 @@ public static class RawEndpoints
     private static IResult Failure(BridgeError error) => Results.Problem(
         statusCode: error.Type switch
         {
-            "NotFound" => StatusCodes.Status404NotFound,
-            "BadRequest" => StatusCodes.Status400BadRequest,
-            "InUse" or "Exists" => StatusCodes.Status409Conflict,
-            "Corrupt" => StatusCodes.Status422UnprocessableEntity,
+            "notFound" => StatusCodes.Status404NotFound,
+            "badRequest" => StatusCodes.Status400BadRequest,
+            "inUse" or "exists" => StatusCodes.Status409Conflict,
+            "corrupt" => StatusCodes.Status422UnprocessableEntity,
             _ => StatusCodes.Status502BadGateway,
         },
         title: error.Type,

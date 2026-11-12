@@ -27,7 +27,7 @@ def _blackbody(kelvin):
 def add_light(params):
     kind = _require(params, "type").upper()
     if kind not in LIGHTS:
-        raise CommandError("BadRequest", f"unknown light type '{kind}'", {"known": list(LIGHTS)})
+        raise CommandError("badRequest", f"unknown light type '{kind}'", {"known": list(LIGHTS)})
     name = params.get("name") or kind.capitalize()
     data = bpy.data.lights.new(name, kind)
     item = _link_new_object(bpy.data.objects.new(name, data))
@@ -40,7 +40,7 @@ def add_light(params):
 def set_light(params):
     item = _object(_require(params, "name"))
     if item.type != "LIGHT":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a light")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a light")
     return _apply_light(item, params)
 
 
@@ -71,7 +71,7 @@ def _apply_light(item, params):
         if params.get("shape"):
             shape = params["shape"].upper()
             if shape not in LIGHT_SHAPES:
-                raise CommandError("BadRequest", f"unknown area shape '{shape}'", {"known": list(LIGHT_SHAPES)})
+                raise CommandError("badRequest", f"unknown area shape '{shape}'", {"known": list(LIGHT_SHAPES)})
             light.shape = shape
         if params.get("size_y") is not None:
             light.size_y = float(params["size_y"])
@@ -96,7 +96,7 @@ def _apply_ies(light, path):
             light.use_nodes = False
         return
     if not os.path.isfile(path):
-        raise CommandError("NotFound", f"no IES file at '{path}'")
+        raise CommandError("notFound", f"no IES file at '{path}'")
     light.use_nodes = True
     tree = light.node_tree
     emission = next((node for node in tree.nodes if node.bl_idname == "ShaderNodeEmission"), None) or tree.nodes.new("ShaderNodeEmission")

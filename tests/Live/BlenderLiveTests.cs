@@ -83,7 +83,7 @@ public sealed class BlenderLiveTests : IAsyncLifetime
             ["commands"] = new JsonArray(new JsonObject { ["command"] = BridgeCommands.FileList.Name, ["params"] = new JsonObject { ["area"] = VolumeAreas.Files, ["path"] = "." } }),
         });
 
-        Assert.Equal("BadRequest", refused.Error?.Type);
+        Assert.Equal("badRequest", refused.Error?.Type);
         Assert.Contains("beside Blender's main thread", refused.Error!.Message, StringComparison.Ordinal);
         Assert.Contains("file_list", refused.Error.Details!["commands"]!.AsArray().Select(name => name!.ToString()));
     }
@@ -293,10 +293,10 @@ public sealed class BlenderLiveTests : IAsyncLifetime
     public async Task Errors_UnknownOperatorAndBadParameter_ComeBackTyped()
     {
         var unknown = await _link.SendAsync(BridgeCommands.RunOperator, new JsonObject { ["name"] = "mesh.no_such_thing" });
-        Assert.Equal("UnknownOperator", unknown.Error!.Type);
+        Assert.Equal("unknownOperator", unknown.Error!.Type);
 
         var badParameter = await _link.SendAsync(BridgeCommands.RunOperator, new JsonObject { ["name"] = "mesh.primitive_cube_add", ["params"] = new JsonObject { ["sizee"] = 2 } });
-        Assert.Equal("UnknownParameter", badParameter.Error!.Type);
+        Assert.Equal("unknownParameter", badParameter.Error!.Type);
         Assert.Contains("size", badParameter.Error.Details!["known"]!.AsArray().Select(node => node!.ToString()));
 
         var python = await Send(BridgeCommands.Python, new JsonObject { ["code"] = "print('hi'); result = len(bpy.data.objects)" });

@@ -64,7 +64,7 @@ def _vector(params, key, default=(0.0, 0.0, 0.0)):
     if value is None:
         return default
     if not isinstance(value, (list, tuple)) or len(value) != 3:
-        raise CommandError("BadRequest", f"'{key}' must be a list of three numbers")
+        raise CommandError("badRequest", f"'{key}' must be a list of three numbers")
     return tuple(float(item) for item in value)
 
 
@@ -99,7 +99,7 @@ def _link_new_object(item):
 def add_primitive(params):
     kind = _require(params, "kind")
     if kind not in PRIMITIVES:
-        raise CommandError("BadRequest", f"unknown primitive '{kind}'", {"known": sorted(PRIMITIVES)})
+        raise CommandError("badRequest", f"unknown primitive '{kind}'", {"known": sorted(PRIMITIVES)})
     operator_name, sizing = PRIMITIVES[kind]
     arguments = {
         "location": _vector(params, "location"),
@@ -121,7 +121,7 @@ def add_primitive(params):
 def select_objects(params):
     mode = params.get("mode") or "replace"
     if mode not in ("replace", "add", "none", "all"):
-        raise CommandError("BadRequest", "'mode' must be replace, add, none or all")
+        raise CommandError("badRequest", "'mode' must be replace, add, none or all")
     _ensure_object_mode()
     if mode in ("replace", "none", "all"):
         for item in bpy.context.view_layer.objects:
@@ -218,7 +218,7 @@ def _reparent(item, parent_name, keep_transform):
         return
     parent = _object(parent_name)
     if parent == item:
-        raise CommandError("BadRequest", "an object cannot be its own parent")
+        raise CommandError("badRequest", "an object cannot be its own parent")
     item.parent = parent
     if keep_transform:
         item.matrix_parent_inverse = parent.matrix_world.inverted()
@@ -254,7 +254,7 @@ def add_text(params):
 def add_empty(params):
     kind = (params.get("type") or "PLAIN_AXES").upper()
     if kind not in EMPTY_TYPES:
-        raise CommandError("BadRequest", f"unknown empty type '{kind}'", {"known": list(EMPTY_TYPES)})
+        raise CommandError("badRequest", f"unknown empty type '{kind}'", {"known": list(EMPTY_TYPES)})
     name = params.get("name") or "Empty"
     item = _link_new_object(bpy.data.objects.new(name, None))
     item.empty_display_type = kind

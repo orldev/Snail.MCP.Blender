@@ -188,7 +188,7 @@ def set_output(params):
     if params.get("preset"):
         preset = str(params["preset"]).upper().replace("-", "_")
         if preset not in RESOLUTION_PRESETS:
-            raise CommandError("BadRequest", f"unknown resolution preset '{params['preset']}'", {"known": list(RESOLUTION_PRESETS)})
+            raise CommandError("badRequest", f"unknown resolution preset '{params['preset']}'", {"known": list(RESOLUTION_PRESETS)})
         render.resolution_x, render.resolution_y = RESOLUTION_PRESETS[preset]
         render.resolution_percentage = 100
     if isinstance(params.get("stereo"), dict):
@@ -210,7 +210,7 @@ def set_output(params):
         render.use_border = region is not None
         if region is not None:
             if len(region) != 4:
-                raise CommandError("BadRequest", "region must be [minX, minY, maxX, maxY] as fractions of the frame, 0 to 1")
+                raise CommandError("badRequest", "region must be [minX, minY, maxX, maxY] as fractions of the frame, 0 to 1")
             render.border_min_x, render.border_min_y, render.border_max_x, render.border_max_y = (max(0.0, min(1.0, float(value))) for value in region)
     if params.get("crop_to_region") is not None:
         render.use_crop_to_border = bool(params["crop_to_region"])
@@ -220,7 +220,7 @@ def set_output(params):
 def _file_output_node(tree, name, create):
     node = tree.nodes.get(name)
     if node is not None and node.bl_idname != "CompositorNodeOutputFile":
-        raise CommandError("BadRequest", f"'{name}' is a {node.bl_idname}, not a File Output node")
+        raise CommandError("badRequest", f"'{name}' is a {node.bl_idname}, not a File Output node")
     if node is None and create:
         node = tree.nodes.new("CompositorNodeOutputFile")
         node.name = name
@@ -229,7 +229,7 @@ def _file_output_node(tree, name, create):
         if hasattr(node, "file_name"):
             node.file_name = ""
     if node is None:
-        raise CommandError("NotFound", f"the compositor has no File Output node '{name}'", {"nodes": [node.name for node in tree.nodes if node.bl_idname == "CompositorNodeOutputFile"]})
+        raise CommandError("notFound", f"the compositor has no File Output node '{name}'", {"nodes": [node.name for node in tree.nodes if node.bl_idname == "CompositorNodeOutputFile"]})
     return node
 
 
@@ -279,7 +279,7 @@ def _pass_socket(layers, wanted):
             setattr(bpy.context.view_layer, attribute, True)
             socket = layers.outputs.get(name)
     if socket is None or not socket.enabled:
-        raise CommandError("NotFound", f"the Render Layers node has no enabled pass '{wanted}'", {"enabled": [socket.name for socket in layers.outputs if socket.enabled], "hint": "blender_render_passes or blender_view_layer enables passes"})
+        raise CommandError("notFound", f"the Render Layers node has no enabled pass '{wanted}'", {"enabled": [socket.name for socket in layers.outputs if socket.enabled], "hint": "blender_render_passes or blender_view_layer enables passes"})
     return socket
 
 
@@ -310,7 +310,7 @@ def file_output(params):
         tree.nodes.remove(_file_output_node(tree, name, False))
         return {"removed": name, "nodes": [node.name for node in tree.nodes if node.bl_idname == "CompositorNodeOutputFile"]}
     if action != "configure":
-        raise CommandError("BadRequest", "action must be configure, info or remove")
+        raise CommandError("badRequest", "action must be configure, info or remove")
     node = _file_output_node(tree, name, True)
     if params.get("directory"):
         directory = params["directory"]

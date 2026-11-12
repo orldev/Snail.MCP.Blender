@@ -60,7 +60,7 @@ public class RenderWatchTests
         var watch = new RenderWatch(new SilentMonitor()) { Interval = TimeSpan.FromMilliseconds(5) };
         var reported = 0;
 
-        var reply = await watch.FollowAsync(Task.Delay(30).ContinueWith(_ => BridgeReply.Failed(new BridgeError("Timeout", "late"))), new Progress<ProgressNotificationValue>(_ => reported++), null, CancellationToken.None);
+        var reply = await watch.FollowAsync(Task.Delay(30).ContinueWith(_ => BridgeReply.Failed(new BridgeError("timeout", "late"))), new Progress<ProgressNotificationValue>(_ => reported++), null, CancellationToken.None);
 
         Assert.False(reply.IsOk);
         Assert.Equal(0, reported);

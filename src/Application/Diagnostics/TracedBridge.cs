@@ -34,7 +34,7 @@ public sealed class TracedBridge(IBlenderBridge link, BridgeTraffic traffic, ILo
         {
             Log.CommandAnswered(logger, command.Name, elapsed.TotalMilliseconds);
         }
-        else if (reply.Error!.Type == "UnknownCommand")
+        else if (reply.Error!.Type == "unknownCommand")
         {
             Log.CommandUnknownToAddOn(logger, command.Name);
         }

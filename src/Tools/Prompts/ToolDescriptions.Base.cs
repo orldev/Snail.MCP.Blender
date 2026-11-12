@@ -71,7 +71,7 @@ public static partial class ToolDescriptions
             "Runs a list of bridge commands in this Blender, in order, in one call: what to use for a build that takes many steps. " +
             "A step is a command name and its params — the tool name without blender_, so add_primitive, transform_object, " +
             "create_material — with the params named as the add-on reads them, the tool's parameter names in snake_case: " +
-            "adaptive_threshold, not adaptiveThreshold. A key the command does not read fails the step as BadRequest, naming the " +
+            "adaptive_threshold, not adaptiveThreshold. A key the command does not read fails the step as badRequest, naming the " +
             "key it was probably meant to be, rather than vanishing from it. Each step passes the add-on's own checks, the same " +
             "lease guard and the same journal as a direct tool call. Generate the list with a loop instead of writing a script: " +
             "this, not blender_python, is what makes " +
@@ -193,7 +193,7 @@ public static partial class ToolDescriptions
         /// <summary><c>blender_lease</c></summary>
         public const string Lease =
             "Claims objects or collections for this agent for a while: mutating commands from other agents on them are " +
-            "refused with Leased until the lease is released or expires. list shows holders; clear drops every lease.";
+            "refused with leased until the lease is released or expires. list shows holders; clear drops every lease.";
 
         /// <summary><c>blender_batch</c></summary>
         public const string Batch =

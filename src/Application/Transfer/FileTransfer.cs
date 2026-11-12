@@ -150,7 +150,7 @@ public sealed class FileTransfer
     {
         if (File.Exists(local) && !overwrite)
         {
-            return (null, new BridgeError("Exists", $"'{local}' already exists on this machine; pass overwrite to replace it", new JsonObject { ["path"] = local }));
+            return (null, new BridgeError("exists", $"'{local}' already exists on this machine; pass overwrite to replace it", new JsonObject { ["path"] = local }));
         }
 
         Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(local))!);
@@ -170,7 +170,7 @@ public sealed class FileTransfer
 
             if (expected is not null && !string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase))
             {
-                return (null, new BridgeError("Corrupt", $"'{remote}' arrived different from what was sent", new JsonObject { ["expected"] = expected, ["received"] = actual }));
+                return (null, new BridgeError("corrupt", $"'{remote}' arrived different from what was sent", new JsonObject { ["expected"] = expected, ["received"] = actual }));
             }
 
             File.Move(partial, local, overwrite: true);
@@ -226,7 +226,7 @@ public sealed class FileTransfer
     }
 
     private static BridgeError Missing(string path) =>
-        new("NotFound", $"no file or folder at '{path}' on this machine", new JsonObject { ["path"] = path });
+        new("notFound", $"no file or folder at '{path}' on this machine", new JsonObject { ["path"] = path });
 
     /// <summary>A folder the add-on lists only in part; over HTTP the same folder is refused as too large for one archive.</summary>
     /// <summary>Every name under the folder, asking for the next page until the add-on says there is none.</summary>

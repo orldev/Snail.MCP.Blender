@@ -19,7 +19,7 @@ CURVE_KINDS = ("bezier", "nurbs", "poly", "circle", "path")
 def _mesh_object(name):
     item = _object(name)
     if item.type != "MESH":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a mesh")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a mesh")
     return item
 
 
@@ -68,7 +68,7 @@ def _axis_vector(spec):
     sign = -1.0 if spec.startswith("-") else 1.0
     axis = spec.lstrip("+-").lower()
     if axis not in AXES:
-        raise CommandError("BadRequest", "axis must be one of +x -x +y -y +z -z")
+        raise CommandError("badRequest", "axis must be one of +x -x +y -y +z -z")
     vector = mathutils.Vector((0.0, 0.0, 0.0))
     vector[AXES[axis]] = sign
     return vector
@@ -97,7 +97,7 @@ def mesh_select(params):
         elif mode == "by_material":
             _select_faces(bm, lambda face: face.material_index == int(params.get("material_index") or 0), params)
         else:
-            raise CommandError("BadRequest", "mode must be all, none, invert, by_index, by_normal, by_position or by_material")
+            raise CommandError("badRequest", "mode must be all, none, invert, by_index, by_normal, by_position or by_material")
         bm.select_flush_mode()
 
     return _edit(item, select)
@@ -125,7 +125,7 @@ def _select_by_index(bm, params):
     for kind, table in (("vertices", bm.verts), ("edges", bm.edges), ("faces", bm.faces)):
         for index in params.get(kind) or []:
             if index < 0 or index >= len(table):
-                raise CommandError("BadRequest", f"{kind} index {index} is out of range (0..{len(table) - 1})")
+                raise CommandError("badRequest", f"{kind} index {index} is out of range (0..{len(table) - 1})")
             table[index].select = True
     bm.select_flush(True)
 
@@ -139,7 +139,7 @@ def _select_by_normal(bm, params):
 def _select_by_position(bm, params):
     axis = (params.get("axis") or "z").lower()
     if axis not in AXES:
-        raise CommandError("BadRequest", "axis must be x, y or z")
+        raise CommandError("badRequest", "axis must be x, y or z")
     low = float(params["min"]) if params.get("min") is not None else float("-inf")
     high = float(params["max"]) if params.get("max") is not None else float("inf")
     index = AXES[axis]
@@ -163,7 +163,7 @@ def mesh_extrude(params):
     def extrude(bm):
         faces = _selected(bm.faces, fallback_all=False)
         if not faces:
-            raise CommandError("BadRequest", "no faces are selected; call mesh_select first")
+            raise CommandError("badRequest", "no faces are selected; call mesh_select first")
         if individual:
             result = bmesh.ops.extrude_discrete_faces(bm, faces=faces)
             for face in result["faces"]:
@@ -196,7 +196,7 @@ def mesh_inset(params):
     def inset(bm):
         faces = _selected(bm.faces, fallback_all=False)
         if not faces:
-            raise CommandError("BadRequest", "no faces are selected; call mesh_select first")
+            raise CommandError("badRequest", "no faces are selected; call mesh_select first")
         if individual:
             result = bmesh.ops.inset_individual(bm, faces=faces, thickness=thickness, depth=depth, use_even_offset=True)
         else:
@@ -282,7 +282,7 @@ def mesh_shade(params):
     if smooth and angle is not None:
         operator = _find_operator("object.shade_auto_smooth")
         if operator is None:
-            raise CommandError("Unsupported", "this Blender has no shade_auto_smooth operator; use mesh_shade without angle")
+            raise CommandError("unsupported", "this Blender has no shade_auto_smooth operator; use mesh_shade without angle")
         with _object_override([item], item):
             operator(angle=math.radians(float(angle)))
     return {"name": item.name, "smooth": smooth, "angle": angle, "modifiers": [modifier.name for modifier in item.modifiers]}
@@ -300,7 +300,7 @@ def _object_override(items, active):
 def _modifier(item, name):
     modifier = item.modifiers.get(name)
     if modifier is None:
-        raise CommandError("NotFound", f"'{item.name}' has no modifier named '{name}'", {"modifiers": [modifier.name for modifier in item.modifiers]})
+        raise CommandError("notFound", f"'{item.name}' has no modifier named '{name}'", {"modifiers": [modifier.name for modifier in item.modifiers]})
     return modifier
 
 
@@ -320,7 +320,7 @@ def _apply_settings(target, settings):
     known = {prop.identifier: prop for prop in target.bl_rna.properties if not prop.is_readonly}
     unknown = sorted(key for key in settings if key not in known)
     if unknown:
-        raise CommandError("UnknownParameter", f"{type(target).__name__} has no setting {', '.join(unknown)}", {"known": sorted(known)})
+        raise CommandError("unknownParameter", f"{type(target).__name__} has no setting {', '.join(unknown)}", {"known": sorted(known)})
     for key, value in settings.items():
         setattr(target, key, _coerce_setting(known[key], value))
 
@@ -353,10 +353,10 @@ def _pointer(prop, value):
     kind = prop.fixed_type.identifier
     source = POINTER_SOURCES.get(kind)
     if source is None:
-        raise CommandError("BadRequest", f"'{prop.identifier}' expects a {kind}, which cannot be named from outside Blender")
+        raise CommandError("badRequest", f"'{prop.identifier}' expects a {kind}, which cannot be named from outside Blender")
     target = source().get(value)
     if target is None:
-        raise CommandError("NotFound", f"no {kind} named '{value}' for '{prop.identifier}'")
+        raise CommandError("notFound", f"no {kind} named '{value}' for '{prop.identifier}'")
     return target
 
 
@@ -375,11 +375,11 @@ def add_modifier(params):
     item = _object(_require(params, "name"))
     kind = _require(params, "type").upper()
     if kind not in {identifier for identifier, _ in _modifier_types()}:
-        raise CommandError("BadRequest", f"unknown modifier type '{kind}'", {"known": [identifier for identifier, _ in _modifier_types()]})
+        raise CommandError("badRequest", f"unknown modifier type '{kind}'", {"known": [identifier for identifier, _ in _modifier_types()]})
     try:
         modifier = item.modifiers.new(name=params.get("modifier_name") or kind.title().replace("_", " "), type=kind)
     except RuntimeError as error:
-        raise CommandError("BadRequest", f"'{item.name}' ({item.type}) cannot take a {kind} modifier: {error}") from error
+        raise CommandError("badRequest", f"'{item.name}' ({item.type}) cannot take a {kind} modifier: {error}") from error
     _apply_settings(modifier, params.get("settings") or {})
     if params.get("apply"):
         return apply_modifier({"name": item.name, "modifier": modifier.name})
@@ -425,7 +425,7 @@ def describe_modifier(params):
         return {"types": [{"type": identifier, "label": label} for identifier, label in _modifier_types()]}
     cls = _modifier_class(kind.upper())
     if cls is None:
-        raise CommandError("BadRequest", f"unknown modifier type '{kind}'", {"known": [identifier for identifier, _ in _modifier_types()]})
+        raise CommandError("badRequest", f"unknown modifier type '{kind}'", {"known": [identifier for identifier, _ in _modifier_types()]})
     return {
         "type": kind.upper(),
         "label": cls.bl_rna.name,
@@ -441,7 +441,7 @@ def describe_modifier(params):
 def add_curve(params):
     kind = params.get("kind") or "bezier"
     if kind not in CURVE_KINDS:
-        raise CommandError("BadRequest", f"unknown curve kind '{kind}'", {"known": list(CURVE_KINDS)})
+        raise CommandError("badRequest", f"unknown curve kind '{kind}'", {"known": list(CURVE_KINDS)})
     _ensure_object_mode()
     if kind in ("circle", "path"):
         operator = "curve.primitive_bezier_circle_add" if kind == "circle" else "curve.primitive_nurbs_path_add"
@@ -457,7 +457,7 @@ def add_curve(params):
 def _curve_from_points(kind, params):
     points = params.get("points") or []
     if len(points) < 2:
-        raise CommandError("BadRequest", "'points' needs at least two [x, y, z] entries")
+        raise CommandError("badRequest", "'points' needs at least two [x, y, z] entries")
     data = bpy.data.curves.new(params.get("name") or "Curve", "CURVE")
     data.dimensions = "3D"
     spline = data.splines.new({"bezier": "BEZIER", "nurbs": "NURBS", "poly": "POLY"}[kind])
@@ -482,7 +482,7 @@ def _curve_from_points(kind, params):
 def set_curve(params):
     item = _object(_require(params, "name"))
     if item.type != "CURVE":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}, not a curve")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}, not a curve")
     return _apply_curve(item, params)
 
 
@@ -522,7 +522,7 @@ def convert_to_mesh(params):
     created = [candidate for candidate in bpy.data.objects if candidate not in before and candidate.type == "MESH"]
     converted = created[0] if created else item
     if converted.type != "MESH":
-        raise CommandError("Unsupported", f"Blender did not convert '{item.name}' ({item.type}) into a mesh")
+        raise CommandError("unsupported", f"Blender did not convert '{item.name}' ({item.type}) into a mesh")
     return _mesh_summary(converted)
 
 
@@ -530,7 +530,7 @@ def convert_to_mesh(params):
 def join_objects(params):
     names = params.get("names") or []
     if len(names) < 2:
-        raise CommandError("BadRequest", "'names' needs at least two objects")
+        raise CommandError("badRequest", "'names' needs at least two objects")
     items = [_object(name) for name in names]
     target = _object(params["target"]) if params.get("target") else items[0]
     if target not in items:
@@ -576,7 +576,7 @@ def _geometry_node_type(kind):
     for prefix in GEOMETRY_NODE_PREFIXES:
         if hasattr(bpy.types, f"{prefix}{kind}"):
             return f"{prefix}{kind}"
-    raise CommandError("BadRequest", f"unknown geometry node type '{kind}'", {"hint": "use the bl_idname, e.g. GeometryNodeSubdivideMesh, or its suffix SubdivideMesh"})
+    raise CommandError("badRequest", f"unknown geometry node type '{kind}'", {"hint": "use the bl_idname, e.g. GeometryNodeSubdivideMesh, or its suffix SubdivideMesh"})
 
 
 def _geometry_tree(item, params):
@@ -585,7 +585,7 @@ def _geometry_tree(item, params):
     if modifier is None:
         modifier = item.modifiers.new(name=modifier_name or "GeometryNodes", type="NODES")
     if modifier.type != "NODES":
-        raise CommandError("BadRequest", f"'{modifier.name}' is a {modifier.type} modifier, not Geometry Nodes")
+        raise CommandError("badRequest", f"'{modifier.name}' is a {modifier.type} modifier, not Geometry Nodes")
     tree = modifier.node_group
     if tree is None:
         tree = bpy.data.node_groups.new(params.get("tree_name") or f"{item.name} Nodes", "GeometryNodeTree")
@@ -609,13 +609,13 @@ def _geometry_socket(node, name, outputs=False):
     if socket is None and name.isdigit():
         socket = sockets[int(name)]
     if socket is None:
-        raise CommandError("UnknownParameter", f"node '{node.name}' has no {'output' if outputs else 'input'} '{name}'", {"sockets": [socket.name for socket in sockets]})
+        raise CommandError("unknownParameter", f"node '{node.name}' has no {'output' if outputs else 'input'} '{name}'", {"sockets": [socket.name for socket in sockets]})
     return socket
 
 
 def _set_geometry_socket(socket, value):
     if not hasattr(socket, "default_value"):
-        raise CommandError("BadRequest", f"'{socket.name}' takes only links")
+        raise CommandError("badRequest", f"'{socket.name}' takes only links")
     current = socket.default_value
     if isinstance(value, list):
         socket.default_value = list(value) + [1.0] * (len(current) - len(value)) if hasattr(current, "__len__") else value
@@ -680,7 +680,7 @@ def build_geometry_nodes(params):
     links = []
     for spec in params.get("links") or []:
         if not isinstance(spec, list) or len(spec) != 4:
-            raise CommandError("BadRequest", "each link is [from_id, from_socket, to_id, to_socket]")
+            raise CommandError("badRequest", "each link is [from_id, from_socket, to_id, to_socket]")
         source = tree.nodes[created.get(spec[0], spec[0])]
         target = tree.nodes[created.get(spec[2], spec[2])]
         tree.links.new(_geometry_socket(source, spec[1], outputs=True), _geometry_socket(target, spec[3]))
@@ -702,7 +702,7 @@ def set_geometry_inputs(params):
     for name, value in (params.get("inputs") or {}).items():
         socket = sockets.get(name)
         if socket is None:
-            raise CommandError("UnknownParameter", f"the tree has no input '{name}'", {"known": sorted(sockets)})
+            raise CommandError("unknownParameter", f"the tree has no input '{name}'", {"known": sorted(sockets)})
         if socket.socket_type == "NodeSocketObject":
             inputs[socket.identifier] = _object(value)
         elif isinstance(value, list):
@@ -741,10 +741,10 @@ def mesh_set_vertices(params):
     moved = 0
     for entry in params.get("vertices") or []:
         if not isinstance(entry, list) or len(entry) != 4:
-            raise CommandError("BadRequest", "each entry is [index, x, y, z]")
+            raise CommandError("badRequest", "each entry is [index, x, y, z]")
         index = int(entry[0])
         if index < 0 or index >= len(mesh.vertices):
-            raise CommandError("BadRequest", f"vertex index {index} is out of range (0..{len(mesh.vertices) - 1})")
+            raise CommandError("badRequest", f"vertex index {index} is out of range (0..{len(mesh.vertices) - 1})")
         vertex = mesh.vertices[index]
         offset = tuple(float(component) for component in entry[1:])
         vertex.co = tuple(a + b for a, b in zip(vertex.co, offset, strict=False)) if relative else offset

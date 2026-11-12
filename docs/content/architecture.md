@@ -15,19 +15,19 @@ line and every reply one JSON line, matched by id:
 
 `deadline_s` is how long the caller will still be waiting, counted from the moment the request arrives — a duration, so
 the two clocks need not agree. A request that reaches the front of the main thread's queue after it has passed is
-answered `Expired` instead of run: nobody is waiting for the result, and a command run for nobody still changes the
+answered `expired` instead of run: nobody is waiting for the result, and a command run for nobody still changes the
 scene the next caller reads.
 
 A failure comes back as data, never as a dropped connection:
 
 ```json
-{"id": "8", "ok": false, "error": {"type": "PollFailed", "message": "bpy.ops.mesh.extrude_region cannot run in the current context", "details": {"mode": "OBJECT"}}}
+{"id": "8", "ok": false, "error": {"type": "pollFailed", "message": "bpy.ops.mesh.extrude_region cannot run in the current context", "details": {"mode": "OBJECT"}}}
 ```
 
 The server turns it into a tool response with `ok: false`, the message, a hint that fits the error type,
 and the details under `data`.
 
-One failure is not data from Blender but the absence of Blender: `Dropped`, the link closing while a command was
+One failure is not data from Blender but the absence of Blender: `dropped`, the link closing while a command was
 running, which is what a process that died looks like from here. The next call reconnects by itself, and that is the
 trap — it reconnects to a Blender that started from the file on disk, so everything since the last save is gone while
 every answer still looks healthy. The process says which run it is: `ping` carries `machine.pid`, `machine.uptime_s`
@@ -51,8 +51,8 @@ late reply would otherwise be read as the answer to the next request. The next c
 Anything on the machine can open a loopback socket, and anything on a container's network can open that one, so
 every request carries a token: the one from the add-on's preferences, the one in the file `--token-file` names, or one
 the add-on generated into `<data>/state/token` that the server reads on connect. A request
-without the right token comes back as `Unauthorized`. The add-on keeps at most 64 requests waiting; beyond that
-it answers `Busy`; a request whose client has gone by its turn, or whose own deadline passed while it waited, is answered rather than run for nobody.
+without the right token comes back as `unauthorized`. The add-on keeps at most 64 requests waiting; beyond that
+it answers `busy`; a request whose client has gone by its turn, or whose own deadline passed while it waited, is answered rather than run for nobody.
 
 ## What the client sees
 
@@ -73,7 +73,7 @@ returned, `snail://journal` the tail of the add-on's journal. Three prompts — 
 ## One build on both sides
 
 The server and the add-on share one command catalog, so a server updated without its add-on answers
-`UnknownCommand` in the middle of a task — which reads as a broken tool rather than a stale install. Versions
+`unknownCommand` in the middle of a task — which reads as a broken tool rather than a stale install. Versions
 cannot catch that: the add-on's version stays put across bug fixes. So each side hashes its own Python — the
 top-level `.py` files in name order, each as its name followed by its bytes — and `ping` carries the add-on's
 digest, its version and the number of commands it registers.
@@ -101,7 +101,7 @@ holding the main thread on purpose, which is why the two are read together.
 one, and, since a server over HTTP serves several clients over one link, a count per client. The same exchanges are
 published as metrics under the meter `Snail.MCP.Blender` (`snail.blender.commands` and
 `snail.blender.command.duration`, tagged with the command, the outcome and the client) for a host that collects them:
-what a model reads in one call is not what an operator watches over a month. The same conclusion arrives on its own too — a reply of type `UnknownCommand` carries the hint to
+what a model reads in one call is not what an operator watches over a month. The same conclusion arrives on its own too — a reply of type `unknownCommand` carries the hint to
 reinstall and is logged as a warning, and a digest that differs is logged once per installed build.
 
 ## Inside the add-on
@@ -139,7 +139,7 @@ even though every one of the things they did had a tool.
 `run_tools` closes that gap: a list of commands goes to the Blender that is already open, in one call, and
 the add-on dispatches each step through the same `core.dispatch` a direct call goes through. The lease guard
 refuses a step on another agent's object, the journal records each step under its own command name with the
-objects it touched, and a failed step stops the sequence and comes back as `StepFailed` with every step that
+objects it touched, and a failed step stops the sequence and comes back as `stepFailed` with every step that
 ran. A script gets none of that, so the choice is no longer between correctness and cost.
 
 The other half of the gap is discovery: the tool list a client holds shows only the loaded skills, so a model
@@ -405,6 +405,6 @@ The guards live in `tests/Contracts`; the tests of the tools and the live scenar
   over the same files, so the freshness check cannot start lying if one side changes how it hashes.
 - The refusals the unit tests work against were recorded from a real Blender into `tests/Contracts/addon-answers.json`:
   the type, the message and the details of fifteen answers, most of them failures. A test hands one of those to a fake
-  rather than inventing a `NotFound` of its own, a guard refuses any add-on error type written by hand in a test, and a
+  rather than inventing a `notFound` of its own, a guard refuses any add-on error type written by hand in a test, and a
   live scenario puts every recorded question again and fails when the add-on answers differently — which is the moment
   the fakes stopped standing for Blender, and until then the moment nothing would have shown.

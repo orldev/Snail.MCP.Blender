@@ -13,12 +13,12 @@ public class MessagesTests
         BridgeError.MalformedType,
         BridgeError.BusyType,
         BridgeError.TokenUnreadableType,
-        "UnknownOperator",
-        "UnknownParameter",
-        "PollFailed",
-        "NoArea",
-        "Unauthorized",
-        "UnknownCommand",
+        "unknownOperator",
+        "unknownParameter",
+        "pollFailed",
+        "noArea",
+        "unauthorized",
+        "unknownCommand",
     ];
 
     [Theory]

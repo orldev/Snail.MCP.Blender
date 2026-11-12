@@ -59,9 +59,9 @@ public sealed class RemoteLiveTests : IAsyncLifetime
         var first = await _link.SendAsync(BridgeCommands.FilePut, new JsonObject { ["path"] = "keep.txt", ["offset"] = 0, ["data"] = Convert.ToBase64String("one"u8.ToArray()), ["done"] = true });
         var second = await _link.SendAsync(BridgeCommands.FilePut, new JsonObject { ["path"] = "keep.txt", ["offset"] = 0, ["data"] = Convert.ToBase64String("two"u8.ToArray()), ["done"] = true });
 
-        Assert.Equal("BadRequest", climbing.Error!.Type);
+        Assert.Equal("badRequest", climbing.Error!.Type);
         Assert.True(first.IsOk, $"{first.Error?.Type} {first.Error?.Message}");
-        Assert.Equal("Exists", second.Error!.Type);
+        Assert.Equal("exists", second.Error!.Type);
     }
 
     [BlenderFact]
@@ -101,7 +101,7 @@ public sealed class RemoteLiveTests : IAsyncLifetime
 
         Assert.True(none.IsOk, $"{none.Error?.Type} {none.Error?.Message}");
         Assert.Equal("NONE", none.Result!["compute"]!["backend"]!.ToString());
-        Assert.Equal("BadRequest", unknown.Error!.Type);
+        Assert.Equal("badRequest", unknown.Error!.Type);
         Assert.Contains("NONE", unknown.Error.Details!["known"]!.AsArray().Select(value => value!.ToString()));
     }
 

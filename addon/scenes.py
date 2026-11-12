@@ -29,7 +29,7 @@ def _scene_summary(scene):
 def _activate(scene):
     window = bpy.context.window
     if window is None:
-        raise CommandError("NoArea", "activating a scene needs Blender's window; in background pass scene to the tools instead")
+        raise CommandError("noArea", "activating a scene needs Blender's window; in background pass scene to the tools instead")
     window.scene = scene
 
 
@@ -42,7 +42,7 @@ def scenes(params):
         name = _require(params, "name")
         mode = (params.get("copy") or "EMPTY").upper()
         if mode not in COPY_MODES:
-            raise CommandError("BadRequest", f"copy must be one of {', '.join(COPY_MODES)}")
+            raise CommandError("badRequest", f"copy must be one of {', '.join(COPY_MODES)}")
         source = _scene(params)
         if mode == "EMPTY":
             scene = bpy.data.scenes.new(name)
@@ -53,7 +53,7 @@ def scenes(params):
         else:
             window = bpy.context.window
             if window is None:
-                raise CommandError("NoArea", "a full copy needs Blender's window; use LINK_COPY in background")
+                raise CommandError("noArea", "a full copy needs Blender's window; use LINK_COPY in background")
             with bpy.context.temp_override(window=window, scene=source):
                 bpy.ops.scene.new(type="FULL_COPY")
             scene = bpy.context.window.scene
@@ -63,7 +63,7 @@ def scenes(params):
         return _scene_summary(scene)
     scene = bpy.data.scenes.get(_require(params, "name"))
     if scene is None:
-        raise CommandError("NotFound", f"no scene named '{params['name']}'", {"known": [item.name for item in bpy.data.scenes]})
+        raise CommandError("notFound", f"no scene named '{params['name']}'", {"known": [item.name for item in bpy.data.scenes]})
     if action == "activate":
         _activate(scene)
         return _scene_summary(scene)
@@ -72,11 +72,11 @@ def scenes(params):
         return _scene_summary(scene)
     if action == "remove":
         if len(bpy.data.scenes) == 1:
-            raise CommandError("BadRequest", "the file keeps at least one scene")
+            raise CommandError("badRequest", "the file keeps at least one scene")
         name = scene.name
         bpy.data.scenes.remove(scene)
         return {"removed": name, "scenes": [item.name for item in bpy.data.scenes]}
-    raise CommandError("BadRequest", "action must be list, create, activate, rename or remove")
+    raise CommandError("badRequest", "action must be list, create, activate, rename or remove")
 
 
 def _snapshot_directory(params):
@@ -104,7 +104,7 @@ def snapshot(params):
         return {"directory": directory, "snapshots": [_snapshot_entry(directory, name) for name in names]}
     name = params.get("name") or time.strftime("snapshot-%Y%m%d-%H%M%S")
     if any(character in name for character in "/\\"):
-        raise CommandError("BadRequest", "a snapshot name is a file name without folders")
+        raise CommandError("badRequest", "a snapshot name is a file name without folders")
     blend = os.path.join(directory, f"{name}.blend")
     if action == "save":
         bpy.ops.wm.save_as_mainfile(filepath=blend, copy=True, relative_remap=True)
@@ -113,7 +113,7 @@ def snapshot(params):
             json.dump(meta, handle)
         return _snapshot_entry(directory, name)
     if not os.path.isfile(blend):
-        raise CommandError("NotFound", f"no snapshot named '{name}'", {"known": sorted(entry[:-6] for entry in os.listdir(directory) if entry.endswith(".blend"))})
+        raise CommandError("notFound", f"no snapshot named '{name}'", {"known": sorted(entry[:-6] for entry in os.listdir(directory) if entry.endswith(".blend"))})
     if action == "restore":
         entry = _snapshot_entry(directory, name)
         bpy.ops.wm.open_mainfile(filepath=blend, load_ui=False)
@@ -128,4 +128,4 @@ def snapshot(params):
         if os.path.isfile(meta_path):
             os.remove(meta_path)
         return {"removed": name}
-    raise CommandError("BadRequest", "action must be save, restore, list or remove")
+    raise CommandError("badRequest", "action must be save, restore, list or remove")

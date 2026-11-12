@@ -24,7 +24,7 @@ def _compositor_tree():
         scene.use_nodes = True
     scene.render.use_compositing = True
     if tree is None:
-        raise CommandError("Unsupported", "this Blender exposes no compositor node tree")
+        raise CommandError("unsupported", "this Blender exposes no compositor node tree")
     return tree
 
 
@@ -41,13 +41,13 @@ def _compositor_type(kind):
     for candidate in (kind, f"CompositorNode{kind}", f"ShaderNode{kind}", f"Node{kind}"):
         if hasattr(bpy.types, candidate):
             return candidate
-    raise CommandError("BadRequest", f"unknown compositor node type '{kind}'", {"hint": "use the bl_idname, e.g. CompositorNodeBlur, or its suffix Blur; Mix, Math and Noise come from the shader set"})
+    raise CommandError("badRequest", f"unknown compositor node type '{kind}'", {"hint": "use the bl_idname, e.g. CompositorNodeBlur, or its suffix Blur; Mix, Math and Noise come from the shader set"})
 
 
 def _compositor_node(tree, name):
     node = tree.nodes.get(name)
     if node is None:
-        raise CommandError("NotFound", f"the compositor has no node '{name}'", {"nodes": [node.name for node in tree.nodes]})
+        raise CommandError("notFound", f"the compositor has no node '{name}'", {"nodes": [node.name for node in tree.nodes]})
     return node
 
 
@@ -55,7 +55,7 @@ def _compositor_socket(node, name, outputs=False):
     sockets = node.outputs if outputs else node.inputs
     socket = _find_socket(sockets, name)
     if socket is None:
-        raise CommandError("UnknownParameter", f"node '{node.name}' has no {'output' if outputs else 'input'} '{name}'; name one by its name, its identifier or its index",
+        raise CommandError("unknownParameter", f"node '{node.name}' has no {'output' if outputs else 'input'} '{name}'; name one by its name, its identifier or its index",
                            {"sockets": _socket_names([socket for socket in sockets if socket.enabled])})
     return socket
 
@@ -122,5 +122,5 @@ def compositor(params):
         tree.nodes.remove(node)
         return _compositor_summary(tree)
     if action in ("sharpen", "grain"):
-        raise CommandError("BadRequest", f"'{action}' moved to lens_effects, which builds grain weighted by luminance and animated per frame; sharpening is a Filter node via add_node")
-    raise CommandError("BadRequest", "action must be info, clear, add_node, link or remove_node")
+        raise CommandError("badRequest", f"'{action}' moved to lens_effects, which builds grain weighted by luminance and animated per frame; sharpening is a Filter node via add_node")
+    raise CommandError("badRequest", "action must be info, clear, add_node, link or remove_node")

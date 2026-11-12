@@ -4,7 +4,7 @@ namespace Snail.MCP.Blender.Tests.Support;
 public sealed class SilentMonitor : IBlenderMonitor
 {
     private readonly Queue<JsonObject> _states = new();
-    private BridgeReply _ping = BridgeReply.Failed(new BridgeError("Unavailable", "no monitor"));
+    private BridgeReply _ping = BridgeReply.Failed(new BridgeError("unavailable", "no monitor"));
 
     public int Probes { get; private set; }
 
@@ -35,7 +35,7 @@ public sealed class SilentMonitor : IBlenderMonitor
     {
         Probes++;
 
-        return Task.FromResult(_states.Count > 0 ? BridgeReply.Ok(_states.Dequeue()) : BridgeReply.Failed(new BridgeError("Unavailable", "no monitor")));
+        return Task.FromResult(_states.Count > 0 ? BridgeReply.Ok(_states.Dequeue()) : BridgeReply.Failed(new BridgeError("unavailable", "no monitor")));
     }
 
     public JsonObject? AskedFor { get; private set; }

@@ -45,13 +45,13 @@ def _parse_frames(text, scene):
     if match:
         start, end, step = int(match.group(1)), int(match.group(2)), int(match.group(3) or 1)
         if end < start:
-            raise CommandError("BadRequest", f"frame range '{text}' ends before it starts")
+            raise CommandError("badRequest", f"frame range '{text}' ends before it starts")
         return (start, end, max(1, step)), []
     frames = []
     for part in text.split(","):
         piece = re.fullmatch(r"(-?\d+)(?:-(-?\d+))?", part)
         if piece is None:
-            raise CommandError("BadRequest", f"cannot read frames '{text}'; use 1-240, 1-240x2 or 1,5,9-12")
+            raise CommandError("badRequest", f"cannot read frames '{text}'; use 1-240, 1-240x2 or 1,5,9-12")
         first, last = int(piece.group(1)), int(piece.group(2) or piece.group(1))
         frames.extend(range(first, last + 1))
     return None, sorted(set(frames))
@@ -88,7 +88,7 @@ def advance():
 
 def _validate_output(template):
     if not template:
-        raise CommandError("BadRequest", "output_path is required: a path template such as /renders/{scene}_{camera}_####")
+        raise CommandError("badRequest", "output_path is required: a path template such as /renders/{scene}_{camera}_####")
     _refuse_a_finished_name(template)
     directory = os.path.dirname(template.replace("{scene}", "scene").replace("{camera}", "camera"))
     if directory:
@@ -104,12 +104,12 @@ def render_job(params):
     for name in cameras:
         camera = bpy.data.objects.get(name)
         if camera is None or camera.type != "CAMERA":
-            raise CommandError("NotFound", f"'{name}' is not a camera in this file")
+            raise CommandError("notFound", f"'{name}' is not a camera in this file")
     if not cameras and scene.camera is None:
-        raise CommandError("BadRequest", "the scene has no camera; pass cameras or set one with blender_render_settings")
+        raise CommandError("badRequest", "the scene has no camera; pass cameras or set one with blender_render_settings")
     for name in params.get("view_layers") or []:
         if name not in scene.view_layers:
-            raise CommandError("NotFound", f"no view layer named '{name}'", {"known": [layer.name for layer in scene.view_layers]})
+            raise CommandError("notFound", f"no view layer named '{name}'", {"known": [layer.name for layer in scene.view_layers]})
     frame_range, frame_list = _parse_frames(params.get("frames"), scene)
     frames_total = len(frame_list) if frame_list else len(range(frame_range[0], frame_range[1] + 1, frame_range[2]))
     root = _job_directory(params)
@@ -135,7 +135,7 @@ def _ocio(params):
     if not path:
         return None
     if not os.path.isfile(path):
-        raise CommandError("NotFound", f"no OCIO config at '{path}'")
+        raise CommandError("notFound", f"no OCIO config at '{path}'")
     return path
 
 
@@ -390,7 +390,7 @@ def _spec(scene, params, cameras, frame_range, frame_list, frames_total, directo
         if params.get(key) is not None:
             value = int(params[key])
             if attribute != "resolution_percentage" and not 1 <= value <= MAX_RESOLUTION:
-                raise CommandError("BadRequest", f"{key} must be between 1 and {MAX_RESOLUTION}")
+                raise CommandError("badRequest", f"{key} must be between 1 and {MAX_RESOLUTION}")
             render[attribute] = value
     if params.get("engine"):
         render["engine"] = ENGINES.get(params["engine"].upper(), params["engine"].upper())
@@ -516,7 +516,7 @@ def render_job_status(params):
     if params.get("id"):
         directory = os.path.join(root, params["id"])
         if not os.path.isdir(directory):
-            raise CommandError("NotFound", f"no render job '{params['id']}'", {"known": sorted(os.listdir(root))[-10:]})
+            raise CommandError("notFound", f"no render job '{params['id']}'", {"known": sorted(os.listdir(root))[-10:]})
         return _job_status(params["id"], directory, lines)
     jobs = sorted((entry for entry in os.listdir(root) if entry.startswith("job-") and "-c" not in entry[13:]), reverse=True)[:20]
     return {"jobs": [_job_status(job_id, os.path.join(root, job_id), 0) for job_id in jobs], "running": [job_id for job_id in jobs if _is_running(job_id, os.path.join(root, job_id))]}
@@ -528,7 +528,7 @@ def render_job_cancel(params):
     root = _job_directory(params)
     directory = os.path.join(root, job_id)
     if not os.path.isdir(directory):
-        raise CommandError("NotFound", f"no render job '{job_id}'")
+        raise CommandError("notFound", f"no render job '{job_id}'")
     chunks_path = os.path.join(directory, "chunks.json")
     if os.path.isfile(chunks_path):
         with open(chunks_path) as handle:

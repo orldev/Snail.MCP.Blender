@@ -78,7 +78,7 @@ public class StdioContractTests
         var skillAnswer = JsonDocument.Parse(skillCall.GetProperty("result").GetProperty("content")[0].GetProperty("text").GetString()!).RootElement;
 
         Assert.False(skillAnswer.GetProperty("ok").GetBoolean());
-        Assert.Equal("Unavailable", skillAnswer.GetProperty("type").GetString());
+        Assert.Equal("unavailable", skillAnswer.GetProperty("type").GetString());
         Assert.True(skillCall.GetProperty("result").GetProperty("isError").GetBoolean());
         Assert.False(skillCall.GetProperty("result").TryGetProperty("structuredContent", out _));
 

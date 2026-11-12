@@ -130,7 +130,7 @@ def guard(name, params, agent):
     blocked = [(target, leases[target]) for target in _addressed(params, name) if target in leases and leases[target]["agent"] != holder]
     if blocked:
         target, lease = blocked[0]
-        raise CommandError("Leased", f"'{target}' is held by agent '{lease['agent']}' until {time.strftime('%H:%M:%S', time.localtime(lease['until']))}",
+        raise CommandError("leased", f"'{target}' is held by agent '{lease['agent']}' until {time.strftime('%H:%M:%S', time.localtime(lease['until']))}",
                            {"agent": lease["agent"], "target": target, "note": lease.get("note"), "seconds_left": round(lease["until"] - _now())})
 
 
@@ -138,7 +138,7 @@ def _refuse_or_pass(name, params, agent):
     try:
         guard(name, params, agent)
     except CommandError as refusal:
-        record(name, params, agent, False, f"Leased: {refusal}")
+        record(name, params, agent, False, f"leased: {refusal}")
         raise
 
 
@@ -201,19 +201,19 @@ def lease(params):
         with state.locked(LEASES_FILE):
             foreign = sorted(target for target, held in _leases().items() if held["agent"] != agent)
             if foreign and not params.get("force"):
-                raise CommandError("Leased", f"held by another agent: {', '.join(foreign)}; pass force to clear them too", {"held": foreign})
+                raise CommandError("leased", f"held by another agent: {', '.join(foreign)}; pass force to clear them too", {"held": foreign})
             state.save(LEASES_FILE, {})
         return {"agent": agent, "leases": []}
     names = list(params.get("names") or ([params["name"]] if params.get("name") else []))
     if not names:
-        raise CommandError("BadRequest", "pass names to claim or release")
+        raise CommandError("badRequest", "pass names to claim or release")
     targets = sorted(set(_targets({"names": names})))
     with state.locked(LEASES_FILE):
         leases = _leases()
         if action == "claim":
             held = [name for name in targets if name in leases and leases[name]["agent"] != agent]
             if held:
-                raise CommandError("Leased", f"already held by another agent: {', '.join(held)}", {"held": [{"target": name, "agent": leases[name]["agent"]} for name in held]})
+                raise CommandError("leased", f"already held by another agent: {', '.join(held)}", {"held": [{"target": name, "agent": leases[name]["agent"]} for name in held]})
             until = _now() + max(10, int(params.get("ttl_seconds") or DEFAULT_LEASE_SECONDS))
             for name in targets:
                 leases[name] = {"agent": agent, "until": until, "note": params.get("note")}
@@ -222,8 +222,8 @@ def lease(params):
         if action == "release":
             foreign = [name for name in targets if name in leases and leases[name]["agent"] != agent and not params.get("force")]
             if foreign:
-                raise CommandError("Leased", f"held by another agent: {', '.join(foreign)}; pass force to take them", {"held": foreign})
+                raise CommandError("leased", f"held by another agent: {', '.join(foreign)}; pass force to take them", {"held": foreign})
             released = [name for name in targets if leases.pop(name, None) is not None]
             state.save(LEASES_FILE, leases)
             return {"agent": agent, "released": released, "leases": _lease_summary(leases)}
-    raise CommandError("BadRequest", "action must be claim, release, list or clear")
+    raise CommandError("badRequest", "action must be claim, release, list or clear")

@@ -25,7 +25,7 @@ parallel: they plan, submit a batch, and the coordinator links the output.
 When agents must share one file, set `SNAIL_MCP_BLENDER_AGENT` on each server. Every mutating
 command is then recorded with its agent in the journal (`blender_journal`), and an agent can claim
 objects or collections for a while with `blender_lease`: other agents' mutating commands on them come
-back as `Leased` with the holder's name until the lease is released or expires. Taking another agent's lease, by
+back as `leased` with the holder's name until the lease is released or expires. Taking another agent's lease, by
 `release` or by `clear`, needs `force`. Read-only commands
 always pass.
 
@@ -40,7 +40,7 @@ always do. `blender_diagnose` reports the name in hand under `bridge.agent`.
 Both live in files under the add-on's data directory, on the machine Blender runs on (`state/journal.jsonl`,
 `state/leases.json`), so they survive
 a restart of Blender, and the worker Blenders that batches start read and write the same files: a batch step on a
-leased object fails with `Leased` like a direct call would, and its steps appear in the journal with the worker's `pid`.
+leased object fails with `leased` like a direct call would, and its steps appear in the journal with the worker's `pid`.
 A render job's worker runs no commands and touches neither file. A journal entry names the objects a command addressed
 under `targets`; batches, snapshots, scenes, view layers, File Output nodes, render jobs and projects are named after
 something else, so their `name` is not listed there.
@@ -102,7 +102,7 @@ return { moved: parts.length };
 
 Every call goes over the same link as a tool call, so the lease guard, the journal and the validation hold for each
 step, and a failed command throws `{error, message, hint, type, details}` the program may catch, `type` being the
-add-on's own (`Leased`, `NotFound`). `log(…)` is a global of the program, not a command of `blender`. Only what the
+add-on's own (`leased`, `notFound`). `log(…)` is a global of the program, not a command of `blender`. Only what the
 program returns comes back, with the log it wrote and the list of commands it sent: twenty steps cost one call and one reply instead
 of twenty of each, and a listing a program filters never reaches the conversation whole. It is bounded by the timeout
 it was given, by its memory, and by 200 commands; past that it stops and reports what it managed. It is not

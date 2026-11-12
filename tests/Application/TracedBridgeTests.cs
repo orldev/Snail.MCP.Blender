@@ -53,7 +53,7 @@ public class TracedBridgeTests
 
         Assert.Equal(2, report["requests"]!.GetValue<int>());
         Assert.Equal(2, report["failures"]!.GetValue<int>());
-        Assert.Equal("NotFound", report["lastFailure"]!["type"]!.ToString());
+        Assert.Equal("notFound", report["lastFailure"]!["type"]!.ToString());
     }
 
     [Fact]

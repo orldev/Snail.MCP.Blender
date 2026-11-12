@@ -53,7 +53,7 @@ What changed in this Blender and by whom: every mutating command with its agent,
 
 ## <code>blender_<wbr>lease</code>
 
-Claims objects or collections for this agent for a while: mutating commands from other agents on them are refused with Leased until the lease is released or expires. list shows holders; clear drops every lease.
+Claims objects or collections for this agent for a while: mutating commands from other agents on them are refused with leased until the lease is released or expires. list shows holders; clear drops every lease.
 
 *only adds · every call adds · stays inside Blender.*
 

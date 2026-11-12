@@ -49,7 +49,7 @@ def _preview(path, max_edge=PREVIEW_EDGE, with_stats=True):
     try:
         width, height = image.size
         if width == 0 or height == 0:
-            raise CommandError("RenderFailed", f"'{path}' holds no pixels")
+            raise CommandError("renderFailed", f"'{path}' holds no pixels")
         scale = min(1.0, max_edge / max(width, height))
         if scale < 1.0:
             image.scale(max(1, int(width * scale)), max(1, int(height * scale)))
@@ -83,7 +83,7 @@ def _with_preview(result, path, params):
 def inspect_image(params):
     path = _require(params, "path")
     if not os.path.isfile(path):
-        raise CommandError("NotFound", f"no image at '{path}'")
+        raise CommandError("notFound", f"no image at '{path}'")
     preview, stats = _preview(path, int(params.get("preview_size") or PREVIEW_EDGE))
     result = {"path": path, "bytes": os.path.getsize(path), "size": preview["source"], "stats": stats}
     if params.get("preview", True):

@@ -49,7 +49,7 @@ def refuse(name, params, agent=None):
     hints = {key: _nearest(key, declared) for key in unknown}
     notes = {key: CALL_SETTINGS[_snake(key)] for key in unknown if _snake(key) in CALL_SETTINGS}
     named = ", ".join(_described(key, hints[key], notes.get(key)) for key in unknown)
-    raise CommandError("BadRequest", f"'{name}' takes no {named}",
+    raise CommandError("badRequest", f"'{name}' takes no {named}",
                        {"unknown": unknown, "accepted": sorted(declared), "suggestions": {key: value for key, value in hints.items() if value}, **({"notes": notes} if notes else {})})
 
 

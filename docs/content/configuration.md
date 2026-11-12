@@ -131,7 +131,7 @@ HTTP alike.
 | Render resolution | 4096 pixels per edge |
 | Request size | 16 MB per JSON line to the add-on |
 | Reply size | 4 MB from the add-on; larger replies come back as an error asking for less |
-| Queued commands | 64 waiting for Blender's main thread; beyond that the add-on answers `Busy` |
+| Queued commands | 64 waiting for Blender's main thread; beyond that the add-on answers `busy` |
 | Sequence | 500 steps per `run_tools`; step results leave the reply once it passes half a megabyte, each marked `omitted` |
 | Transfer chunk | 8 MB up, 2 MB down, the whole file checked by SHA-256 at the end |
 | Upload part over HTTP | 16 MB per request of the command `blender_upload` returns, so a proxy that reads a body for a minute never cuts one off |

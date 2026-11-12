@@ -50,7 +50,7 @@ def storage_list(bridge, params):
     directory = transfer.inside(area, relative)
     if not os.path.isdir(directory):
         if relative:
-            raise CommandError("NotFound", f"no folder '{relative}' in the {area} area")
+            raise CommandError("notFound", f"no folder '{relative}' in the {area} area")
         return {"area": area, "path": "", "directory": directory, "entries": [], "truncated": False, "open_file": OPEN["file"]}
 
     names = sorted((name for name in os.listdir(directory) if not name.endswith(transfer.PARTIAL_SUFFIX)), key=str.casefold)
@@ -67,14 +67,14 @@ def storage_delete(bridge, params):
     area = params.get("area") or "files"
     relative = _relative(params.get("path"))
     if not relative:
-        raise CommandError("BadRequest", "'path' names what to delete inside the area; an area itself is never deleted")
+        raise CommandError("badRequest", "'path' names what to delete inside the area; an area itself is never deleted")
     target = transfer.inside(area, relative)
     if target == transfer.area_root(area):
-        raise CommandError("BadRequest", "'path' names the area itself, which is never deleted")
+        raise CommandError("badRequest", "'path' names the area itself, which is never deleted")
     if area == "snapshots" and not os.path.lexists(target) and os.path.isfile(f"{target}.blend"):
         return _delete_snapshot(area, relative, target)
     if not os.path.lexists(target):
-        raise CommandError("NotFound", f"nothing at '{relative}' in the {area} area")
+        raise CommandError("notFound", f"nothing at '{relative}' in the {area} area")
 
     _refuse_in_use(area, relative, target)
     size, count = _size(target)
@@ -151,13 +151,13 @@ def _modified(path):
 
 def _refuse_in_use(area, relative, target):
     if area == "files" and OPEN["file"] and _contains(target, OPEN["file"]):
-        raise CommandError("InUse", f"'{relative}' holds {OPEN['file']}, the file open in Blender; open another file before deleting it", {"open_file": OPEN["file"]})
+        raise CommandError("inUse", f"'{relative}' holds {OPEN['file']}, the file open in Blender; open another file before deleting it", {"open_file": OPEN["file"]})
     root = transfer.area_root(area)
     top = os.path.relpath(target, root).split(os.sep, 1)[0]
     if area == "jobs" and top.startswith("job-") and _is_active(_job(top, os.path.join(root, top))["state"]):
-        raise CommandError("InUse", f"job '{top}' is still running; cancel it before deleting it", {"job": top})
+        raise CommandError("inUse", f"job '{top}' is still running; cancel it before deleting it", {"job": top})
     if area == "batches" and top.startswith("batch-") and _is_active(_batch(top, os.path.join(root, top))["state"]):
-        raise CommandError("InUse", f"batch '{top}' is still running; wait for it before deleting it", {"batch": top})
+        raise CommandError("inUse", f"batch '{top}' is still running; wait for it before deleting it", {"batch": top})
 
 
 def _is_active(phase):

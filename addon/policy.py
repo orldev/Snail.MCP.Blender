@@ -26,7 +26,7 @@ def choose(access):
     """Sets how far Python may go here; anything but the three levels is refused at start-up rather than read as allow."""
     level = (access or "allow").strip().lower()
     if level not in LEVELS:
-        raise CommandError("BadRequest", f"python access must be one of {', '.join(LEVELS)}")
+        raise CommandError("badRequest", f"python access must be one of {', '.join(LEVELS)}")
     ACCESS["python"] = level
     return level
 
@@ -40,12 +40,12 @@ def refuse(name, params, agent):
     if is_open() or not isinstance(params, dict):
         return
     if name == "python":
-        raise CommandError("PythonDisabled", "this Blender runs with python off; use the commands instead")
+        raise CommandError("pythonDisabled", "this Blender runs with python off; use the commands instead")
     if name == "run_operator" and _runs_scripts(params):
-        raise CommandError("PythonDisabled", f"'{params.get('name')}' runs code, and this Blender runs with python off")
+        raise CommandError("pythonDisabled", f"'{params.get('name')}' runs code, and this Blender runs with python off")
     for key in catalog.paths_of(name):
         if not _inside_the_data_directory(params.get("area"), params.get(key)):
-            raise CommandError("PythonDisabled", f"'{key}' leaves the add-on's own folders, and this Blender runs with python off")
+            raise CommandError("pythonDisabled", f"'{key}' leaves the add-on's own folders, and this Blender runs with python off")
 
 
 def _runs_scripts(params):

@@ -19,7 +19,7 @@ RESERVED_CHARACTERS = '/\\:*?"<>|'
 def undo_redo(params):
     action = params.get("action") or "undo"
     if action not in ("undo", "redo"):
-        raise CommandError("BadRequest", "'action' must be undo or redo")
+        raise CommandError("badRequest", "'action' must be undo or redo")
     steps = max(1, int(params.get("steps") or 1))
     operator = bpy.ops.ed.undo if action == "undo" else bpy.ops.ed.redo
     done = 0
@@ -36,7 +36,7 @@ def undo_redo(params):
 def save_file(params):
     path = params.get("path") or bpy.data.filepath
     if not path:
-        raise CommandError("BadRequest", "the file has never been saved; pass 'path'")
+        raise CommandError("badRequest", "the file has never been saved; pass 'path'")
     directory = os.path.dirname(path)
     if directory:  # Blender reports a missing folder as "Cannot open file …@ for writing", which names neither the folder nor the cure
         os.makedirs(directory, exist_ok=True)
@@ -70,14 +70,14 @@ def open_project(params):
     name = _project_name(params)
     start = params.get("from") or "empty"
     if start not in PROJECT_STARTS:
-        raise CommandError("BadRequest", "'from' must be empty or current")
+        raise CommandError("badRequest", "'from' must be empty or current")
     directory = os.path.join(transfer.files_root(), name)
     blend = os.path.join(directory, f"{name}.blend")
     exists = os.path.isfile(blend)
     if exists and start == "current":
-        raise CommandError("Exists", f"project '{name}' already has {name}.blend; open it without 'from' or pick another name", {"blend": blend})
+        raise CommandError("exists", f"project '{name}' already has {name}.blend; open it without 'from' or pick another name", {"blend": blend})
     if (bpy.data.is_dirty or storage.has_unsaved_changes()) and start == "empty" and not params.get("discard"):
-        raise CommandError("Unsaved", "the open file has unsaved changes; save it first or pass discard to drop them", {"file": bpy.data.filepath or None})
+        raise CommandError("unsaved", "the open file has unsaved changes; save it first or pass discard to drop them", {"file": bpy.data.filepath or None})
 
     for folder in PROJECT_FOLDERS:
         os.makedirs(os.path.join(directory, folder), exist_ok=True)
@@ -99,7 +99,7 @@ def open_project(params):
 def _project_name(params):
     name = _require(params, "name").strip()
     if name in (".", "..") or len(name) > MAX_PROJECT_NAME or name != name.rstrip(". ") or any(character in RESERVED_CHARACTERS or ord(character) < 32 for character in name):
-        raise CommandError("BadRequest", f"'name' must be one folder name: no slashes or {RESERVED_CHARACTERS}, no trailing dot or space, at most {MAX_PROJECT_NAME} characters", {"name": name})
+        raise CommandError("badRequest", f"'name' must be one folder name: no slashes or {RESERVED_CHARACTERS}, no trailing dot or space, at most {MAX_PROJECT_NAME} characters", {"name": name})
     return name
 
 

@@ -48,7 +48,7 @@ this command runs both itself and keeps Blender answering until the process is s
 to demand instead of the generated one, and `--backend` — `OPTIX`, `CUDA`, `HIP`, `ONEAPI`, `METAL` or `NONE` — to enable
 a Cycles compute backend before listening; `--host` is for the Docker image alone. The commands that need Blender's
 window — `viewport_capture`, `set_viewport_shading`, `sequencer_meta`, `sequencer_proxy`, `scenes` when it activates a
-scene or makes a full copy, and `blender_run_operator` with an `area` — answer `NoArea` there; everything else, rendering
+scene or makes a full copy, and `blender_run_operator` with an `area` — answer `noArea` there; everything else, rendering
 included, works.
 
 To start it with the machine on Windows, register a scheduled task that runs as the artist without storing a password —
@@ -80,7 +80,7 @@ as it is, for example `ssh -i ~/.ssh/id_ed25519 artist@render-box schtasks /end 
 | keep it from starting with the machine | `schtasks /change /tn "Snail Bridge" /disable`; `/enable` undoes it |
 | remove it | `schtasks /delete /tn "Snail Bridge" /f` |
 
-A stopped service closes the port, so the server's commands answer `Unavailable` until it runs again. The task keeps no
+A stopped service closes the port, so the server's commands answer `unavailable` until it runs again. The task keeps no
 log — Task Scheduler drops Blender's output — so its state shows in `blender_diagnose`. While it runs, a Blender opened
 by hand on that machine works as usual but cannot listen on 9876, which the service holds: stop the service first to
 drive the Blender with the window.

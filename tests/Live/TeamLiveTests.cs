@@ -45,14 +45,14 @@ public sealed class TeamLiveTests : IAsyncLifetime
 
         var refused = await _modeling.SendAsync(BridgeCommands.TransformObject, new JsonObject { ["name"] = "Cube", ["location"] = new JsonArray(1, 0, 0) });
         Assert.False(refused.IsOk);
-        Assert.Equal("Leased", refused.Error!.Type);
+        Assert.Equal("leased", refused.Error!.Type);
         Assert.Equal("lighting", refused.Error.Details!["agent"]!.ToString());
 
         var seen = await Send(_modeling, BridgeCommands.ObjectInfo, new JsonObject { ["name"] = "Cube" });
         Assert.Equal("Cube", seen["name"]!.ToString());
 
         var stolen = await _modeling.SendAsync(BridgeCommands.Lease, new JsonObject { ["action"] = "release", ["names"] = new JsonArray("Cube") });
-        Assert.Equal("Leased", stolen.Error!.Type);
+        Assert.Equal("leased", stolen.Error!.Type);
 
         await Send(_lighting, BridgeCommands.Lease, new JsonObject { ["action"] = "release", ["names"] = new JsonArray("Cube") });
         var moved = await Send(_modeling, BridgeCommands.TransformObject, new JsonObject { ["name"] = "Cube", ["location"] = new JsonArray(1, 0, 0) });
@@ -78,8 +78,8 @@ public sealed class TeamLiveTests : IAsyncLifetime
         var assigned = await _modeling.SendAsync(BridgeCommands.AssignMaterial, new JsonObject { ["object"] = "Hero", ["material"] = "Paint" });
         var deleted = await _modeling.SendAsync(BridgeCommands.DeleteObjects, new JsonObject { ["selected"] = true });
 
-        Assert.Equal("Leased", assigned.Error?.Type);
-        Assert.Equal("Leased", deleted.Error?.Type);
+        Assert.Equal("leased", assigned.Error?.Type);
+        Assert.Equal("leased", deleted.Error?.Type);
     }
 
     /// <summary>A name inside a block, a name in a key of its own and a name that is the key of a block are all the object they name.</summary>
@@ -103,9 +103,9 @@ public sealed class TeamLiveTests : IAsyncLifetime
             new JsonObject { ["camera"] = "Shot", ["type"] = "orbit", ["pivot_name"] = "Focus", ["start"] = 1, ["end"] = 8 });
         var elsewhere = await _modeling.SendAsync(BridgeCommands.SetCameraOptics, new JsonObject { ["camera"] = "Shot", ["lens"] = 50 });
 
-        Assert.Equal("Leased", focused.Error?.Type);
-        Assert.Equal("Leased", blurred.Error?.Type);
-        Assert.Equal("Leased", pivoted.Error?.Type);
+        Assert.Equal("leased", focused.Error?.Type);
+        Assert.Equal("leased", blurred.Error?.Type);
+        Assert.Equal("leased", pivoted.Error?.Type);
         Assert.True(elsewhere.IsOk, $"{elsewhere.Error?.Type} {elsewhere.Error?.Message}");
 
         var journal = await Send(_modeling, BridgeCommands.Journal, new JsonObject { ["limit"] = 20 });
@@ -136,14 +136,14 @@ public sealed class TeamLiveTests : IAsyncLifetime
 
         Assert.True(material.IsOk, $"a material is not the object of the same name: {material.Error?.Type} {material.Error?.Message}");
         Assert.True(namesake.IsOk, $"a new object gets a name of its own: {namesake.Error?.Type} {namesake.Error?.Message}");
-        Assert.Equal("Leased", theObject.Error?.Type);
+        Assert.Equal("leased", theObject.Error?.Type);
 
         var flagged = await _modeling.SendAsync(BridgeCommands.ObjectRenderFlags, new JsonObject { ["name"] = "Steel", ["holdout"] = true });
         var exported = await _modeling.SendAsync(BridgeCommands.ExportFile,
             new JsonObject { ["path"] = Path.Combine(_workDirectory, "held.obj"), ["selected_only"] = true, ["names"] = new JsonArray("Steel") });
 
-        Assert.Equal("Leased", flagged.Error?.Type);
-        Assert.Equal("Leased", exported.Error?.Type);
+        Assert.Equal("leased", flagged.Error?.Type);
+        Assert.Equal("leased", exported.Error?.Type);
 
         var journal = await Send(_modeling, BridgeCommands.Journal, new JsonObject { ["limit"] = 20 });
         var wrote = journal["entries"]!.AsArray().First(entry => entry!["command"]!.ToString() == "set_material")!;
@@ -160,7 +160,7 @@ public sealed class TeamLiveTests : IAsyncLifetime
         var cleared = await _modeling.SendAsync(BridgeCommands.Lease, new JsonObject { ["action"] = "clear" });
         var forced = await Send(_modeling, BridgeCommands.Lease, new JsonObject { ["action"] = "clear", ["force"] = true });
 
-        Assert.Equal("Leased", cleared.Error?.Type);
+        Assert.Equal("leased", cleared.Error?.Type);
         Assert.Empty(forced["leases"]!.AsArray());
     }
 
@@ -203,7 +203,7 @@ public sealed class TeamLiveTests : IAsyncLifetime
         var steps = status["steps"]!.AsArray();
         Assert.Equal("finished", status["state"]!.ToString());
         Assert.False(steps[0]!["ok"]!.GetValue<bool>(), status.ToJsonString());
-        Assert.Contains("Leased", steps[0]!["error"]!.ToString(), StringComparison.Ordinal);
+        Assert.Contains("leased", steps[0]!["error"]!.ToString(), StringComparison.Ordinal);
         Assert.True(steps[1]!["ok"]!.GetValue<bool>(), status.ToJsonString());
 
         var journal = await Send(_lighting, BridgeCommands.Journal);
@@ -224,7 +224,7 @@ public sealed class TeamLiveTests : IAsyncLifetime
         var refused = await anonymous.SendAsync(BridgeCommands.SceneInfo);
         var answered = await trusted.SendAsync(BridgeCommands.SceneInfo);
 
-        Assert.Equal("Unauthorized", refused.Error!.Type);
+        Assert.Equal("unauthorized", refused.Error!.Type);
         Assert.True(answered.IsOk, $"{answered.Error?.Type} {answered.Error?.Message}");
     }
 
@@ -323,8 +323,8 @@ public sealed class TeamLiveTests : IAsyncLifetime
         }, TimeSpan.FromSeconds(60));
 
         Assert.False(refused.IsOk);
-        Assert.Equal("StepFailed", refused.Error!.Type);
-        Assert.Contains("Leased", refused.Error.Details!["steps"]![1]!["error"]!.ToString(), StringComparison.Ordinal);
+        Assert.Equal("stepFailed", refused.Error!.Type);
+        Assert.Contains("leased", refused.Error.Details!["steps"]![1]!["error"]!.ToString(), StringComparison.Ordinal);
         Assert.True(refused.Error.Details["steps"]![0]!["ok"]!.GetValue<bool>());
         Assert.Equal([2], refused.Error.Details["failed"]!.AsArray().Select(index => index!.GetValue<int>()));
 

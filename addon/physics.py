@@ -48,11 +48,11 @@ def add_physics(params):
     item = _object(_require(params, "name"))
     kind = _require(params, "type")
     if kind not in PHYSICS_KINDS:
-        raise CommandError("BadRequest", f"unknown physics type '{kind}'", {"known": list(PHYSICS_KINDS)})
+        raise CommandError("badRequest", f"unknown physics type '{kind}'", {"known": list(PHYSICS_KINDS)})
     settings = params.get("settings") or {}
     if kind.startswith("rigid_body"):
         if item.type != "MESH":
-            raise CommandError("BadRequest", f"'{item.name}' is a {item.type}; rigid bodies need a mesh")
+            raise CommandError("badRequest", f"'{item.name}' is a {item.type}; rigid bodies need a mesh")
         with _object_override([item], item):
             if item.rigid_body is None:
                 bpy.ops.rigidbody.object_add(type="PASSIVE" if kind == "rigid_body_passive" else "ACTIVE")
@@ -66,12 +66,12 @@ def add_physics(params):
         try:
             modifier = item.modifiers.new(name=kind.replace("_", " ").title(), type=modifier_type)
         except RuntimeError as error:
-            raise CommandError("BadRequest", f"'{item.name}' ({item.type}) cannot take {kind}: {error}") from error
+            raise CommandError("badRequest", f"'{item.name}' ({item.type}) cannot take {kind}: {error}") from error
     if kind.startswith("fluid_"):
         modifier.fluid_type = {"fluid_domain": "DOMAIN", "fluid_flow": "FLOW", "fluid_effector": "EFFECTOR"}[kind]
     target = getattr(modifier, settings_attribute) if settings_attribute else modifier
     if target is None:
-        raise CommandError("Unsupported", f"{kind} has no settings block on '{item.name}'")
+        raise CommandError("unsupported", f"{kind} has no settings block on '{item.name}'")
     _apply_settings(target, settings)
     return _physics_summary(item)
 
@@ -96,7 +96,7 @@ def remove_physics(params):
             removed.append(modifier.name)
             item.modifiers.remove(modifier)
     else:
-        raise CommandError("BadRequest", f"unknown physics type '{kind}'", {"known": [*PHYSICS_KINDS, "particles"]})
+        raise CommandError("badRequest", f"unknown physics type '{kind}'", {"known": [*PHYSICS_KINDS, "particles"]})
     summary = _physics_summary(item)
     summary["removed"] = removed
     return summary
@@ -107,9 +107,9 @@ def add_particles(params):
     item = _object(_require(params, "name"))
     kind = (params.get("type") or "EMITTER").upper()
     if kind not in PARTICLE_KINDS:
-        raise CommandError("BadRequest", "type must be EMITTER or HAIR")
+        raise CommandError("badRequest", "type must be EMITTER or HAIR")
     if item.type != "MESH":
-        raise CommandError("BadRequest", f"'{item.name}' is a {item.type}; particles need a mesh")
+        raise CommandError("badRequest", f"'{item.name}' is a {item.type}; particles need a mesh")
     modifier = item.modifiers.new(name=params.get("system_name") or ("Hair" if kind == "HAIR" else "Particles"), type="PARTICLE_SYSTEM")
     system = item.particle_systems[modifier.name] if modifier.name in item.particle_systems else item.particle_systems[-1]
     settings = system.settings

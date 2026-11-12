@@ -54,7 +54,7 @@ public class ProgramToolsTests
             return missing;
             """);
 
-        Assert.Equal("NotFound", run.Result!.ToString());
+        Assert.Equal("notFound", run.Result!.ToString());
         Assert.Equal(["delete_objects", "add_primitive"], _bridge.Sent.Select(sent => sent.Command.Name));
     }
 
@@ -67,7 +67,7 @@ public class ProgramToolsTests
 
         var run = await RunAsync("""blender.delete_objects({ names: ["Ghost"] });""");
 
-        Assert.Equal("NotFound", run.Failure!.Type);
+        Assert.Equal("notFound", run.Failure!.Type);
     }
 
     [Fact]

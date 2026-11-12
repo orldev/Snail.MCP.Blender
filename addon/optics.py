@@ -13,7 +13,7 @@ def _apply_curve_points(curve, points):
     while len(curve.points) > 2:
         curve.points.remove(curve.points[1])
     if len(points) < 2:
-        raise CommandError("BadRequest", "a curve needs at least two [x, y] points")
+        raise CommandError("badRequest", "a curve needs at least two [x, y] points")
     curve.points[0].location = tuple(points[0])
     curve.points[-1].location = tuple(points[-1])
     for point in points[1:-1]:
@@ -86,7 +86,7 @@ def set_camera_optics(params):
         if aperture.get("blades") is not None:
             blades = int(aperture["blades"])
             if blades not in (0,) and not 3 <= blades <= 16:
-                raise CommandError("BadRequest", "aperture blades are 0 (round) or 3 to 16")
+                raise CommandError("badRequest", "aperture blades are 0 (round) or 3 to 16")
             dof.aperture_blades = blades
         if aperture.get("rotation") is not None:
             dof.aperture_rotation = math.radians(float(aperture["rotation"]))
@@ -107,7 +107,7 @@ def set_camera_optics(params):
         for name, spec in blur.items():
             target = _object(name)
             if not hasattr(target, "cycles"):
-                raise CommandError("Unsupported", "per-object motion blur needs the Cycles add-on")
+                raise CommandError("unsupported", "per-object motion blur needs the Cycles add-on")
             if spec.get("enabled") is not None:
                 target.cycles.use_motion_blur = bool(spec["enabled"])
             if spec.get("steps") is not None:

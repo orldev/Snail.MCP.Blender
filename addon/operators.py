@@ -38,17 +38,17 @@ def run_operator(params):
     name = _require(params, "name")
     arguments = params.get("params") or {}
     if not isinstance(arguments, dict):
-        raise CommandError("BadRequest", "'params' must be an object of operator properties")
+        raise CommandError("badRequest", "'params' must be an object of operator properties")
     operator = _operator(name)
     rna = operator.get_rna_type()
     unknown = sorted(key for key in arguments if key not in rna.properties)
     if unknown:
-        raise CommandError("UnknownParameter", f"bpy.ops.{name} has no property {', '.join(unknown)}",
+        raise CommandError("unknownParameter", f"bpy.ops.{name} has no property {', '.join(unknown)}",
                            {"known": _property_names(rna)})
     coerced = {key: _coerce(rna.properties[key], value) for key, value in arguments.items()}
     with _override(params.get("area")):
         if not operator.poll():
-            raise CommandError("PollFailed", f"bpy.ops.{name} cannot run in the current context",
+            raise CommandError("pollFailed", f"bpy.ops.{name} cannot run in the current context",
                                {"mode": bpy.context.mode, "active": _name(bpy.context.view_layer.objects.active)})
         status = operator(**coerced)
     return {"status": sorted(status), "active": _name(bpy.context.view_layer.objects.active)}
@@ -81,7 +81,7 @@ def _find_operator(name):
 def _operator(name):
     operator = _find_operator(name)
     if operator is None:
-        raise CommandError("UnknownOperator", f"bpy.ops.{name} does not exist")
+        raise CommandError("unknownOperator", f"bpy.ops.{name} does not exist")
     return operator
 
 
@@ -136,4 +136,4 @@ def _override(area_type):
                 continue
             region = next((region for region in area.regions if region.type == "WINDOW"), None)
             return bpy.context.temp_override(window=window, area=area, region=region)
-    raise CommandError("NoArea", f"no open editor of type {area_type}; open one in Blender or drop the 'area' argument")
+    raise CommandError("noArea", f"no open editor of type {area_type}; open one in Blender or drop the 'area' argument")

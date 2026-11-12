@@ -56,6 +56,11 @@ def _expires_at(request):
     return time.monotonic() + float(deadline)
 
 
+def _word(name):
+    """A failure's type as every Snail server spells one, camelCase: KeyError answers keyError."""
+    return name[:1].lower() + name[1:]
+
+
 class CommandError(Exception):
     """A failure the caller can act on: carries a short type and a message."""
 
@@ -294,25 +299,25 @@ class BridgeServer:
 
     def _receive(self, connection, line):
         if line is None:
-            self._send(connection, self._failure(None, "RequestTooLarge", f"a request above {MAX_LINE_BYTES} bytes was dropped"))
+            self._send(connection, self._failure(None, "requestTooLarge", f"a request above {MAX_LINE_BYTES} bytes was dropped"))
             return
         if not line.strip():
             return
         try:
             request = json.loads(line)
         except (ValueError, RecursionError) as error:
-            self._send(connection, self._failure(None, "BadJson", str(error)))
+            self._send(connection, self._failure(None, "badJson", str(error)))
             return
         if not isinstance(request, dict):
-            self._send(connection, self._failure(None, "BadRequest", "a request is a JSON object"))
+            self._send(connection, self._failure(None, "badRequest", "a request is a JSON object"))
             return
         request_id = request.get("id")
         command = request.get("command")
         if not isinstance(command, str):
-            self._send(connection, self._failure(request_id, "BadRequest", "a request needs a string 'command'"))
+            self._send(connection, self._failure(request_id, "badRequest", "a request needs a string 'command'"))
             return
         if not self._is_trusted(request):
-            self._send(connection, self._failure(request_id, "Unauthorized", "the add-on expects the token set in its preferences; configure the same one on the server"))
+            self._send(connection, self._failure(request_id, "unauthorized", "the add-on expects the token set in its preferences; configure the same one on the server"))
             connection.finish()
             return
         if command in self._immediate:
@@ -321,7 +326,7 @@ class BridgeServer:
         try:
             self._pending.put_nowait((connection, request, _expires_at(request)))
         except queue.Full:
-            self._send(connection, self._failure(request_id, "Busy", f"{MAX_QUEUED_REQUESTS} requests are already waiting for Blender's main thread; retry after one finishes"))
+            self._send(connection, self._failure(request_id, "busy", f"{MAX_QUEUED_REQUESTS} requests are already waiting for Blender's main thread; retry after one finishes"))
 
     def _is_trusted(self, request):
         if not self._token:
@@ -338,7 +343,7 @@ class BridgeServer:
             if not connection.is_open:
                 continue
             if expires_at is not None and time.monotonic() > expires_at:
-                self._send(connection, self._failure(request.get("id"), "Expired", "the caller stopped waiting before Blender's main thread reached this request; it was not run"))
+                self._send(connection, self._failure(request.get("id"), "expired", "the caller stopped waiting before Blender's main thread reached this request; it was not run"))
                 continue
             self._executing = request.get("command")
             try:
@@ -351,14 +356,14 @@ class BridgeServer:
         request_id = request.get("id")
         params = request.get("params") or {}
         if not isinstance(params, dict):
-            return self._failure(request_id, "BadRequest", "'params' must be an object")
+            return self._failure(request_id, "badRequest", "'params' must be an object")
         try:
             return {"id": request_id, "ok": True, "result": run(params)}
         except CommandError as error:
             return self._failure(request_id, error.kind, str(error), error.details)
         except Exception as error:
             trace = traceback.format_exc().splitlines()[-TRACEBACK_LINES:]
-            return self._failure(request_id, type(error).__name__, str(error), {"traceback": trace})
+            return self._failure(request_id, _word(type(error).__name__), str(error), {"traceback": trace})
 
     @staticmethod
     def _failure(request_id, kind, message, details=None):
@@ -373,11 +378,11 @@ class BridgeServer:
         try:
             payload = json.dumps(reply, ensure_ascii=False, default=str)
         except (TypeError, ValueError, RecursionError) as error:
-            payload = json.dumps(cls._failure(reply.get("id"), "Unserializable", str(error)))
+            payload = json.dumps(cls._failure(reply.get("id"), "unserializable", str(error)))
         data = payload.encode("utf-8", errors="replace")
         if len(data) > MAX_REPLY_BYTES:
             data = json.dumps(cls._failure(
-                reply.get("id"), "ReplyTooLarge",
+                reply.get("id"), "replyTooLarge",
                 f"the reply is {len(data)} bytes against a cap of {MAX_REPLY_BYTES}; ask for less")).encode("utf-8")
         return data + b"\n"
 

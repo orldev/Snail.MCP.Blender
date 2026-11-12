@@ -101,7 +101,7 @@ public sealed class MaterialsLiveTests : IAsyncLifetime
 
         var refused = await _link.SendAsync(BridgeCommands.SetNode, new JsonObject { ["material"] = "Mathy", ["node"] = "Power", ["inputs"] = new JsonObject { ["7"] = 1.0 } });
 
-        Assert.Equal("UnknownParameter", refused.Error?.Type);
+        Assert.Equal("unknownParameter", refused.Error?.Type);
         Assert.Contains("Value (Value_001)", refused.Error!.Details!.ToJsonString(), StringComparison.Ordinal);
     }
 

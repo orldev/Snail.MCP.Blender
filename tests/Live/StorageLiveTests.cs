@@ -89,7 +89,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
         File.Delete(tokenFile);
         Assert.True(cycles.IsOk, $"{cycles.Error?.Type} {cycles.Error?.Message}");
         Assert.Equal("NONE", cycles.Result!["compute"]!["backend"]!.ToString());
-        Assert.Equal("Unauthorized", refused.Error!.Type);
+        Assert.Equal("unauthorized", refused.Error!.Type);
     }
 
     [BlenderFact]
@@ -114,12 +114,12 @@ public sealed class StorageLiveTests : IAsyncLifetime
     public async Task OpenProject_WithUnsavedChanges_IsRefused_UntilTheyAreDiscarded()
     {
         await _link.SendAsync(BridgeCommands.OpenProject, new JsonObject { ["name"] = "first" });
-        await _link.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Unsaved" });
+        await _link.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "unsaved" });
 
         var refused = await _link.SendAsync(BridgeCommands.OpenProject, new JsonObject { ["name"] = "second" });
         var discarded = await _link.SendAsync(BridgeCommands.OpenProject, new JsonObject { ["name"] = "second", ["discard"] = true });
 
-        Assert.Equal("Unsaved", refused.Error!.Type);
+        Assert.Equal("unsaved", refused.Error!.Type);
         Assert.True(discarded.IsOk, $"{discarded.Error?.Type} {discarded.Error?.Message}");
         Assert.Equal(0, discarded.Result!["objects"]!.GetValue<int>());
     }
@@ -135,7 +135,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
 
         Assert.True(kept.IsOk, $"{kept.Error?.Type} {kept.Error?.Message}");
         Assert.Equal(1, kept.Result!["objects"]!.GetValue<int>());
-        Assert.Equal("BadRequest", slashed.Error!.Type);
+        Assert.Equal("badRequest", slashed.Error!.Type);
     }
 
     [BlenderFact]
@@ -168,9 +168,9 @@ public sealed class StorageLiveTests : IAsyncLifetime
         var climbing = await _link.SendAsync(BridgeCommands.StorageDelete, new JsonObject { ["area"] = "files", ["path"] = "../state" });
         var absolute = await _link.SendAsync(BridgeCommands.FileGet, new JsonObject { ["area"] = "files", ["path"] = Path.Combine(_blender.DataDirectory, "state", "token") });
 
-        Assert.Equal("InUse", busy.Error!.Type);
-        Assert.Equal("BadRequest", climbing.Error!.Type);
-        Assert.Equal("BadRequest", absolute.Error!.Type);
+        Assert.Equal("inUse", busy.Error!.Type);
+        Assert.Equal("badRequest", climbing.Error!.Type);
+        Assert.Equal("badRequest", absolute.Error!.Type);
     }
 
     [BlenderFact]
@@ -204,7 +204,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
         var deleted = await DeleteOnceSettledAsync(id);
 
         Assert.Contains(listed.Result!["entries"]!.AsArray(), entry => entry!["name"]!.ToString() == id && entry["job"]!["state"] is not null);
-        Assert.Equal("InUse", busy.Error!.Type);
+        Assert.Equal("inUse", busy.Error!.Type);
         Assert.True(deleted.IsOk, $"{deleted.Error?.Type} {deleted.Error?.Message}");
         Assert.False(Directory.Exists(Path.Combine(_blender.DataDirectory, "jobs", id)));
     }
@@ -220,8 +220,8 @@ public sealed class StorageLiveTests : IAsyncLifetime
         var climbing = await _link.SendAsync(BridgeCommands.StorageDelete, new JsonObject { ["area"] = "jobs", ["path"] = "x/.. " });
         var aside = await _link.SendAsync(BridgeCommands.StorageDelete, new JsonObject { ["area"] = "jobs", ["path"] = "x/../job-20260101-000000-001" });
 
-        Assert.Equal("BadRequest", climbing.Error?.Type);
-        Assert.Equal("BadRequest", aside.Error?.Type);
+        Assert.Equal("badRequest", climbing.Error?.Type);
+        Assert.Equal("badRequest", aside.Error?.Type);
         Assert.True(Directory.Exists(Path.Combine(jobs, "job-20260101-000000-001")));
     }
 
@@ -241,7 +241,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
         var busy = await _link.SendAsync(BridgeCommands.StorageDelete, new JsonObject { ["area"] = "jobs", ["path"] = "job-20260101-000000-002" });
         worker.Kill();
 
-        Assert.Equal("InUse", busy.Error?.Type);
+        Assert.Equal("inUse", busy.Error?.Type);
         Assert.True(Directory.Exists(directory));
     }
 
@@ -263,9 +263,9 @@ public sealed class StorageLiveTests : IAsyncLifetime
         var allowed = await link.SendAsync(BridgeCommands.AddPrimitive, new JsonObject { ["kind"] = "cube", ["name"] = "Crate" });
 
         File.Delete(tokenFile);
-        Assert.Equal("PythonDisabled", script.Error?.Type);
-        Assert.Equal("PythonDisabled", installer.Error?.Type);
-        Assert.Equal("PythonDisabled", elsewhere.Error?.Type);
+        Assert.Equal("pythonDisabled", script.Error?.Type);
+        Assert.Equal("pythonDisabled", installer.Error?.Type);
+        Assert.Equal("pythonDisabled", elsewhere.Error?.Type);
         Assert.False(File.Exists(outside));
         Assert.True(allowed.IsOk, $"{allowed.Error?.Type} {allowed.Error?.Message}");
     }
@@ -293,11 +293,11 @@ public sealed class StorageLiveTests : IAsyncLifetime
 
         File.Delete(tokenFile);
         Assert.False(File.Exists(written), "a batch step ran Python on a Blender started with python off");
-        Assert.True(started.IsOk || started.Error?.Type == "PythonDisabled", $"{started.Error?.Type} {started.Error?.Message}");
+        Assert.True(started.IsOk || started.Error?.Type == "pythonDisabled", $"{started.Error?.Type} {started.Error?.Message}");
 
         if (settled.IsOk && settled.Result?["steps"] is JsonArray ran && ran.Count > 0)
         {
-            Assert.Contains("PythonDisabled", ran[0]!["error"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
+            Assert.Contains("pythonDisabled", ran[0]!["error"]?.ToString() ?? string.Empty, StringComparison.Ordinal);
         }
     }
 
@@ -335,7 +335,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
         var inside = await link.SendAsync(BridgeCommands.ExportFile, new JsonObject { ["path"] = Path.Combine(closed.DataDirectory, "files", "crate.obj"), ["format"] = "obj" });
 
         File.Delete(tokenFile);
-        Assert.Equal("PythonDisabled", away.Error?.Type);
+        Assert.Equal("pythonDisabled", away.Error?.Type);
         Assert.False(File.Exists(outside));
         Assert.True(inside.IsOk, $"{inside.Error?.Type} {inside.Error?.Message}");
     }
@@ -425,7 +425,7 @@ public sealed class StorageLiveTests : IAsyncLifetime
         {
             var reply = await _link.SendAsync(BridgeCommands.StorageDelete, new JsonObject { ["area"] = "jobs", ["path"] = id });
 
-            if (reply.Error?.Type != "InUse" || DateTimeOffset.UtcNow > deadline)
+            if (reply.Error?.Type != "inUse" || DateTimeOffset.UtcNow > deadline)
             {
                 return reply;
             }
