@@ -8,7 +8,7 @@ namespace Snail.MCP.Blender.Application.Transfer;
 /// add-on's files/&lt;folder name&gt;, so an upload from inside the project lands in the twin at the same relative path and a download from the
 /// twin comes back to the same place — the two folders mirror each other. The home folder and the filesystem root are no project: a client
 /// started there would scatter renders across them, so downloads fall back to the server's own downloads folder.</remarks>
-public sealed class LocalProject(ServerConfig config)
+internal sealed class LocalProject(ServerConfig config)
 {
     /// <summary>The project folder, or null when the server runs in the home folder, at the root, or with no folder configured.</summary>
     public string? Directory => Usable(config.ProjectDirectory);

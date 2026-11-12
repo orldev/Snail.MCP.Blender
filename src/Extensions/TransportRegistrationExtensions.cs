@@ -22,7 +22,7 @@ using Snail.Sdk.Mcp.Programs;
 namespace Snail.MCP.Blender.Extensions;
 
 /// <summary>Driving adapter: tools reach the model over stdio or HTTP, guidance rides along with initialize.</summary>
-public static class TransportRegistrationExtensions
+internal static class TransportRegistrationExtensions
 {
     /// <summary>What a client calls itself over HTTP, which becomes the agent name on its commands.</summary>
     public const string AgentHeader = "X-Snail-Agent";

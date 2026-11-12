@@ -11,7 +11,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Working alongside other agents in one Blender: the journal of who changed what, leases on objects, and batches that run elsewhere.</summary>
 [McpServerToolType]
-public sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, IServiceProvider services, AddOnJobs background) : BridgeToolBase(bridge)
+internal sealed class TeamTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, IServiceProvider services, AddOnJobs background) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_journal", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Team.Journal)]

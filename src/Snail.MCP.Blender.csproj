@@ -45,6 +45,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Snail.MCP.Blender.Tests" />
+        <InternalsVisibleTo Include="Snail.MCP.Blender.Benchmarks" />
     </ItemGroup>
 
 </Project>

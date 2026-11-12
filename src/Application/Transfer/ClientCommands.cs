@@ -4,12 +4,12 @@ using Snail.MCP.Blender.Application.Access;
 namespace Snail.MCP.Blender.Application.Transfer;
 
 /// <summary>A shell command for the client's machine, and the moment the link inside it stops working.</summary>
-public sealed record ClientCommand(string Command, DateTimeOffset Expires);
+internal sealed record ClientCommand(string Command, DateTimeOffset Expires);
 
 /// <summary>The commands a client runs to move files through the HTTP server, which sees none of the client's folders.</summary>
 /// <remarks>curl, tar and dd ship with macOS, Linux and Windows 10 and later. A folder travels as one tar, so a sequence of frames is one
 /// upload instead of one per frame. Paths are single-quoted for the POSIX shell an agent's shell tool runs.</remarks>
-public sealed class ClientCommands(FileLinks links, ServerConfig config)
+internal sealed class ClientCommands(FileLinks links, ServerConfig config)
 {
     /// <summary>The size of one request of an upload, as the settings ask for it.</summary>
     /// <remarks>A reverse proxy may stop reading a body after a minute — Traefik's default — and a 160 MB upload over a 2 MB/s uplink broke

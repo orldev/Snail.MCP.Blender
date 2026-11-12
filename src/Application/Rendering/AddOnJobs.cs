@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Application.Rendering;
 /// as its result. The asking is the server's, not the model's: a client subscribed to the job's resource is told when
 /// it ends, and a model reads the resource when it wants.
 /// </remarks>
-public sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, TimeProvider clock)
+internal sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, TimeProvider clock)
 {
     /// <summary>The kind of job a render is.</summary>
     private const string RenderKind = "render";
@@ -117,4 +117,4 @@ public sealed class AddOnJobs(IBlenderBridge bridge, Jobs jobs, TimeProvider clo
 /// <summary>What starting a job gives: the job when the add-on took the work, and the add-on's first answer either way.</summary>
 /// <param name="Job">The job of the server, null when the add-on refused.</param>
 /// <param name="First">The add-on's answer to the start.</param>
-public sealed record JobStart(Job? Job, BridgeReply First);
+internal sealed record JobStart(Job? Job, BridgeReply First);

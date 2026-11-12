@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tools.Prompts;
 
 /// <summary>What each skill covers, shown by blender_skills so the model knows which one to load; a wire contract, edited with caution.</summary>
-public static class SkillDescriptions
+internal static class SkillDescriptions
 {
     public const string Modeling =
         "Mesh editing on a selection (select by index, normal or position; extrude, inset, bevel, subdivide, merge, " +

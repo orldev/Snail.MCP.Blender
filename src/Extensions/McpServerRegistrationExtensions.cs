@@ -8,7 +8,7 @@ using Snail.Sdk.Mcp.Hosting.Jobs;
 namespace Snail.MCP.Blender.Extensions;
 
 /// <summary>Composition root: lists the features to wire; how sockets or the transport are configured is known one level down.</summary>
-public static class McpServerRegistrationExtensions
+internal static class McpServerRegistrationExtensions
 {
     extension(HostApplicationBuilder builder)
     {

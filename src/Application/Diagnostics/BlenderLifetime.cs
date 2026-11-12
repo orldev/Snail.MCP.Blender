@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Application.Diagnostics;
 /// the same version and digest, and the scene is quietly back at its last save with everything since it gone. The process is what differs,
 /// so the pid its ping carries is compared with the pid of the ping before — the first ping after a restart is the only moment at which the
 /// loss can be named. This outlives the link on purpose: the connection itself is replaced by the reconnect and remembers nothing across it.</remarks>
-public sealed class BlenderLifetime(TimeProvider time, ILogger<BlenderLifetime> logger)
+internal sealed class BlenderLifetime(TimeProvider time, ILogger<BlenderLifetime> logger)
 {
     private int? _pid;
     private JsonObject? _restart;

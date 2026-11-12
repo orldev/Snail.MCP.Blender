@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>The .blend file, the undo history and snapshots of the file.</summary>
 [McpServerToolType]
-public sealed class FileTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class FileTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     private static readonly TimeSpan FileTimeout = TimeSpan.FromSeconds(120);
 

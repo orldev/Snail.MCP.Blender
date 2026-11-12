@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Application.Diagnostics;
 /// <remarks>The ping goes over the monitor link, which the add-on answers from its socket thread: on the control link the report would wait
 /// for a running render to finish, and a busy Blender would look like a dead one. The agent named is the asking client's, which over HTTP is
 /// not the server's: it is the name the add-on's leases and journal will show this client under.</remarks>
-public sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, BridgeTraffic traffic, AddOnFreshness freshness, BlenderLifetime lifetime, ITunnel tunnel, LocalProject project, ClientSessions? clients = null)
+internal sealed class ServerHealth(ServerConfig config, IBlenderMonitor monitor, BridgeTraffic traffic, AddOnFreshness freshness, BlenderLifetime lifetime, ITunnel tunnel, LocalProject project, ClientSessions? clients = null)
 {
     /// <summary>Seconds without a tick of Blender's queue, while nothing runs, after which the dispatcher is called stalled rather than idle.</summary>
     public const int StalledAfterSeconds = 60;

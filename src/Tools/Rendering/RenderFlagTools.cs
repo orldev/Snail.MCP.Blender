@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>What each object contributes to the render: holdout, shadows only, which rays see it, which pass indexes it.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class RenderFlagTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class RenderFlagTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_object_render_flags", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Flags.ObjectRenderFlags)]

@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>A monitor link that answers from a script, or with nothing at all: what a render watch or a health report sees when it asks.</summary>
-public sealed class SilentMonitor : IBlenderMonitor
+internal sealed class SilentMonitor : IBlenderMonitor
 {
     private readonly Queue<JsonObject> _states = new();
     private BridgeReply _ping = BridgeReply.Failed(new BridgeError("unavailable", "no monitor"));

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Modeling;
 /// <summary>Geometry Nodes: procedural geometry built as a node tree on a modifier.</summary>
 [McpServerToolType]
 [Skill(Skills.Modeling, SkillDescriptions.Modeling)]
-public sealed class GeometryNodeTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class GeometryNodeTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_build_geometry_nodes", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.GeometryNodes.Build)]

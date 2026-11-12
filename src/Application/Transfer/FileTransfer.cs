@@ -3,10 +3,10 @@ using System.Security.Cryptography;
 namespace Snail.MCP.Blender.Application.Transfer;
 
 /// <summary>One file moved between the two machines, with the digest both ends agreed on.</summary>
-public sealed record Transferred(string From, string To, long Size, string Sha256);
+internal sealed record Transferred(string From, string To, long Size, string Sha256);
 
 /// <summary>What a transfer did: the files that made it, and the error that stopped it when one did.</summary>
-public sealed record TransferOutcome(IReadOnlyList<Transferred> Files, BridgeError? Error);
+internal sealed record TransferOutcome(IReadOnlyList<Transferred> Files, BridgeError? Error);
 
 /// <summary>Moves files and folders between this machine and the one Blender runs on, a chunk per request, each end checking the other's SHA-256.</summary>
 /// <remarks>The chunks are sized by the add-on's line limits: 16 MB a request and 4 MB a reply, both carrying base64. The exchange itself is
@@ -14,7 +14,7 @@ public sealed record TransferOutcome(IReadOnlyList<Transferred> Files, BridgeErr
 /// partial name and takes its own only once the digest matches, so an interrupted transfer never leaves a truncated file behind — including
 /// a transfer the caller cancelled, which used to leave one: the partial was swept on a failed reply and not on the exception a cancellation
 /// throws through the same code.</remarks>
-public sealed class FileTransfer
+internal sealed class FileTransfer
 {
     public const int UploadChunkBytes = 8 * 1024 * 1024;
 

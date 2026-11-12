@@ -5,7 +5,7 @@ using Snail.MCP.Blender.Tests.Contracts;
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>A background Blender running the add-on from the repository on a free port, driven by <c>Support/headless_driver.py</c>.</summary>
-public sealed class HeadlessBlender : IDisposable
+internal sealed class HeadlessBlender : IDisposable
 {
     private readonly Process _process;
 

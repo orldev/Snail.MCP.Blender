@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain;
 
 /// <summary>Names of the skills this server ships; each is a folder under Tools with classes marked by Snail.Sdk's skill attribute.</summary>
-public static class Skills
+internal static class Skills
 {
     public const string Modeling = "modeling";
 

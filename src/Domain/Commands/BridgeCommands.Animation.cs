@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/animation.py</c>: keyframes, F-Curves, armatures, drivers, shape keys and markers.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand SetFrame = new("set_frame", AddOnModules.Animation);
 

@@ -3,7 +3,7 @@ using System.Globalization;
 namespace Snail.MCP.Blender.Web.Pages;
 
 /// <summary>Sizes and durations the way a person reads them on a page.</summary>
-public static class Readable
+internal static class Readable
 {
     private static readonly string[] Units = ["B", "KB", "MB", "GB", "TB"];
 

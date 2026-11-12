@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/objects.py</c>: primitives, text and empties, one object in depth, selection, deletion, duplication, transforms and parenting.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand ObjectInfo = new("object_info", AddOnModules.Objects);
 

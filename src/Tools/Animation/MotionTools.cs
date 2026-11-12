@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Animation;
 /// <summary>Motion that is computed rather than keyed: paths and drivers.</summary>
 [McpServerToolType]
 [Skill(Skills.Animation, SkillDescriptions.Animation)]
-public sealed class MotionTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class MotionTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_follow_path", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Motion.FollowPath)]

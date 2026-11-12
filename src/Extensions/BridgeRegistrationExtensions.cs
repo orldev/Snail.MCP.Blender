@@ -13,7 +13,7 @@ using Snail.MCP.Blender.Application.Transfer;
 namespace Snail.MCP.Blender.Extensions;
 
 /// <summary>The link to Blender: the TCP client of the add-on behind a traffic trace, the SSH tunnel when Blender is elsewhere, the add-on packager and the health report over them.</summary>
-public static class BridgeRegistrationExtensions
+internal static class BridgeRegistrationExtensions
 {
     extension(IServiceCollection services)
     {

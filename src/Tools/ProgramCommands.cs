@@ -19,7 +19,7 @@ namespace Snail.MCP.Blender.Tools;
 /// (<c>ProgramOptions.Ran</c>), not here.
 /// </para>
 /// </remarks>
-public sealed class ProgramCommands(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice) : IProgramCommands
+internal sealed class ProgramCommands(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice) : IProgramCommands
 {
     /// <inheritdoc />
     public IReadOnlyList<string> Names { get; } = [.. BridgeCommands.All.Select(command => command.Name)];

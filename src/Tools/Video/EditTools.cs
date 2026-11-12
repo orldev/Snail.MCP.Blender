@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Video;
 /// <summary>The cut itself: splitting strips, proxies for playback, project timing and grading.</summary>
 [McpServerToolType]
 [Skill(Skills.Video, SkillDescriptions.Video)]
-public sealed class EditTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class EditTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_sequencer_split", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Cuts.Split)]

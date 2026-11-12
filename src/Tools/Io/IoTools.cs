@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Io;
 /// <summary>Files in, files out.</summary>
 [McpServerToolType]
 [Skill(Skills.Io, SkillDescriptions.Io)]
-public sealed class IoTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class IoTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_import_file", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Io.Import)]

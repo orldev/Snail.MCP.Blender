@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tools;
 
 /// <summary>Limits the descriptions promise; guard tests keep the prose and these numbers equal.</summary>
-public static class ToolLimits
+internal static class ToolLimits
 {
     /// <summary>Longest wait for one command; renders and imports of big files fit, a hung Blender does not hold the client forever.</summary>
     public const int MaxTimeoutSeconds = 600;

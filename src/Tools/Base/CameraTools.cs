@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Cameras: adding, aiming, lens and depth of field.</summary>
 [McpServerToolType]
-public sealed class CameraTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class CameraTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_camera", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Camera.AddCamera)]

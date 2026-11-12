@@ -4,7 +4,7 @@ using Snail.MCP.Blender.Tools.Prompts;
 namespace Snail.MCP.Blender.Tools.Farm;
 
 /// <summary>What a background render job writes: format, depth, codec, size and samples for this job only.</summary>
-public sealed record JobOutput : Block
+internal sealed record JobOutput : Block
 {
     [Description("PNG, JPEG, OPEN_EXR, OPEN_EXR_MULTILAYER, TIFF, WEBP or FFMPEG; the scene's format otherwise.")]
     public string? FileFormat { get; init; }
@@ -38,7 +38,7 @@ public sealed record JobOutput : Block
 }
 
 /// <summary>How a job runs on this machine: how many processes, how they share the range, what happens after a crash.</summary>
-public sealed record JobRun : Block
+internal sealed record JobRun : Block
 {
     [Description("Processes to split the frame range over; each renders every nth frame, so the sequence fills in evenly. 1 keeps one process.")]
     public int? Chunks { get; init; }

@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tools.Prompts;
 
 /// <summary>Pipeline recipes served as MCP prompts: the order of tools a studio would follow; a contract with the agent, guarded like the descriptions.</summary>
-public static class PromptTexts
+internal static class PromptTexts
 {
     public const string ProductShotName = "photoreal_product_shot";
 

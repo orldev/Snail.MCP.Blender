@@ -4,7 +4,7 @@ using Snail.Sdk.Mcp.Hosting.Discovery;
 namespace Snail.MCP.Blender.Application.Discovery;
 
 /// <summary>One thing a script does that a tool of this server already does, and the skill that tool arrives with.</summary>
-public sealed record ScriptFinding(string Operation, string Tool, string? Skill);
+internal sealed record ScriptFinding(string Operation, string Tool, string? Skill);
 
 /// <summary>Reads a Python script the way a reviewer would: which of its operations this server already has a tool for.</summary>
 /// <remarks>The measured reason blender_python wins is not that the tools are missing but that they are invisible: two thirds of the
@@ -14,7 +14,7 @@ public sealed record ScriptFinding(string Operation, string Tool, string? Skill)
 /// <para>The tools are the ones the server registers, read as Snail.Sdk's discovery reads them (<see cref="ToolCatalog"/>); the strict match of
 /// an operator to the tool that covers it (<see cref="Covering"/>) is this server's own, since <c>find_tool</c> ranks by likeness and a near
 /// miss there is a fair answer where here it would be wrong advice.</para></remarks>
-public sealed partial class ScriptAdvice(IReadOnlyList<ToolEntry> tools)
+internal partial class ScriptAdvice(IReadOnlyList<ToolEntry> tools)
 {
     /// <summary>Words that carry no intent in an operator's or a tool's name: the prefix every tool shares, and the glue of an English sentence.</summary>
     private static readonly HashSet<string> Noise = new(StringComparer.OrdinalIgnoreCase)

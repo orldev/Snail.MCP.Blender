@@ -6,7 +6,7 @@ using Snail.Sdk.Mcp.Hosting.Discovery;
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>The tools a session is listed from its start: those of the server's classes that belong to no skill, and the ones Snail.Sdk adds.</summary>
-public static class ServerTools
+internal static class ServerTools
 {
     /// <summary>What Snail.Sdk registers for this server: <c>find_tool</c>, <c>run_program</c> and the three skill tools.</summary>
     public static IReadOnlyList<string> OfTheSdk { get; } = ["find_tool", "run_program", "blender_skills", "blender_enable_skill", "blender_disable_skill"];

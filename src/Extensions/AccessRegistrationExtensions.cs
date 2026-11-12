@@ -13,7 +13,7 @@ using Snail.Sdk.Mcp.Hosting.Sessions;
 namespace Snail.MCP.Blender.Extensions;
 
 /// <summary>Who may do what: the client in hand, the kind of work each call is, the gate Snail.Sdk asks, and the advice a script gets.</summary>
-public static class AccessRegistrationExtensions
+internal static class AccessRegistrationExtensions
 {
     extension(IServiceCollection services)
     {

@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Reading the scene and choosing what to work on.</summary>
 [McpServerToolType]
-public sealed class SceneTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class SceneTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_scene_info", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Scene.Info)]

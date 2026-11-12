@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tests.Support;
 /// where that costs most: the type, the message and the details of an error decide the hint a tool gives and whether a step recovers, and
 /// none of it is visible from this side. Each answer here was taken from a live Blender by <c>AddOnAnswersLiveTests</c>, which runs the same
 /// scenarios again and fails when the add-on has started answering something else.</remarks>
-public static class RecordedAnswers
+internal static class RecordedAnswers
 {
     private static readonly Lazy<IReadOnlyDictionary<string, RecordedAnswer>> Answers = new(Read);
 
@@ -58,7 +58,7 @@ public static class RecordedAnswers
 /// <param name="Command">The bridge command that was sent.</param>
 /// <param name="Reply">What the add-on answered.</param>
 /// <param name="Volatile">Fields of the reply that differ from one machine to the next — a path, a name, a count — and are not compared.</param>
-public sealed record RecordedAnswer(string Scenario, string Command, BridgeReply Reply, IReadOnlyList<string> Volatile)
+internal sealed record RecordedAnswer(string Scenario, string Command, BridgeReply Reply, IReadOnlyList<string> Volatile)
 {
     public static RecordedAnswer From(JsonObject recorded)
     {

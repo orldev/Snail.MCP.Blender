@@ -5,7 +5,7 @@ using Snail.Sdk.Mcp.Hosting;
 namespace Snail.MCP.Blender.Configuration;
 
 /// <summary>Root server configuration, bound from a JSON file and environment variables.</summary>
-public sealed class ServerConfig
+internal sealed class ServerConfig
 {
     public const string SectionName = "Snail";
 
@@ -52,7 +52,7 @@ public sealed class ServerConfig
 }
 
 /// <summary>Settings of the TCP link to the Blender add-on.</summary>
-public sealed class BlenderLinkOptions
+internal sealed class BlenderLinkOptions
 {
     /// <summary>Where the add-on listens: the loopback, or the Blender container's name when the server runs beside it in Docker; a Blender on another
     /// machine is reached through <see cref="Tunnel"/>, never directly.</summary>
@@ -87,7 +87,7 @@ public sealed class BlenderLinkOptions
 /// <summary>An SSH tunnel this server opens to a Blender on another machine: up while the server runs, reopened after a drop, closed when it exits.</summary>
 /// <remarks>The server's own <see cref="BlenderLinkOptions.Port"/> is the local end; the add-on listens on <see cref="RemotePort"/> over there. The tunnel
 /// lives exactly as long as the server, which lives as long as the client works with Blender, so nothing stays open between sessions.</remarks>
-public sealed class TunnelOptions
+internal sealed class TunnelOptions
 {
     /// <summary>user@host, or a host from ~/.ssh/config; empty leaves the link on this machine.</summary>
     public string? Host { get; set; }
@@ -103,7 +103,7 @@ public sealed class TunnelOptions
 }
 
 /// <summary>Settings of the HTTP server a container runs: where it listens, the token clients present and the address the outside reaches it at.</summary>
-public sealed class HttpOptions
+internal sealed class HttpOptions
 {
     /// <summary>The address to listen on; a container listens on every interface, a server started by hand on the loopback only.</summary>
     /// <remarks>The HTTP server replaces it with the address it really listens on, which <c>Url</c> at the root (<c>SNAIL_MCP_BLENDER_URL</c>) or a

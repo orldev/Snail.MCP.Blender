@@ -7,7 +7,7 @@ using Snail.MCP.Blender.Configuration;
 namespace Snail.MCP.Blender.Adapters.AddOn;
 
 /// <summary>Zips the bundled add-on into the data directory with the manifest at the zip root, the layout Blender's Install from Disk expects.</summary>
-public sealed partial class AddOnPackager(ServerConfig config) : IAddOnPackager
+internal partial class AddOnPackager(ServerConfig config) : IAddOnPackager
 {
     private readonly Lock _packing = new();
 

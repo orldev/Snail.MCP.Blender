@@ -7,7 +7,7 @@ using Snail.MCP.Blender.Extensions;
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>The HTTP server composed exactly as a container runs it, on a free loopback port, in front of an add-on of the test's choosing.</summary>
-public static class InProcessHttpServer
+internal static class InProcessHttpServer
 {
     public const string Token = "in-process-token";
 

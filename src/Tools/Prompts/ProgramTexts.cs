@@ -3,7 +3,7 @@ namespace Snail.MCP.Blender.Tools.Prompts;
 /// <summary>What <c>run_program</c> is for on this server, written ahead of the rules and limits Snail.Sdk states for every program.</summary>
 /// <remarks>Outside <see cref="ToolDescriptions"/>, which holds the descriptions of this server's own tool methods: <c>run_program</c> is
 /// Snail.Sdk's tool, and the SDK writes the rest of its description — how a failed command is thrown, the log, the limits.</remarks>
-public static class ProgramTexts
+internal static class ProgramTexts
 {
     public const string Purpose =
         "Runs a small JavaScript program that calls the commands itself: blender.add_primitive({kind: \"cube\", name: \"Crate\"}) and so on for " +

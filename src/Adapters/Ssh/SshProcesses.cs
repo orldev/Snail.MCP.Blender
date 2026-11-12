@@ -3,7 +3,7 @@ using System.Diagnostics;
 namespace Snail.MCP.Blender.Adapters.Ssh;
 
 /// <summary>One running ssh: what the tunnel needs to watch it end and to end it.</summary>
-public interface ISshProcess : IDisposable
+internal interface ISshProcess : IDisposable
 {
     int Id { get; }
 
@@ -16,13 +16,13 @@ public interface ISshProcess : IDisposable
 }
 
 /// <summary>Starts ssh; a seam so the tunnel's supervision is tested without a network.</summary>
-public interface ISshProcessLauncher
+internal interface ISshProcessLauncher
 {
     ISshProcess Start(IReadOnlyList<string> arguments);
 }
 
 /// <summary>Starts the system's ssh with none of this server's standard streams: stdin and stdout carry JSON-RPC here, and ssh reading or writing them would corrupt it.</summary>
-public sealed class SshProcessLauncher(ILogger<SshProcessLauncher> logger) : ISshProcessLauncher
+internal sealed class SshProcessLauncher(ILogger<SshProcessLauncher> logger) : ISshProcessLauncher
 {
     public ISshProcess Start(IReadOnlyList<string> arguments)
     {

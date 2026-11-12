@@ -4,7 +4,7 @@ using Snail.MCP.Blender.Tools.Prompts;
 namespace Snail.MCP.Blender.Tools;
 
 /// <summary>Shared base of add-on-backed tools: sends one command and turns the reply into a tool result.</summary>
-public abstract class BridgeToolBase(IBlenderBridge bridge)
+internal abstract class BridgeToolBase(IBlenderBridge bridge)
 {
     protected async Task<CallToolResult> SendAsync(BridgeCommand command, JsonObject arguments, CancellationToken cancellationToken, TimeSpan? timeout = null) =>
         BridgeAnswers.From(await bridge.SendAsync(command, arguments, timeout, cancellationToken).ConfigureAwait(false));

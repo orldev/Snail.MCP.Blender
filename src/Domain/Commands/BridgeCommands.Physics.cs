@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/physics.py</c>: rigid and soft bodies, cloth, fluids and particles.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand AddPhysics = new("add_physics", AddOnModules.Physics);
 

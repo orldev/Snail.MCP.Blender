@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Animation;
 /// <summary>Shape keys: blend shapes for morphing and facial animation.</summary>
 [McpServerToolType]
 [Skill(Skills.Animation, SkillDescriptions.Animation)]
-public sealed class ShapeKeyTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class ShapeKeyTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_shape_key", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.ShapeKeys.Add)]

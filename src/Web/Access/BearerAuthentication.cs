@@ -11,7 +11,7 @@ namespace Snail.MCP.Blender.Web.Access;
 /// <remarks>A request without the header gets no result rather than a failure, so a page or a signed link can still admit it by its own
 /// scheme. The name on the ticket is the key's, not a header's: it is what the client's commands are signed with, and a name the caller
 /// chose for itself would let anyone holding any key take another agent's lease.</remarks>
-public sealed class BearerAuthentication(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ClientKeys keys)
+internal sealed class BearerAuthentication(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ClientKeys keys)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     private const string Prefix = "Bearer ";

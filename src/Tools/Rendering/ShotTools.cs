@@ -11,7 +11,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>Pictures of a thing rather than of the scene: product shots, viewport captures, baked textures, and a look at any image on disk.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class ShotTools(IBlenderBridge bridge, RenderWatch watch, RenderGallery gallery) : BridgeToolBase(bridge)
+internal sealed class ShotTools(IBlenderBridge bridge, RenderWatch watch, RenderGallery gallery) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_render_object", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.RenderObject)]

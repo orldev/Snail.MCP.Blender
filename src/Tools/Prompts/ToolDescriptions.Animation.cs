@@ -1,6 +1,6 @@
 namespace Snail.MCP.Blender.Tools.Prompts;
 
-public static partial class ToolDescriptions
+internal partial class ToolDescriptions
 {
     /// <summary><c>KeyframeTools</c>.</summary>
     public static class Keyframes

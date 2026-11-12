@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Video;
 
 /// <summary>Where a strip's picture sits in the frame.</summary>
-public sealed record StripTransform : Block
+internal sealed record StripTransform : Block
 {
     [Description("[x, y] offset in pixels.")]
     public double[]? Offset { get; init; }
@@ -22,7 +22,7 @@ public sealed record StripTransform : Block
 }
 
 /// <summary>Fades in frames: opacity for pictures, volume for sound.</summary>
-public sealed record StripFade : Block
+internal sealed record StripFade : Block
 {
     [Description("Frames of fade-in.")]
     public int? In { get; init; }
@@ -32,7 +32,7 @@ public sealed record StripFade : Block
 }
 
 /// <summary>Primary grade: lift, gamma, gain or offset, power, slope; 1 is neutral.</summary>
-public sealed record ColorBalance : Block
+internal sealed record ColorBalance : Block
 {
     [Description("LIFT_GAMMA_GAIN or OFFSET_POWER_SLOPE.")]
     public string? Method { get; init; }
@@ -51,7 +51,7 @@ public sealed record ColorBalance : Block
 }
 
 /// <summary>Audio of the encode.</summary>
-public sealed record EncodeAudio : Block
+internal sealed record EncodeAudio : Block
 {
     [Description("AAC, MP3, VORBIS, OPUS, FLAC, PCM, AC3 or NONE.")]
     public string? Codec { get; init; }

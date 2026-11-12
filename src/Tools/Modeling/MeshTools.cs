@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Modeling;
 /// <summary>Mesh editing through bmesh: every operation works on the mesh's stored selection, so select first, then edit.</summary>
 [McpServerToolType]
 [Skill(Skills.Modeling, SkillDescriptions.Modeling)]
-public sealed class MeshTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class MeshTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_mesh_select", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Mesh.Select)]

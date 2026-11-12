@@ -11,7 +11,7 @@ namespace Snail.MCP.Blender.Application.Access;
 /// <c>run_program</c>, and the server's own carriers — <c>run_tools</c>, <c>blender_batch</c> — ask it for every command they carry, under the
 /// name of the tool the command stands for (<see cref="BridgeCommands.ToolOf"/>). A tool the server registered is judged by the tool, its
 /// annotations included; a command no tool sends, by the command's own meaning.</remarks>
-public sealed class ScopeGate(ToolScopes scopes, ClientSessions clients, IServiceProvider root) : IToolGate
+internal sealed class ScopeGate(ToolScopes scopes, ClientSessions clients, IServiceProvider root) : IToolGate
 {
     private IReadOnlyDictionary<string, McpServerTool>? _tools;
 

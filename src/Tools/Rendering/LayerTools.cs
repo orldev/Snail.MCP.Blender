@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>How a scene splits into renders: view layers with their collections, passes and mattes, and which lights reach which objects.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class LayerTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class LayerTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_view_layer", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Layers.ViewLayer)]

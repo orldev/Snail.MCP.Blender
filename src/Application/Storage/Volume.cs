@@ -7,25 +7,25 @@ using Snail.MCP.Blender.Application.Transfer;
 namespace Snail.MCP.Blender.Application.Storage;
 
 /// <summary>A file under a path of an area, relative to that path, with its size and its modification time in Unix seconds.</summary>
-public sealed record VolumeFile(string Path, long Size, long Modified);
+internal sealed record VolumeFile(string Path, long Size, long Modified);
 
 /// <summary>What a path of an area holds: one file, or a folder and every file under it.</summary>
-public sealed record VolumeItem(bool IsFolder, IReadOnlyList<VolumeFile> Files, long Bytes, bool IsTruncated);
+internal sealed record VolumeItem(bool IsFolder, IReadOnlyList<VolumeFile> Files, long Bytes, bool IsTruncated);
 
 /// <summary>A path of an area looked up: what it holds, or why it could not be read.</summary>
-public sealed record VolumeLookup(VolumeItem? Item, BridgeError? Error);
+internal sealed record VolumeLookup(VolumeItem? Item, BridgeError? Error);
 
 /// <summary>Where the bytes of one request land in a file sent in several: at an offset, and whether this request ends the file, checked
 /// against the digest the client computed of the whole.</summary>
-public sealed record UploadPart(long Offset, bool IsLast, string? Sha256);
+internal sealed record UploadPart(long Offset, bool IsLast, string? Sha256);
 
 /// <summary>Files written into an area, and the error that stopped the writing when one did.</summary>
-public sealed record VolumeWrite(IReadOnlyList<Transferred> Files, BridgeError? Error);
+internal sealed record VolumeWrite(IReadOnlyList<Transferred> Files, BridgeError? Error);
 
 /// <summary>The add-on's data directory as the HTTP server reaches it: its areas measured, listed, read, written and deleted over the volume link.</summary>
 /// <remarks>Bytes move in the chunks file transfers use, each file checked against the digest the other end computed. Nothing here touches this
 /// machine's disk: a download streams from the add-on into the response, an upload from the request into the add-on.</remarks>
-public sealed class Volume(IBlenderVolume link)
+internal sealed class Volume(IBlenderVolume link)
 {
     public Task<BridgeReply> MeasureAsync(CancellationToken cancellationToken) =>
         link.SendAsync(BridgeCommands.Storage, [], cancellationToken: cancellationToken);

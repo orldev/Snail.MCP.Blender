@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Post;
 
 /// <summary>The Denoise node at the head of the post stack.</summary>
-public sealed record Denoise : Block
+internal sealed record Denoise : Block
 {
     [Description("Off removes the block; on when any other field is given.")]
     public bool? Enabled { get; init; }
@@ -22,7 +22,7 @@ public sealed record Denoise : Block
 }
 
 /// <summary>Depth of field from the Z pass instead of the camera.</summary>
-public sealed record Defocus : Block
+internal sealed record Defocus : Block
 {
     public bool? Enabled { get; init; }
 
@@ -43,7 +43,7 @@ public sealed record Defocus : Block
 }
 
 /// <summary>Motion blur from the Vector pass; scene motion blur must be off.</summary>
-public sealed record VectorBlur : Block
+internal sealed record VectorBlur : Block
 {
     public bool? Enabled { get; init; }
 
@@ -55,7 +55,7 @@ public sealed record VectorBlur : Block
 }
 
 /// <summary>Glare: bloom, streaks, ghosts and their kin.</summary>
-public sealed record Glare : Block
+internal sealed record Glare : Block
 {
     public bool? Enabled { get; init; }
 
@@ -97,7 +97,7 @@ public sealed record Glare : Block
 }
 
 /// <summary>Halation: the red halo film puts around highlights.</summary>
-public sealed record Halation : Block
+internal sealed record Halation : Block
 {
     public bool? Enabled { get; init; }
 
@@ -115,7 +115,7 @@ public sealed record Halation : Block
 }
 
 /// <summary>Chromatic aberration and barrel distortion of a lens.</summary>
-public sealed record ChromaticAberration : Block
+internal sealed record ChromaticAberration : Block
 {
     public bool? Enabled { get; init; }
 
@@ -133,7 +133,7 @@ public sealed record ChromaticAberration : Block
 }
 
 /// <summary>Darkened corners.</summary>
-public sealed record Vignette : Block
+internal sealed record Vignette : Block
 {
     public bool? Enabled { get; init; }
 
@@ -148,7 +148,7 @@ public sealed record Vignette : Block
 }
 
 /// <summary>How grain weighs by luminance: film shows it in the mids, little in clipped highlights.</summary>
-public sealed record GrainResponse : Block
+internal sealed record GrainResponse : Block
 {
     [Description("Weight in the shadows; 0.6 by default.")]
     public double? Shadows { get; init; }
@@ -161,7 +161,7 @@ public sealed record GrainResponse : Block
 }
 
 /// <summary>Film grain, animated per frame and weighted by luminance.</summary>
-public sealed record Grain : Block
+internal sealed record Grain : Block
 {
     public bool? Enabled { get; init; }
 

@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>The generic layer: any bpy operator, its documentation, and Python itself, as far as the configured access allows.</summary>
 [McpServerToolType]
-public sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice) : BridgeToolBase(bridge)
+internal sealed class OperatorTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice) : BridgeToolBase(bridge)
 {
 
     [McpServerTool(Name = "blender_run_operator", Destructive = true, OpenWorld = true)]

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>The glass: the physical camera in front of the sensor.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class OpticsTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class OpticsTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_set_camera_optics", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Lens.Optics)]

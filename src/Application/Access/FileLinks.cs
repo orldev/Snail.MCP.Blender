@@ -6,14 +6,14 @@ using Snail.MCP.Blender.Configuration;
 namespace Snail.MCP.Blender.Application.Access;
 
 /// <summary>A link that opens one path of the volume for one method until it expires.</summary>
-public sealed record FileLink(string Url, DateTimeOffset Expires);
+internal sealed record FileLink(string Url, DateTimeOffset Expires);
 
 /// <summary>Signs and checks links to what the HTTP server serves under <c>/raw</c>, so a command the agent runs on its own machine needs no token.</summary>
 /// <remarks>The signature covers the method, the path, the format, whether it may replace what is there, and the expiry: a link to read a
 /// render cannot overwrite it, open the folder around it or outlive its minutes, and one issued to write a new file cannot be turned into one
 /// that replaces an existing file by adding a word to the query. It ends up in the agent's transcript, which is why it carries no token and
 /// dies on its own.</remarks>
-public sealed class FileLinks(ClientToken token, ServerConfig config, TimeProvider time)
+internal sealed class FileLinks(ClientToken token, ServerConfig config, TimeProvider time)
 {
     public const string RawPrefix = "/raw";
 

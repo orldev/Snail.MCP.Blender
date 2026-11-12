@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/materials.py</c>: materials, shader node graphs, textures, UVs and viewport shading.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand CreateMaterial = new("create_material", AddOnModules.Materials);
 

@@ -16,7 +16,7 @@ using Snail.MCP.Blender.Web.Access;
 namespace Snail.MCP.Blender.Extensions;
 
 /// <summary>The HTTP server's own features: who may reach it, and the volume it serves files from.</summary>
-public static class WebRegistrationExtensions
+internal static class WebRegistrationExtensions
 {
     extension(IServiceCollection services)
     {

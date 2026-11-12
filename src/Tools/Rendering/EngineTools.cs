@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>The render engines in depth: Cycles sampling and light paths, EEVEE quality, motion blur.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class EngineTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class EngineTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_set_cycles", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Engines.Cycles)]

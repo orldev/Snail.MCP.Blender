@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/engines.py</c>: Cycles, EEVEE, Freestyle and motion blur settings.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand SetCycles = new("set_cycles", AddOnModules.Engines);
 

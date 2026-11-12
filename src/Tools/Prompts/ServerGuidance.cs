@@ -4,7 +4,7 @@ namespace Snail.MCP.Blender.Tools.Prompts;
 /// <remarks>Claude Code keeps the first <see cref="ClientLimit"/> characters of a server's instructions and drops the rest. At 4946 characters
 /// the text lost its whole tail in every session: how to reach files over HTTP, the units and what to do with a failed call. What a model
 /// needs before its first call therefore comes first, and what a tool's own answer repeats is left to that answer.</remarks>
-public static class ServerGuidance
+internal static class ServerGuidance
 {
     /// <summary>The most a client is known to keep of the instructions.</summary>
     public const int ClientLimit = 4096;

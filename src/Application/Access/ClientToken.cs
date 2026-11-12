@@ -8,7 +8,7 @@ namespace Snail.MCP.Blender.Application.Access;
 /// <remarks>Compared as digests in fixed time, so neither the length of a guess nor a matching prefix shows in how long the answer takes.
 /// The link key is derived from the token rather than drawn at random, so a link outlives a restart of the container and dies with the token.
 /// A server with no token accepts nobody and signs with a key of its own; the HTTP server refuses to start that way, the stdio server never checks.</remarks>
-public sealed class ClientToken
+internal sealed class ClientToken
 {
     private static readonly byte[] LinkKeyPurpose = "snail file links"u8.ToArray();
 

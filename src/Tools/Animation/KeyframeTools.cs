@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Animation;
 /// <summary>Keyframes and the curves between them.</summary>
 [McpServerToolType]
 [Skill(Skills.Animation, SkillDescriptions.Animation)]
-public sealed class KeyframeTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class KeyframeTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_set_frame", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Keyframes.SetFrame)]

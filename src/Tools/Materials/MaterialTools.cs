@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Materials;
 /// <summary>Materials as Principled BSDF settings, their assignment, and how the viewport shows them.</summary>
 [McpServerToolType]
 [Skill(Skills.Materials, SkillDescriptions.Materials)]
-public sealed class MaterialTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class MaterialTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_create_material", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Materials.Create)]

@@ -4,7 +4,7 @@ namespace Snail.MCP.Blender.Domain;
 /// <remarks>Coarse on purpose: a scope answers "may this client do this kind of thing at all", which an operator can decide once for a key,
 /// and the lease guard and the Python setting still decide the rest per call. Finer scopes would be a second policy to keep in step with the
 /// command schema, and the schema is already the one place that says what a command does.</remarks>
-public static class Scopes
+internal static class Scopes
 {
     /// <summary>Reading the scene, the files and the diagnostics.</summary>
     public const string Read = "read";
@@ -35,7 +35,7 @@ public static class Scopes
 /// <param name="Scopes">The kinds of work this key opens; see <see cref="Snail.MCP.Blender.Domain.Scopes"/>.</param>
 /// <param name="Issued">When the key was minted, for an operator reading the list.</param>
 /// <param name="Revoked">When it stopped being accepted, or null while it still is.</param>
-public sealed record ClientKey(string Name, string Digest, IReadOnlyList<string> Scopes, DateTimeOffset Issued, DateTimeOffset? Revoked = null)
+internal sealed record ClientKey(string Name, string Digest, IReadOnlyList<string> Scopes, DateTimeOffset Issued, DateTimeOffset? Revoked = null)
 {
     public bool IsRevoked => Revoked is not null;
 

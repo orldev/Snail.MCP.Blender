@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain;
 
 /// <summary>Why a command did not produce a result: the add-on's own error, or a failure of the link itself.</summary>
-public sealed record BridgeError(string Type, string Message, JsonNode? Details = null)
+internal sealed record BridgeError(string Type, string Message, JsonNode? Details = null)
 {
     public const string UnavailableType = "unavailable";
 

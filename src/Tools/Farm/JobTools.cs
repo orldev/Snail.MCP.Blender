@@ -14,7 +14,7 @@ namespace Snail.MCP.Blender.Tools.Farm;
 /// ends. The add-on keeps the job and its files, so <c>blender_render_jobs</c> still lists what it holds across a restart of this server.</remarks>
 [McpServerToolType]
 [Skill(Skills.Farm, SkillDescriptions.Farm)]
-public sealed class JobTools(IBlenderBridge bridge, ServerConfig config, AddOnJobs background)
+internal sealed class JobTools(IBlenderBridge bridge, ServerConfig config, AddOnJobs background)
 {
     [McpServerTool(Name = "blender_render_job", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Jobs.Start)]

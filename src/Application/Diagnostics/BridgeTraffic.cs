@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Application.Diagnostics;
 /// <remarks>Counters live here rather than in a log so that blender_diagnose can show them to the model; the process is short-lived,
 /// so they need no persistence and no reset. The same exchanges are published as metrics for a host that collects them — a container
 /// beside Blender runs for weeks, and what a model reads in one call is not what an operator watches over a month.</remarks>
-public sealed class BridgeTraffic
+internal sealed class BridgeTraffic
 {
     /// <summary>The meter the counters are published under.</summary>
     public const string MeterName = "Snail.MCP.Blender";

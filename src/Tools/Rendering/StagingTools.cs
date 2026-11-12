@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>Staging a subject for the camera: moves that circle or approach it, and the lights around it.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class StagingTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class StagingTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_camera_move", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Staging.CameraMove)]

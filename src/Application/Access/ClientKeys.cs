@@ -14,7 +14,7 @@ namespace Snail.MCP.Blender.Application.Access;
 /// smaller space to search than the whole one, and stretching would only slow down every request.</para>
 /// <para>The configured token stays a key of its own, with every scope, so a server that was set up with one keeps working and an operator
 /// can move clients over one at a time.</para></remarks>
-public sealed class ClientKeys
+internal sealed class ClientKeys
 {
     /// <summary>Bytes of secret a minted key carries, as base64url.</summary>
     public const int SecretBytes = 32;

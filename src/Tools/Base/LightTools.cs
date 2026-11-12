@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Lights: adding and tuning point, sun, spot and area lights.</summary>
 [McpServerToolType]
-public sealed class LightTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class LightTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_light", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Light.AddLight)]

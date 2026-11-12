@@ -7,6 +7,6 @@ namespace Snail.MCP.Blender.Configuration;
 /// reflection at run time. The generated attributes format their own message — <c>ErrorMessage</c> on a range is ignored — and it already
 /// names the setting and the range it broke.</remarks>
 [OptionsValidator]
-public sealed partial class ServerConfigValidation : IValidateOptions<ServerConfig>
+internal partial class ServerConfigValidation : IValidateOptions<ServerConfig>
 {
 }

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Modeling;
 /// <summary>Curves: drawing them from points, giving them thickness, turning them into meshes.</summary>
 [McpServerToolType]
 [Skill(Skills.Modeling, SkillDescriptions.Modeling)]
-public sealed class CurveTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class CurveTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_curve", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Curves.Add)]

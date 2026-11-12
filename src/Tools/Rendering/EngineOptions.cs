@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Rendering;
 
 /// <summary>Cycles light path bounces.</summary>
-public sealed record Bounces : Block
+internal sealed record Bounces : Block
 {
     [Description("Total bounces; 12 is the default.")]
     public int? Total { get; init; }
@@ -21,7 +21,7 @@ public sealed record Bounces : Block
 }
 
 /// <summary>Cycles caustics.</summary>
-public sealed record Caustics : Block
+internal sealed record Caustics : Block
 {
     public bool? Reflective { get; init; }
 
@@ -32,7 +32,7 @@ public sealed record Caustics : Block
 }
 
 /// <summary>Cycles sample clamping.</summary>
-public sealed record Clamp : Block
+internal sealed record Clamp : Block
 {
     [Description("Clamp direct light; 0 is none.")]
     public double? Direct { get; init; }
@@ -42,7 +42,7 @@ public sealed record Clamp : Block
 }
 
 /// <summary>EEVEE screen-space ray tracing options.</summary>
-public sealed record RaytracingOptions : Block
+internal sealed record RaytracingOptions : Block
 {
     [Description("Trace resolution: \"1\", \"2\" or \"4\" (divisor).")]
     public string? Resolution { get; init; }
@@ -66,7 +66,7 @@ public sealed record RaytracingOptions : Block
 }
 
 /// <summary>EEVEE fast global illumination.</summary>
-public sealed record FastGiOptions : Block
+internal sealed record FastGiOptions : Block
 {
     [Description("AMBIENT_OCCLUSION_ONLY or GLOBAL_ILLUMINATION.")]
     public string? Method { get; init; }
@@ -89,7 +89,7 @@ public sealed record FastGiOptions : Block
 }
 
 /// <summary>EEVEE volumetrics.</summary>
-public sealed record Volumetrics : Block
+internal sealed record Volumetrics : Block
 {
     [Description("\"2\", \"4\", \"8\" or \"16\"; smaller is finer and slower.")]
     public string? TileSize { get; init; }
@@ -115,7 +115,7 @@ public sealed record Volumetrics : Block
 }
 
 /// <summary>EEVEE light clamping.</summary>
-public sealed record EeveeClamp : Block
+internal sealed record EeveeClamp : Block
 {
     public double? SurfaceDirect { get; init; }
 
@@ -127,7 +127,7 @@ public sealed record EeveeClamp : Block
 }
 
 /// <summary>A Freestyle line set: which edges draw and how.</summary>
-public sealed record Lineset : Block
+internal sealed record Lineset : Block
 {
     [Description("Line set name; LineSet is Blender's default one.")]
     public string? Name { get; init; }
@@ -150,7 +150,7 @@ public sealed record Lineset : Block
 }
 
 /// <summary>EEVEE depth-of-field bokeh.</summary>
-public sealed record Bokeh : Block
+internal sealed record Bokeh : Block
 {
     [Description("Largest bokeh in pixels.")]
     public double? MaxSize { get; init; }

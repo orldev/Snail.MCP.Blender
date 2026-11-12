@@ -20,7 +20,7 @@ namespace Snail.MCP.Blender.Web.Pages;
 /// <summary>The pages of the server beside Blender: signing in with the client token, the status, and the areas of the volume to look through and clean.</summary>
 /// <remarks>Every action is a form that posts and returns to the page it came from, so the pages need no script to work; the script only asks
 /// before a deletion and shows times in the reader's zone. Forms carry an antiforgery token, and the session cookie is SameSite=Strict.</remarks>
-public static class PageEndpoints
+internal static class PageEndpoints
 {
     private const string LoginPath = "/login";
 

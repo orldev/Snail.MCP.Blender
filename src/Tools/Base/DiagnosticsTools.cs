@@ -8,7 +8,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Health of the server and of the link into Blender, plus the add-on installer.</summary>
 [McpServerToolType]
-public sealed class DiagnosticsTools(ServerHealth health, IAddOnPackager packager)
+internal sealed class DiagnosticsTools(ServerHealth health, IAddOnPackager packager)
 {
     [McpServerTool(Name = "blender_diagnose", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Diagnostics.Diagnose)]

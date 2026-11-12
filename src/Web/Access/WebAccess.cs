@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Web.Access;
 
 /// <summary>The ways into the HTTP server and who each one admits.</summary>
-public static class WebAccess
+internal static class WebAccess
 {
     /// <summary>A client sending its key as a bearer on every request: Claude Code on <c>/mcp</c>, or a script on the files.</summary>
     public const string BearerScheme = "Bearer";

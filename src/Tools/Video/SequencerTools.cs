@@ -12,7 +12,7 @@ namespace Snail.MCP.Blender.Tools.Video;
 /// <summary>The Video Sequence Editor: a timeline of strips encoded to a video file.</summary>
 [McpServerToolType]
 [Skill(Skills.Video, SkillDescriptions.Video)]
-public sealed class SequencerTools(IBlenderBridge bridge, RenderWatch watch, Jobs jobs) : BridgeToolBase(bridge)
+internal sealed class SequencerTools(IBlenderBridge bridge, RenderWatch watch, Jobs jobs) : BridgeToolBase(bridge)
 {
     /// <summary>The kind of job an encode of the timeline is.</summary>
     private const string VideoKind = "video";

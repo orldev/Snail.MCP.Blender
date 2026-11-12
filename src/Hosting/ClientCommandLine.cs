@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Hosting;
 /// <remarks>A key is worth nothing to whoever reads the file it is kept in — only its digest is stored — so it cannot be looked up later and
 /// there is no editing the file by hand. This is where an operator gets one, and the only moment the secret exists outside the holder's hands
 /// is the line that prints it.</remarks>
-public static class ClientCommandLine
+internal static class ClientCommandLine
 {
     public const string Verb = "clients";
 

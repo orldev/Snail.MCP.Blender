@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Application.Discovery;
 /// they are about to do. The schema does.
 /// <para>A file that cannot be read leaves every command unknown rather than stopping the server: the caller decides what an unknown command
 /// costs, and for the scopes that is the widest ordinary answer, never the narrowest.</para></remarks>
-public sealed class CommandSemantics(string? addOnDirectory = null)
+internal sealed class CommandSemantics(string? addOnDirectory = null)
 {
     private readonly IReadOnlyDictionary<string, JsonObject> _commands = Read(Path.Combine(addOnDirectory ?? ServerPaths.BundledAddOnDirectory, "commands.json"));
 

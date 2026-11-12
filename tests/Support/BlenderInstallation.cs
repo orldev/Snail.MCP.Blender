@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>Where a Blender binary is on this machine, if anywhere; the live tests skip without one.</summary>
-public static class BlenderInstallation
+internal static class BlenderInstallation
 {
     public const string PathVariable = "SNAIL_MCP_BLENDER_TESTS_BLENDER";
 
@@ -27,7 +27,7 @@ public static class BlenderInstallation
 }
 
 /// <summary>A fact that runs only where Blender is installed; elsewhere it is reported as skipped, never as green.</summary>
-public sealed class BlenderFactAttribute : FactAttribute
+internal sealed class BlenderFactAttribute : FactAttribute
 {
     public BlenderFactAttribute()
     {

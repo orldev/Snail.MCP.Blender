@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Adapters.Blender;
 /// belongs to is the command's own, read from the schema both sides share, so a call site that holds only the bridge still sends
 /// <c>file_get</c> down the data link — it used to be the port a caller happened to have injected that decided, and the promise held only
 /// by convention.</remarks>
-public sealed class BlenderLinks(BlenderLinkOptions options, ILogger<BlenderConnection> logger, ClientSessions? clients = null) : IBlenderBridge, IAsyncDisposable
+internal sealed class BlenderLinks(BlenderLinkOptions options, ILogger<BlenderConnection> logger, ClientSessions? clients = null) : IBlenderBridge, IAsyncDisposable
 {
     private readonly BlenderConnection _control = new(options, logger, clients);
 

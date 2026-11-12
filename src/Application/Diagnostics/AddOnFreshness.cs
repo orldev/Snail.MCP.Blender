@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Application.Diagnostics;
 /// <remarks>A server updated without its add-on answers <c>UnknownCommand</c> in the middle of a task, which reads as a broken tool rather than
 /// a stale install. Versions cannot catch that — the add-on's version stays put across bug fixes — so both sides hash their own Python and the
 /// digests are compared. The direction follows from the catalog: commands this server knows and the add-on does not mean the add-on is behind.</remarks>
-public sealed class AddOnFreshness(IAddOnPackager packager, ILogger<AddOnFreshness> logger)
+internal sealed class AddOnFreshness(IAddOnPackager packager, ILogger<AddOnFreshness> logger)
 {
     private string? _reported;
 

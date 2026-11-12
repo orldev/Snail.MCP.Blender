@@ -12,7 +12,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 /// in context; the tools stay the way the model gets the same things. Like the image block, the blob carries the base64 text
 /// as UTF-8 bytes, not the decoded picture.</remarks>
 [McpServerResourceType]
-public sealed class BlenderResources(IBlenderBridge bridge, RenderGallery gallery)
+internal sealed class BlenderResources(IBlenderBridge bridge, RenderGallery gallery)
 {
     public const string LastRenderUri = "snail://renders/last";
 

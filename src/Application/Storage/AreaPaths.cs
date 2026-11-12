@@ -4,7 +4,7 @@ namespace Snail.MCP.Blender.Application.Storage;
 /// <remarks>The add-on trims a path and resolves "." and ".." before it acts. A check for exactly ".." let ".. " through, which became ".."
 /// over there: the root of an area, or the folder of a running job, was deleted by a name this server had passed. A dot segment is refused
 /// whatever surrounds it, on both sides, so the two readings have nothing left to disagree on.</remarks>
-public static class AreaPaths
+internal static class AreaPaths
 {
     /// <summary>Relative, in either slash, without a drive, a NUL or a segment that is "." or ".." once trimmed.</summary>
     /// <remarks>The other separator is a separator, not a refusal: the add-on reads <c>a\b.png</c> as a file in a folder, and the shared cases

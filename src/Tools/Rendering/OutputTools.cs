@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>What a render becomes on disk: colour management, format with depth and codec, stamps, region, File Output nodes.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class OutputTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class OutputTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_set_color_management", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Output.ColorManagement)]

@@ -14,7 +14,7 @@ namespace Snail.MCP.Blender.Tests.Support;
 /// <summary>The scope rule, the gate and the clients a test serves, and the tools discovery reads, built the way the server builds them.</summary>
 /// <remarks>The rule reads the command schema bundled next to the test binary, so a test asks the same question of the same file the server
 /// does rather than a table of its own.</remarks>
-public static class Access
+internal static class Access
 {
     public static ToolScopes Scopes { get; } = new(new CommandSemantics());
 

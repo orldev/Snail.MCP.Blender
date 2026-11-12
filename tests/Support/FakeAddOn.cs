@@ -5,7 +5,7 @@ using System.Text;
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>The add-on's socket side on a free loopback port: reads one JSON line, answers with whatever the test scripted, so <c>BlenderConnection</c> is exercised over a real TCP link.</summary>
-public sealed class FakeAddOn : IAsyncDisposable
+internal sealed class FakeAddOn : IAsyncDisposable
 {
     private readonly TcpListener _listener;
     private readonly Func<JsonObject, Task<string?>> _answer;

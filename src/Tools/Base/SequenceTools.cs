@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Many commands in one call, run in the Blender that is already open: what a build of hundreds of steps costs instead of hundreds of round trips.</summary>
 [McpServerToolType]
-public sealed class SequenceTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, IServiceProvider services) : BridgeToolBase(bridge)
+internal sealed class SequenceTools(IBlenderBridge bridge, ServerConfig config, ScriptAdvice advice, IServiceProvider services) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "run_tools", Destructive = true, OpenWorld = true)]
     [Forwards]

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Animation;
 /// <summary>Armatures, skinning and posing.</summary>
 [McpServerToolType]
 [Skill(Skills.Animation, SkillDescriptions.Animation)]
-public sealed class RigTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class RigTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_armature", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rig.AddArmature)]

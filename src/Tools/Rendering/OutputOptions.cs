@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Rendering;
 
 /// <summary>Metadata burnt into the frame.</summary>
-public sealed record Stamp : Block
+internal sealed record Stamp : Block
 {
     [Description("Stamps on or off.")]
     public bool? Enabled { get; init; }
@@ -39,7 +39,7 @@ public sealed record Stamp : Block
 }
 
 /// <summary>Stereoscopic and multi-view rendering.</summary>
-public sealed record Stereo : Block
+internal sealed record Stereo : Block
 {
     [Description("Multi-view rendering on or off.")]
     public bool? Enabled { get; init; }
@@ -64,7 +64,7 @@ public sealed record Stereo : Block
 }
 
 /// <summary>White balance of the view.</summary>
-public sealed record WhiteBalance : Block
+internal sealed record WhiteBalance : Block
 {
     [Description("On or off; on when temperature or tint is given.")]
     public bool? Enabled { get; init; }

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Farm;
 /// <summary>Whether the frame fits the machine, measured before an hour of rendering finds out.</summary>
 [McpServerToolType]
 [Skill(Skills.Farm, SkillDescriptions.Farm)]
-public sealed class BudgetTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class BudgetTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_render_budget", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Budget.Estimate)]

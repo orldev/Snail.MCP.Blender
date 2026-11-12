@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Post;
 /// <summary>The compositor node tree that post-processes renders: nodes, File Output, cryptomatte mattes.</summary>
 [McpServerToolType]
 [Skill(Skills.Post, SkillDescriptions.Post)]
-public sealed class CompositorTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class CompositorTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_compositor", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.Compositor)]

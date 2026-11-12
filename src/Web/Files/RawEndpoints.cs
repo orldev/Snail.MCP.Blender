@@ -13,7 +13,7 @@ namespace Snail.MCP.Blender.Web.Files;
 /// <remarks>Only the files area takes writes: jobs, batches and snapshots are made by Blender, and a page or a link only reads or removes them.
 /// A path is checked here before it reaches the add-on, which checks it again against the area it names. What is read comes sandboxed and
 /// unsniffed: an SVG or an HTML file from the volume must not run script in the pages' origin.</remarks>
-public static class RawEndpoints
+internal static class RawEndpoints
 {
     private static readonly FileExtensionContentTypeProvider ContentTypes = new();
 

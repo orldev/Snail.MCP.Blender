@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Modeling;
 /// <summary>Modifiers of every type, driven by their Python property names.</summary>
 [McpServerToolType]
 [Skill(Skills.Modeling, SkillDescriptions.Modeling)]
-public sealed class ModifierTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class ModifierTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_modifier", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Modifiers.Add)]

@@ -1,6 +1,6 @@
 namespace Snail.MCP.Blender.Tools.Prompts;
 
-public static partial class ToolDescriptions
+internal partial class ToolDescriptions
 {
     /// <summary><c>RenderTools</c> and <c>CompositorTools</c>.</summary>
     public static class Rendering

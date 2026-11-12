@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools;
 /// <summary>What the add-on answered, as the envelope every Snail server answers in: <see cref="ToolAnswer"/> over a bridge reply.</summary>
 /// <remarks>The add-on's error type becomes the envelope's <c>type</c> as the add-on spells it (<c>Unavailable</c>, <c>Leased</c>), and its
 /// details become the failure's <c>data</c>; the hint is the one that fits the type.</remarks>
-public static class BridgeAnswers
+internal static class BridgeAnswers
 {
     /// <summary>A bridge reply as a tool result: the result as is, or the add-on's error with the hint that fits its type.</summary>
     public static CallToolResult From(BridgeReply reply) =>

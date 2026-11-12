@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/modeling.py</c>: mesh edits, modifiers, curves, joins, origins and geometry nodes.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand MeshSelect = new("mesh_select", AddOnModules.Modeling);
 

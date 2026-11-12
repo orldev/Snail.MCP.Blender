@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/files.py</c>: undo history, the .blend file itself and the project folder that holds it.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand UndoRedo = new("undo_redo", AddOnModules.Files);
 

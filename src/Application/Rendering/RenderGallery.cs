@@ -3,7 +3,7 @@ namespace Snail.MCP.Blender.Application.Rendering;
 /// <summary>The last picture a tool returned, kept so a client can read it again as a resource without another render.</summary>
 /// <remarks>One picture is enough: the model looks at the latest render, and a client with resource support shows it in its own
 /// viewer instead of spending context on the image block a second time.</remarks>
-public sealed class RenderGallery
+internal sealed class RenderGallery
 {
     private readonly Lock _gate = new();
     private Picture? _last;

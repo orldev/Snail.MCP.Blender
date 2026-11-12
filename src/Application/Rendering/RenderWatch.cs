@@ -6,7 +6,7 @@ namespace Snail.MCP.Blender.Application.Rendering;
 /// <remarks>Without a progress token from the client there is nothing to report to, so the reply is awaited as it is. The poll
 /// interval is long enough that a probe never competes with the render for Blender's attention; the timer stops the moment
 /// the render ends, so no probe is left pending after the reply.</remarks>
-public sealed class RenderWatch(IBlenderMonitor monitor)
+internal sealed class RenderWatch(IBlenderMonitor monitor)
 {
     public TimeSpan Interval { get; init; } = TimeSpan.FromSeconds(2);
 

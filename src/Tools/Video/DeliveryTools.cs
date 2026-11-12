@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Video;
 /// <summary>Delivery: how the timeline is encoded, and the sound on its own.</summary>
 [McpServerToolType]
 [Skill(Skills.Video, SkillDescriptions.Video)]
-public sealed class DeliveryTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class DeliveryTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_sequencer_encode", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Delivery.Encode)]

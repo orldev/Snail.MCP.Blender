@@ -13,7 +13,7 @@ namespace Snail.MCP.Blender.Adapters.Blender;
 /// wait in its queue; serialising here keeps the reply stream trivially in order. Any exit that leaves bytes of unknown
 /// shape in the socket closes it on purpose: a late reply would be read as the answer to the next request, a half-written
 /// request would be glued to the next one, and a line that did not parse means the stream is no longer at a boundary.</remarks>
-public sealed class BlenderConnection(BlenderLinkOptions options, ILogger<BlenderConnection> logger, ClientSessions? clients = null) : IBlenderBridge, IAsyncDisposable
+internal sealed class BlenderConnection(BlenderLinkOptions options, ILogger<BlenderConnection> logger, ClientSessions? clients = null) : IBlenderBridge, IAsyncDisposable
 {
     private static readonly UTF8Encoding Utf8 = new(encoderShouldEmitUTF8Identifier: false);
 

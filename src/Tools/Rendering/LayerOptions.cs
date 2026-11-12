@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Rendering;
 
 /// <summary>Which collections a view layer renders and how.</summary>
-public sealed record LayerCollections : Block
+internal sealed record LayerCollections : Block
 {
     [Description("Collections rendered normally; also clears holdout and indirect-only on them.")]
     public string[]? Include { get; init; }
@@ -22,7 +22,7 @@ public sealed record LayerCollections : Block
 }
 
 /// <summary>Cryptomatte passes of a view layer.</summary>
-public sealed record Cryptomatte : Block
+internal sealed record Cryptomatte : Block
 {
     [Description("Matte by object.")]
     public bool? Object { get; init; }

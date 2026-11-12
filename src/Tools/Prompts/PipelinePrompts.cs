@@ -5,7 +5,7 @@ namespace Snail.MCP.Blender.Tools.Prompts;
 
 /// <summary>Recipes a studio follows, offered as MCP prompts so a client can start a task with the right order of tools already in front of the model.</summary>
 [McpServerPromptType]
-public sealed class PipelinePrompts
+internal sealed class PipelinePrompts
 {
     [McpServerPrompt(Name = PromptTexts.ProductShotName)]
     [Description(PromptTexts.ProductShotDescription)]

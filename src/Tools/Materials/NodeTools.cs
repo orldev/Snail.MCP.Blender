@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Materials;
 /// <summary>The shader node graph of a material, node by node or as one specification.</summary>
 [McpServerToolType]
 [Skill(Skills.Materials, SkillDescriptions.Materials)]
-public sealed class NodeTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class NodeTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_node", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Nodes.Add)]

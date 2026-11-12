@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Rendering;
 
 /// <summary>The sensor behind the lens.</summary>
-public sealed record Sensor : Block
+internal sealed record Sensor : Block
 {
     [Description("Width in mm: 36 full frame, 23.5 APS-C, 24.89 Super 35, 6.17 phone.")]
     public double? Width { get; init; }
@@ -16,7 +16,7 @@ public sealed record Sensor : Block
 }
 
 /// <summary>The iris: how much light and what shape of bokeh.</summary>
-public sealed record Aperture : Block
+internal sealed record Aperture : Block
 {
     [Description("Depth of field on or off; on when any other field is given.")]
     public bool? Enabled { get; init; }
@@ -35,7 +35,7 @@ public sealed record Aperture : Block
 }
 
 /// <summary>Where the lens focuses.</summary>
-public sealed record Focus : Block
+internal sealed record Focus : Block
 {
     [Description("Focus distance in metres; cleared when an object is given.")]
     public double? Distance { get; init; }
@@ -48,7 +48,7 @@ public sealed record Focus : Block
 }
 
 /// <summary>Cycles motion blur of one object.</summary>
-public sealed record ObjectMotion : Block
+internal sealed record ObjectMotion : Block
 {
     [Description("Blur this object's motion.")]
     public bool? Enabled { get; init; }

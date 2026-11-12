@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain;
 
 /// <summary>The Python modules of the add-on, each the home of a group of commands; every command names its module, so the contract is checked file by file.</summary>
-public static class AddOnModules
+internal static class AddOnModules
 {
     public const string Animation = "animation";
 

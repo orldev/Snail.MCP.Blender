@@ -13,7 +13,7 @@ namespace Snail.MCP.Blender.Extensions;
 
 /// <summary>Composition root of the server a container runs: the bridge and tools of the stdio server, reached over HTTP behind the client token.</summary>
 /// <remarks>No idle watchdog: over stdio it ends a server its client forgot, but a container is meant to outlive every client.</remarks>
-public static class HttpServerRegistrationExtensions
+internal static class HttpServerRegistrationExtensions
 {
     public const string McpPath = "/mcp";
 

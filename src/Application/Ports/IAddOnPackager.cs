@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Application.Ports;
 
 /// <summary>Builds the zip Blender installs through Preferences → Get Extensions → Install from Disk.</summary>
-public interface IAddOnPackager
+internal interface IAddOnPackager
 {
     AddOnPackage Pack();
 

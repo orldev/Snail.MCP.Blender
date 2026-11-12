@@ -5,7 +5,7 @@ namespace Snail.MCP.Blender.Application.Discovery;
 /// <summary>What the Python setting lets through: which operators run code, and whether a script is one the catalog already covers.</summary>
 /// <remarks>One place for the rule, because three doors lead to the same room: blender_python, a step of run_tools or blender_batch, and a
 /// command a program sends. A rule that lived at one door only was a way around the setting at the other two.</remarks>
-public static class ScriptAccess
+internal static class ScriptAccess
 {
     /// <summary>Covered operations a script may carry before <see cref="PythonAccess.Fallback"/> refuses it: one is a fair mix, several is a sequence written as a script.</summary>
     public const int CoveredLimit = 2;

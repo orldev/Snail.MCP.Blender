@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Collections: the outliner's folders.</summary>
 [McpServerToolType]
-public sealed class CollectionTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class CollectionTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_create_collection", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Collections.CreateCollection)]

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Physics;
 /// <summary>Simulations and particles.</summary>
 [McpServerToolType]
 [Skill(Skills.Physics, SkillDescriptions.Physics)]
-public sealed class PhysicsTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class PhysicsTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_physics", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Physics.Add)]

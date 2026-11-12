@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tools.Prompts;
 
 /// <summary>Tool description catalog — what the model reads before calling; a contract with the agent guarded by <c>ToolCatalogConventionTests</c>. One partial file per area of Blender.</summary>
-public static partial class ToolDescriptions
+internal partial class ToolDescriptions
 {
     /// <summary>Parameter descriptions shared by several tools.</summary>
     public static class Parameters

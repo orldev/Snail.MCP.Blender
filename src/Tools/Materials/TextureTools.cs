@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Materials;
 /// <summary>Textures wired into the shader, and the UVs they need.</summary>
 [McpServerToolType]
 [Skill(Skills.Materials, SkillDescriptions.Materials)]
-public sealed class TextureTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class TextureTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_load_image_texture", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Textures.LoadImage)]

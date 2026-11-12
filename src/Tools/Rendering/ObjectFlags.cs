@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tools.Rendering;
 
 /// <summary>Which ray types see an object.</summary>
-public sealed record RayVisibility : Block
+internal sealed record RayVisibility : Block
 {
     public bool? Camera { get; init; }
 
@@ -17,7 +17,7 @@ public sealed record RayVisibility : Block
 }
 
 /// <summary>An object's role in caustics.</summary>
-public sealed record CausticsRole : Block
+internal sealed record CausticsRole : Block
 {
     public bool? Caster { get; init; }
 

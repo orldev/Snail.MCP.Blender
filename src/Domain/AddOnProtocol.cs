@@ -6,7 +6,7 @@ namespace Snail.MCP.Blender.Domain;
 /// before it, so an add-on ahead of this server is left alone — it speaks everything this server knows and more, and refusing it would make
 /// every upgrade a lockstep.
 /// <para>The contract test keeps both equal to <c>PROTOCOL</c> and <c>CAPABILITIES</c> in <c>addon/diagnostics.py</c>.</para></remarks>
-public static class AddOnProtocol
+internal static class AddOnProtocol
 {
     /// <summary>The protocol this server speaks, and the oldest it works with.</summary>
     public const int Version = 1;

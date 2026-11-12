@@ -8,7 +8,7 @@ using Snail.Sdk.Mcp.Hosting;
 namespace Snail.MCP.Blender.Configuration;
 
 /// <summary>Builds <see cref="ServerConfig"/>: defaults → settings file → environment variables, validated before the server answers anything.</summary>
-public static class ServerConfigExtensions
+internal static class ServerConfigExtensions
 {
     /// <summary>Adds the configuration sources and binds them through the options pipeline; what a consumer injects is the bound <see cref="ServerConfig"/> itself.</summary>
     /// <remarks>The ranges are attributes on the settings and <see cref="ServerConfigValidation"/> is generated from them, so a setting arrives with

@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain;
 
 /// <summary>What came back for one command: a result, or the error that replaced it.</summary>
-public sealed record BridgeReply(JsonNode? Result, BridgeError? Error)
+internal sealed record BridgeReply(JsonNode? Result, BridgeError? Error)
 {
     public bool IsOk => Error is null;
 

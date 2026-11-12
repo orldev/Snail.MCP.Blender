@@ -5,7 +5,7 @@ using Snail.MCP.Blender.Tools.Prompts;
 namespace Snail.MCP.Blender.Web.Pages;
 
 /// <summary>What the pages show, read out of the add-on's and the server's own reports.</summary>
-public static class PageViews
+internal static class PageViews
 {
     public static IReadOnlyList<Section> Sections { get; } =
     [

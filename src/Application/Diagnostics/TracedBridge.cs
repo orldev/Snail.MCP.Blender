@@ -6,7 +6,7 @@ namespace Snail.MCP.Blender.Application.Diagnostics;
 /// <summary>The bridge with a stopwatch around every command: each exchange lands in the log and in <see cref="BridgeTraffic"/>, the reply passes through untouched.</summary>
 /// <remarks>Timing sits in front of the link rather than inside it so the TCP client stays about sockets, and so the monitor link,
 /// which probes every two seconds during a render, does not inflate the counters.</remarks>
-public sealed class TracedBridge(IBlenderBridge link, BridgeTraffic traffic, ILogger<TracedBridge> logger, ClientSessions? clients = null) : IBlenderBridge
+internal sealed class TracedBridge(IBlenderBridge link, BridgeTraffic traffic, ILogger<TracedBridge> logger, ClientSessions? clients = null) : IBlenderBridge
 {
     public bool IsConnected => link.IsConnected;
 

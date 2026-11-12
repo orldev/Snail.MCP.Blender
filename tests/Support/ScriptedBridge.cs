@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>An add-on that answers from a script: tests assert which command left with which parameters and feed the reply the real add-on would give.</summary>
-public sealed class ScriptedBridge : IBlenderBridge
+internal sealed class ScriptedBridge : IBlenderBridge
 {
     private readonly Dictionary<string, Func<JsonObject?, BridgeReply>> _answers = new(StringComparer.Ordinal);
 

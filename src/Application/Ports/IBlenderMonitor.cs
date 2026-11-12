@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Application.Ports;
 
 /// <summary>The monitor link, answered from the add-on's socket thread: alive while the control link waits on a render.</summary>
-public interface IBlenderMonitor
+internal interface IBlenderMonitor
 {
     /// <summary>What the render in flight is doing.</summary>
     Task<BridgeReply> ProbeAsync(CancellationToken cancellationToken = default);

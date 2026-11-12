@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Animation;
 /// <summary>Constraints on objects and bones, driven by their Python property names.</summary>
 [McpServerToolType]
 [Skill(Skills.Animation, SkillDescriptions.Animation)]
-public sealed class ConstraintTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class ConstraintTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_constraint", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Constraints.Add)]

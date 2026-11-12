@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Post;
 /// <summary>The lens artefacts added after the render: the post stack on the beauty pass.</summary>
 [McpServerToolType]
 [Skill(Skills.Post, SkillDescriptions.Post)]
-public sealed class PostTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class PostTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_lens_effects", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Lens.Effects)]

@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Tools.Modeling;
 /// <summary>Whole-object geometry: joining, origins and baking transforms into the mesh.</summary>
 [McpServerToolType]
 [Skill(Skills.Modeling, SkillDescriptions.Modeling)]
-public sealed class GeometryTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class GeometryTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_join_objects", Destructive = true, OpenWorld = false)]
     [Description(ToolDescriptions.Geometry.Join)]

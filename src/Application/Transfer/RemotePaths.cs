@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Application.Transfer;
 
 /// <summary>Paths on the machine Blender runs on, read without assuming it is this one: a Windows path is absolute there even when this server runs on macOS.</summary>
-public static class RemotePaths
+internal static class RemotePaths
 {
     /// <summary>Rooted on any of the platforms Blender runs on: <c>/home/…</c>, <c>C:\…</c>, <c>C:/…</c>, <c>\\server\…</c> or <c>~</c>.</summary>
     /// <remarks>Read after trimming, as the add-on reads it: a leading space hid <c>~/…/startup/x.py</c> from this check, and the add-on then

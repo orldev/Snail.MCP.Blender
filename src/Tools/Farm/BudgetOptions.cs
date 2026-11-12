@@ -3,7 +3,7 @@ using System.ComponentModel;
 namespace Snail.MCP.Blender.Tools.Farm;
 
 /// <summary>A probe render that times the frame at low resolution.</summary>
-public sealed record Probe : Block
+internal sealed record Probe : Block
 {
     [Description("Off skips the probe; on when any other field is given.")]
     public bool? Enabled { get; init; }
@@ -16,7 +16,7 @@ public sealed record Probe : Block
 }
 
 /// <summary>Simplify: caps that keep heavy scenes renderable.</summary>
-public sealed record Simplify : Block
+internal sealed record Simplify : Block
 {
     public bool? Enabled { get; init; }
 
@@ -31,7 +31,7 @@ public sealed record Simplify : Block
 }
 
 /// <summary>Limits applied right away.</summary>
-public sealed record Limits : Block
+internal sealed record Limits : Block
 {
     [Description("Largest texture edge at render time: OFF, 128, 256, 512, 1024, 2048, 4096 or 8192.")]
     public string? TextureLimit { get; init; }
@@ -46,7 +46,7 @@ public sealed record Limits : Block
 }
 
 /// <summary>Preparing the file to leave this machine.</summary>
-public sealed record FarmPack : Block
+internal sealed record FarmPack : Block
 {
     public bool? Enabled { get; init; }
 

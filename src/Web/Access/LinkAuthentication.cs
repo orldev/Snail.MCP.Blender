@@ -10,7 +10,7 @@ namespace Snail.MCP.Blender.Web.Access;
 /// <summary>Admits a request whose query carries a link signed for its own method, path, format and replacing.</summary>
 /// <remarks>The replacing flag is read here and checked against the signature, so a link issued to write a new file cannot be turned into one
 /// that replaces an existing file by adding a word to the query.</remarks>
-public sealed class LinkAuthentication(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, FileLinks links)
+internal sealed class LinkAuthentication(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, FileLinks links)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
     protected override Task<AuthenticateResult> HandleAuthenticateAsync()

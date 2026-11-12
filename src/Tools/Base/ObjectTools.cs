@@ -7,7 +7,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Creating, moving, copying and removing objects.</summary>
 [McpServerToolType]
-public sealed class ObjectTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
+internal sealed class ObjectTools(IBlenderBridge bridge) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_add_primitive", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Objects.AddPrimitive)]

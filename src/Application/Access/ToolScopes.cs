@@ -13,7 +13,7 @@ namespace Snail.MCP.Blender.Application.Access;
 /// <c>run_program</c> are each one tool with one annotation, and what they do is whatever is inside them: a key without the Python scope
 /// was running Python by sending it as a step. Those three ask the gate (<see cref="ScopeGate"/>) about every command they carry, under the name of
 /// the tool the command stands for.</para></remarks>
-public sealed class ToolScopes(CommandSemantics semantics)
+internal sealed class ToolScopes(CommandSemantics semantics)
 {
     private static readonly string[] Farmed = ["render_job", "batch", "render_animation"];
 

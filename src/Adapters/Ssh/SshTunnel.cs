@@ -9,7 +9,7 @@ namespace Snail.MCP.Blender.Adapters.Ssh;
 /// and closed otherwise. ssh runs with BatchMode, so it never waits for a password or a host key on a terminal nobody sees, and with
 /// ExitOnForwardFailure, so a port it cannot forward ends it instead of leaving a tunnel that carries nothing. A drop is reopened after a pause
 /// that doubles up to half a minute and starts over once a tunnel has held for a minute.</remarks>
-public sealed class SshTunnel(BlenderLinkOptions link, ISshProcessLauncher launcher, TimeProvider timeProvider, ILogger<SshTunnel> logger)
+internal sealed class SshTunnel(BlenderLinkOptions link, ISshProcessLauncher launcher, TimeProvider timeProvider, ILogger<SshTunnel> logger)
     : BackgroundService, ITunnel
 {
     private static readonly TimeSpan FirstRetry = TimeSpan.FromSeconds(1);

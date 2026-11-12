@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Domain.Commands;
 
 /// <summary>Commands of <c>addon/sequencer.py</c>: the Video Sequence Editor: strips, cuts, grading, encoding and mixdown.</summary>
-public static partial class BridgeCommands
+internal partial class BridgeCommands
 {
     public static readonly BridgeCommand SequencerInfo = new("sequencer_info", AddOnModules.Sequencer);
 

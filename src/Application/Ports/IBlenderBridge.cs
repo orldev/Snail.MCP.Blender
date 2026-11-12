@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Application.Ports;
 
 /// <summary>The link to the add-on running inside Blender: one command in, one reply out.</summary>
-public interface IBlenderBridge
+internal interface IBlenderBridge
 {
     bool IsConnected { get; }
 

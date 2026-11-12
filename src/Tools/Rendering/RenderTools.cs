@@ -12,7 +12,7 @@ namespace Snail.MCP.Blender.Tools.Rendering;
 /// <summary>Render settings, renders to disk and render passes.</summary>
 [McpServerToolType]
 [Skill(Skills.Rendering, SkillDescriptions.Rendering)]
-public sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, RenderGallery gallery, ServerConfig config, AddOnJobs background) : BridgeToolBase(bridge)
+internal sealed class RenderTools(IBlenderBridge bridge, RenderWatch watch, RenderGallery gallery, ServerConfig config, AddOnJobs background) : BridgeToolBase(bridge)
 {
     [McpServerTool(Name = "blender_render_settings", Destructive = false, OpenWorld = false)]
     [Description(ToolDescriptions.Rendering.Settings)]

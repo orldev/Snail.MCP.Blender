@@ -13,7 +13,7 @@ namespace Snail.MCP.Blender.Tools.Base;
 
 /// <summary>Files between this machine and the one Blender runs on: what a remote Blender needs to see, and what it rendered.</summary>
 [McpServerToolType]
-public sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, ServerConfig config, LocalProject project, ClientCommands commands, ClientSessions clients, IServiceProvider services)
+internal sealed class TransferTools(IBlenderBridge bridge, FileTransfer transfer, ServerConfig config, LocalProject project, ClientCommands commands, ClientSessions clients, IServiceProvider services)
     : BridgeToolBase(bridge)
 {
     private TimeSpan Basis => TimeSpan.FromSeconds(config.Bridge.RequestTimeoutSeconds);

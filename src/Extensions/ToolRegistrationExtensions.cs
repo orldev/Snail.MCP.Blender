@@ -16,7 +16,7 @@ namespace Snail.MCP.Blender.Extensions;
 /// <remarks>A class marked with Snail.Sdk's <c>[Skill]</c> is registered like the rest: every tool stays in the server's one collection, so the
 /// protocol finds every call and <c>find_tool</c> every tool, and <c>WithSkills</c> leaves out of a session's list the skills it has not loaded.
 /// The classes are named one by one rather than found by reflection, which is what a build that trims or compiles ahead of time can follow.</remarks>
-public static class ToolRegistrationExtensions
+internal static class ToolRegistrationExtensions
 {
     extension(IMcpServerBuilder builder)
     {

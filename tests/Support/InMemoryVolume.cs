@@ -3,7 +3,7 @@ using System.Security.Cryptography;
 namespace Snail.MCP.Blender.Tests.Support;
 
 /// <summary>The add-on's data directory kept in memory, answering the transfer and storage commands the way the add-on does, over a real socket.</summary>
-public sealed class InMemoryVolume : IAsyncDisposable
+internal sealed class InMemoryVolume : IAsyncDisposable
 {
     private readonly Dictionary<string, List<byte>> _arriving = new(StringComparer.Ordinal);
 

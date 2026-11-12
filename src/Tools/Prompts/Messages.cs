@@ -4,7 +4,7 @@ using Snail.Sdk.Mcp.Hosting;
 namespace Snail.MCP.Blender.Tools.Prompts;
 
 /// <summary>Human-facing texts: errors and hints in tool responses, seen by the model after the call; tool descriptions live in <see cref="ToolDescriptions"/>.</summary>
-public static class Messages
+internal static class Messages
 {
     public const string AddOnUnavailableHint =
         "Start Blender and make sure the Snail Bridge extension is installed and listening on the same port: " +

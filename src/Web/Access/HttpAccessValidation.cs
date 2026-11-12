@@ -7,7 +7,7 @@ using Snail.Sdk.Mcp.Hosting;
 namespace Snail.MCP.Blender.Web.Access;
 
 /// <summary>Stops an HTTP server that has no token before it listens, instead of letting it turn every client away.</summary>
-public sealed class HttpAccessValidation : IValidateOptions<ServerConfig>
+internal sealed class HttpAccessValidation : IValidateOptions<ServerConfig>
 {
     public ValidateOptionsResult Validate(string? name, ServerConfig options) =>
         options.Transport is McpTransport.Http && ClientToken.Read(options.Http) is null

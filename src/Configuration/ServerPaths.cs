@@ -3,7 +3,7 @@ using Snail.Sdk.Mcp.Hosting;
 namespace Snail.MCP.Blender.Configuration;
 
 /// <summary>Paths where the server keeps its data and ships the add-on; its settings file is found by Snail.Sdk's <see cref="ServerSettings"/>.</summary>
-public static class ServerPaths
+internal static class ServerPaths
 {
     /// <summary>The server's short name, which names its folders: ~/.s3l-mcp-blender and ~/.config/s3l-mcp-blender.</summary>
     public const string ShortName = "blender";

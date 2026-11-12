@@ -5,7 +5,7 @@ namespace Snail.MCP.Blender.Application.Transfer;
 /// request of a large file takes far longer than any other. Under the link's flat timeout a large upload timed out on its last chunk while the
 /// add-on went on to commit the file, and the retry was refused as already there. The rate is a deliberate under-estimate rather than a
 /// measurement: hashing a file from network storage at 50 MB a second.</remarks>
-public static class TransferTimeouts
+internal static class TransferTimeouts
 {
     private const long HashedBytesPerSecond = 50L * 1024 * 1024;
 

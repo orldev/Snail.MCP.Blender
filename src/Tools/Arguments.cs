@@ -1,7 +1,7 @@
 namespace Snail.MCP.Blender.Tools;
 
 /// <summary>Builds the params of a bridge request, leaving out what the caller did not pass so the add-on's defaults apply.</summary>
-public static class Arguments
+internal static class Arguments
 {
     extension(JsonObject arguments)
     {

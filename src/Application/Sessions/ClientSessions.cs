@@ -4,7 +4,7 @@ namespace Snail.MCP.Blender.Application.Sessions;
 /// <remarks>The name is what the add-on's leases and journal call the agent: two clients working in one Blender have to be told apart there,
 /// or one takes a lease the other reads as its own and the journal records a studio of one. Which skills a client has loaded is Snail.Sdk's
 /// (<c>WithSkills</c>), kept by this name over HTTP and by the MCP session over stdio.</remarks>
-public sealed class ClientSession(string name, string? agent, IReadOnlyList<string>? scopes = null)
+internal sealed class ClientSession(string name, string? agent, IReadOnlyList<string>? scopes = null)
 {
     /// <summary>What the client is called here, for the log and the health report.</summary>
     public string Name { get; } = name;
@@ -33,7 +33,7 @@ public sealed class ClientSession(string name, string? agent, IReadOnlyList<stri
 /// now: an operator who revokes a key and mints a narrower one for the same client means the narrower one from the next request on.
 /// Everything downstream — the gate, the agent a command is signed with — asks for the client in hand rather than for the process's one.
 /// <para>The clients of a server whose configured agent name, for a client that names none of its own, is <paramref name="agent"/>.</para></remarks>
-public sealed class ClientSessions(string? agent)
+internal sealed class ClientSessions(string? agent)
 {
     private readonly AsyncLocal<ClientSession?> _serving = new();
 
