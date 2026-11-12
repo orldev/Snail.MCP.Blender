@@ -118,11 +118,14 @@ jobs:
       - name: Build the site
         run: dotnet msbuild src/Snail.MCP.Blender.csproj -t:SnailSite -nologo
 
+  # The runner is the Ubuntu of the Blender image (deploy/blender/Dockerfile), whose packages.txt it installs: ubuntu-latest
+  # moves to 26.04 from October 2026, where the libraries may be named otherwise, and a test that passed beside another
+  # system would prove nothing of the image.
   live:
     name: Live tests against Blender
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
 
     steps:

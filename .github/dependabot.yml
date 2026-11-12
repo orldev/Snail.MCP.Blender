@@ -28,10 +28,16 @@ updates:
     groups:
       snail-sdk:
         patterns: ["Snail.Sdk*"]
-      model-context-protocol:
-        patterns: ["ModelContextProtocol*"]
       tests:
         patterns: ["xunit*", "Microsoft.NET.Test.Sdk", "coverlet.*", "Microsoft.Extensions.TimeProvider.Testing"]
+    # ModelContextProtocol moves with Snail.Sdk.Mcp, by hand: its packages reach the server through Snail.Sdk.Mcp.Hosting
+    # and Http, and ModelContextProtocol.AspNetCore asks for its core at exactly its own version, so a bump of the two
+    # here alone is refused by restore (NU1608) — the group meant to move them together still failed (Snail.MCP.CleanUp
+    # #4). The major versions of Microsoft.Extensions wait for .NET 11.
+    ignore:
+      - dependency-name: "ModelContextProtocol*"
+      - dependency-name: "Microsoft.Extensions.*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /deploy/mcp
