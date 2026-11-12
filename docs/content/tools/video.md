@@ -621,7 +621,7 @@ Removes one strip, or every strip with all=true.
 
 ## <code>blender_<wbr>sequencer_<wbr>render</code>
 
-Encodes the timeline to a video file with FFmpeg: container by extension, codec, quality and audio codec, or whatever blender_sequencer_encode prepared. The frame range is fitted to the strips unless given. Long for big timelines: set a timeout that fits.
+Encodes the timeline to a video file with FFmpeg: container by extension, codec, quality and audio codec, or whatever blender_sequencer_encode prepared. The frame range is fitted to the strips unless given. The encode is a job: the reply is its result within the wait, or the job's resource to read when it ends; Blender is busy until then. Long for big timelines: set a timeout that fits.
 
 *only adds · every call adds · stays inside Blender.*
 
@@ -638,6 +638,7 @@ Encodes the timeline to a video file with FFmpeg: container by extension, codec,
 | `resolutionX` | `integer?` | — | `null` | Pixels along this edge, 1 to 4096. |
 | `resolutionY` | `integer?` | — | `null` | Pixels along this edge, 1 to 4096. |
 | `timeoutSeconds` | `integer` | — | `600` | Seconds to wait for Blender, 1 to 600. |
+| `wait` | `integer` | — | `60` | Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on. |
 
 <details><summary>JSON Schema</summary>
 
@@ -722,6 +723,11 @@ Encodes the timeline to a video file with FFmpeg: container by extension, codec,
       "description": "Seconds to wait for Blender, 1 to 600.",
       "type": "integer",
       "default": 600
+    },
+    "wait": {
+      "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+      "type": "integer",
+      "default": 60
     }
   },
   "required": [

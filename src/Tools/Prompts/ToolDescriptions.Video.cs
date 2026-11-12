@@ -28,8 +28,9 @@ public static partial class ToolDescriptions
         /// <summary><c>blender_sequencer_render</c></summary>
         public const string Render =
             "Encodes the timeline to a video file with FFmpeg: container by extension, codec, quality and audio codec, or " +
-            "whatever blender_sequencer_encode prepared. The frame range is fitted to the strips unless given. Long for big " +
-            "timelines: set a timeout that fits.";
+            "whatever blender_sequencer_encode prepared. The frame range is fitted to the strips unless given. The encode is a job: " +
+            "the reply is its result within the wait, or the job's resource to read when it ends; Blender is busy until then. " +
+            "Long for big timelines: set a timeout that fits.";
     }
 
     /// <summary><c>EditTools</c>.</summary>

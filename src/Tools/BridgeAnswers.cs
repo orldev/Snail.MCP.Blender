@@ -15,6 +15,12 @@ public static class BridgeAnswers
             ? ToolAnswer.Ok(reply.Result ?? new JsonObject())
             : Failed(reply.Error!);
 
+    /// <summary>A bridge reply as the answer a job ends with: the result, or the add-on's error with its hint and type.</summary>
+    public static Answer<JsonObject> Answered(BridgeReply reply) =>
+        reply.IsOk
+            ? Answer.Ok(reply.Result as JsonObject ?? [])
+            : Answer.Failed(reply.Error!.Message, Messages.HintFor(reply.Error), reply.Error.Type, reply.Error.Details?.DeepClone());
+
     /// <summary>The add-on's error as a failed answer.</summary>
     public static CallToolResult Failed(BridgeError error) =>
         ToolAnswer.Failed(error.Message, Messages.HintFor(error), error.Type, error.Details?.DeepClone());

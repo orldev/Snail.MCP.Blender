@@ -4,6 +4,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using Snail.MCP.Blender.Application.Rendering;
 using Snail.Sdk.Mcp.Hosting.Discovery;
+using Snail.Sdk.Mcp.Hosting.Jobs;
 using Snail.MCP.Blender.Tools.Prompts;
 
 namespace Snail.MCP.Blender.Tools.Video;
@@ -11,8 +12,11 @@ namespace Snail.MCP.Blender.Tools.Video;
 /// <summary>The Video Sequence Editor: a timeline of strips encoded to a video file.</summary>
 [McpServerToolType]
 [Skill(Skills.Video, SkillDescriptions.Video)]
-public sealed class SequencerTools(IBlenderBridge bridge, RenderWatch watch) : BridgeToolBase(bridge)
+public sealed class SequencerTools(IBlenderBridge bridge, RenderWatch watch, Jobs jobs) : BridgeToolBase(bridge)
 {
+    /// <summary>The kind of job an encode of the timeline is.</summary>
+    private const string VideoKind = "video";
+
     [McpServerTool(Name = "blender_sequencer_info", ReadOnly = true, OpenWorld = false)]
     [Description(ToolDescriptions.Video.Info)]
     public Task<CallToolResult> InfoAsync(CancellationToken cancellationToken = default) =>
@@ -108,14 +112,39 @@ public sealed class SequencerTools(IBlenderBridge bridge, RenderWatch watch) : B
         [Description(ToolDescriptions.Parameters.RenderResolution)] int? resolutionX = null,
         [Description(ToolDescriptions.Parameters.RenderResolution)] int? resolutionY = null,
         [Description(ToolDescriptions.Parameters.TimeoutSeconds)] int timeoutSeconds = 600,
-        IProgress<ProgressNotificationValue>? progress = null,
-        CancellationToken cancellationToken = default) =>
-        ToolLimits.IsRenderable(resolutionX) && ToolLimits.IsRenderable(resolutionY)
-            ? await WithinAsync(timeoutSeconds, async timeout => BridgeAnswers.From(await watch.FollowAsync(
-                ExchangeAsync(BridgeCommands.SequencerRender,
-                    new JsonObject().With("path", path).With("codec", codec).With("quality", quality).With("audio_codec", audioCodec).With("fit_range", fitRange)
-                        .With("start", start).With("end", end).With("fps", fps).With("resolution_x", resolutionX).With("resolution_y", resolutionY),
-                    timeout, cancellationToken),
-                progress, start is { } first && end is { } last ? last - first + 1 : null, cancellationToken).ConfigureAwait(false))).ConfigureAwait(false)
-            : ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint);
+        [Description(ToolDescriptions.Parameters.Wait)] int wait = 60,
+        CancellationToken cancellationToken = default)
+    {
+        if (!ToolLimits.IsRenderable(resolutionX) || !ToolLimits.IsRenderable(resolutionY))
+        {
+            return ToolAnswer.Failed(Messages.ResolutionTooLarge, Messages.ResolutionHint);
+        }
+
+        var arguments = new JsonObject().With("path", path).With("codec", codec).With("quality", quality).With("audio_codec", audioCodec).With("fit_range", fitRange)
+            .With("start", start).With("end", end).With("fps", fps).With("resolution_x", resolutionX).With("resolution_y", resolutionY);
+        int? frames = start is { } first && end is { } last ? last - first + 1 : null;
+
+        return await WithinAsync(timeoutSeconds, async timeout =>
+        {
+            var job = jobs.Start(VideoKind, (progress, token) => EncodeAsync(arguments, timeout, frames, progress, token), ToolAnswer.ObjectInfo);
+
+            return BridgeAnswers.Job(await job.ForAsync(TimeSpan.FromSeconds(wait), cancellationToken).ConfigureAwait(false), Messages.SequencerRenderNote);
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>Encodes the timeline in this Blender, the monitor's frames reported as the job's progress; a refusal of the add-on ends the job failed with its type.</summary>
+    /// <remarks>A call that waited for the whole encode was cut by the client's own timeout — a minute for Claude Code — while Blender went on
+    /// encoding, and the model never learned the file was written. As a job the call answers within its wait and the encode keeps its own timeout.</remarks>
+    private async Task<Answer<JsonObject>> EncodeAsync(JsonObject arguments, TimeSpan timeout, int? frames, IProgress<JobProgress> progress, CancellationToken cancellationToken)
+    {
+        var reply = await watch.FollowAsync(ExchangeAsync(BridgeCommands.SequencerRender, arguments, timeout, cancellationToken), new Steps(progress), frames, cancellationToken).ConfigureAwait(false);
+
+        return BridgeAnswers.Answered(reply);
+    }
+
+    /// <summary>The monitor's MCP progress as a job's steps.</summary>
+    private sealed class Steps(IProgress<JobProgress> job) : IProgress<ProgressNotificationValue>
+    {
+        public void Report(ProgressNotificationValue value) => job.Report(new JobProgress(value.Progress, value.Total, value.Message));
+    }
 }

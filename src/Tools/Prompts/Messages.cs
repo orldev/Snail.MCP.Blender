@@ -21,6 +21,10 @@ public static class Messages
         "must be stoppable belong in blender_render_job, which renders in a second Blender and blender_render_job_cancel ends; " +
         "blender_render_animation does that by default.";
 
+    public const string SequencerRenderNote =
+        "Encoding in this Blender, which stays busy until the video is written and cannot be stopped; the job's resource shows the frames " +
+        "and holds the file's path once it ends.";
+
     public const string BackgroundRenderNote =
         "Rendering in a second Blender: this one stays free, the job's resource shows the frames as they land and " +
         "blender_render_job_cancel stops it. Pass background=false to render here instead, which blocks Blender and cannot be cancelled.";

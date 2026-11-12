@@ -1,5 +1,6 @@
 using Snail.MCP.Blender.Application.Rendering;
 using Snail.MCP.Blender.Tools.Video;
+using Snail.Sdk.Mcp.Hosting.Jobs;
 
 namespace Snail.MCP.Blender.Tests.Tools;
 
@@ -7,7 +8,7 @@ public class VideoToolsTests
 {
     private readonly ScriptedBridge _bridge = new();
 
-    private SequencerTools Timeline() => new(_bridge, new RenderWatch(new SilentMonitor()));
+    private SequencerTools Timeline() => new(_bridge, new RenderWatch(new SilentMonitor()), new Jobs("blender"));
 
     [Fact]
     public async Task AddStrip_TextWithFade_SendsWireNames()
@@ -37,6 +38,37 @@ public class VideoToolsTests
 
         Assert.False(response["ok"]!.GetValue<bool>());
         Assert.Empty(_bridge.Sent);
+    }
+
+    /// <summary>An encode is a job: a call that waited for the whole timeline was cut by the client's own minute while Blender went on, so the
+    /// call answers within its wait and the encode keeps the timeout it was given.</summary>
+    [Fact]
+    public async Task Render_IsAJob_ThatEndsWithTheEncodedFile_AndKeepsItsOwnTimeout()
+    {
+        _bridge.Answer(BridgeCommands.SequencerRender, new JsonObject { ["path"] = "/tmp/out.mp4", ["bytes"] = 2048 });
+        var tools = Timeline();
+
+        var text = (await tools.RenderAsync("/tmp/out.mp4", start: 1, end: 24, timeoutSeconds: 500, wait: 10)).Text();
+
+        Assert.True(text.Contains("\"ok\":true", StringComparison.Ordinal), text);
+        Assert.Contains("job://blender/video/", text, StringComparison.Ordinal);
+        Assert.Contains("/tmp/out.mp4", text, StringComparison.Ordinal);
+        Assert.Equal(BridgeCommands.SequencerRender, _bridge.Sent.Single().Command);
+        Assert.Equal(TimeSpan.FromSeconds(500), _bridge.Sent.Single().Timeout);
+        Assert.Equal(24, _bridge.LastParameters!["end"]!.GetValue<int>());
+    }
+
+    [Fact]
+    public async Task Render_RefusedByTheAddOn_EndsTheJobFailed_WithTheAddOnsType()
+    {
+        var refusal = RecordedAnswers.Error("a primitive of a kind there is none of");
+        _bridge.Fail(BridgeCommands.SequencerRender, refusal);
+        var tools = Timeline();
+
+        var text = (await tools.RenderAsync("/tmp/out.mp4", wait: 10)).Text();
+
+        Assert.True(text.Contains("\"ok\":false", StringComparison.Ordinal), text);
+        Assert.Contains($"\"type\":\"{refusal.Type}\"", text, StringComparison.Ordinal);
     }
 
     [Fact]

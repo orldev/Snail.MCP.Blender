@@ -9512,7 +9512,7 @@
   },
   {
     "name": "blender_sequencer_render",
-    "description": "Encodes the timeline to a video file with FFmpeg: container by extension, codec, quality and audio codec, or whatever blender_sequencer_encode prepared. The frame range is fitted to the strips unless given. Long for big timelines: set a timeout that fits.",
+    "description": "Encodes the timeline to a video file with FFmpeg: container by extension, codec, quality and audio codec, or whatever blender_sequencer_encode prepared. The frame range is fitted to the strips unless given. The encode is a job: the reply is its result within the wait, or the job\u0027s resource to read when it ends; Blender is busy until then. Long for big timelines: set a timeout that fits.",
     "inputSchema": {
       "type": "object",
       "properties": {
@@ -9593,6 +9593,11 @@
           "description": "Seconds to wait for Blender, 1 to 600.",
           "type": "integer",
           "default": 600
+        },
+        "wait": {
+          "description": "Seconds to wait for the job to end before answering with it still running; 60 by default, 0 answers at once with the job to read or wait on.",
+          "type": "integer",
+          "default": 60
         }
       },
       "required": [
