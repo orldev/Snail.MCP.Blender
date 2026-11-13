@@ -25,7 +25,7 @@ ARG VERSION
 
 RUN dotnet publish src/Snail.MCP.Blender.csproj -c Release -o /app -p:UseAppHost=false -p:PublishAot=false -p:Version="$VERSION"
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0.14
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.15
 ARG VERSION
 LABEL org.opencontainers.image.version=$VERSION
 # tini runs as process 1 and starts the program under it: .NET ends an unhandled exception with SIGABRT, which process
