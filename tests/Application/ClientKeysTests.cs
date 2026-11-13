@@ -26,7 +26,7 @@ public class ClientKeysTests : IDisposable
         var (key, secret) = keys.Mint("lighting", [Scopes.Read, Scopes.Write]);
 
         Assert.Equal("lighting", keys.Holder(secret)?.Name);
-        Assert.Null(keys.Holder($"l{secret[1..]}"));
+        Assert.Null(keys.Holder($"{(secret[0] == 'a' ? 'b' : 'a')}{secret[1..]}"));
         Assert.Null(keys.Holder(""));
         Assert.True(key.May(Scopes.Write));
         Assert.False(key.May(Scopes.Python));

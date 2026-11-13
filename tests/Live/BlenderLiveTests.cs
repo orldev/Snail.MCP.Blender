@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Snail.MCP.Blender.Adapters.AddOn;
 using Snail.MCP.Blender.Adapters.Blender;
 using Snail.MCP.Blender.Configuration;
@@ -44,16 +45,21 @@ public sealed class BlenderLiveTests : IAsyncLifetime
 
     /// <summary>Ping is answered from the socket thread, so a Blender whose dispatcher died answers it like a healthy one; the pulse is what
     /// tells them apart, and it has to move on its own while nothing is asked of Blender.</summary>
+    /// <remarks>The pulse is compared as the moment of the last tick, not as the seconds since it: a ping served right after a tick reads 0.0,
+    /// and two of them read the same 0.0 although the dispatcher ticked six times between them.</remarks>
     [BlenderFact]
     public async Task Ping_RealAddOn_ReportsAPulseThatKeepsMoving()
     {
+        var clock = Stopwatch.StartNew();
         var first = await Send(BridgeCommands.Ping);
+        var firstTick = clock.Elapsed.TotalSeconds - first["pumped_s_ago"]!.GetValue<double>();
         await Task.Delay(TimeSpan.FromMilliseconds(300));
         var second = await Send(BridgeCommands.Ping);
+        var secondTick = clock.Elapsed.TotalSeconds - second["pumped_s_ago"]!.GetValue<double>();
 
         Assert.True(first["pumped_s_ago"]!.GetValue<double>() < 5, $"the queue was last drained {first["pumped_s_ago"]} s ago");
         Assert.True(second["pumped_s_ago"]!.GetValue<double>() < 5, $"the queue was last drained {second["pumped_s_ago"]} s ago");
-        Assert.NotEqual(first["pumped_s_ago"]!.GetValue<double>(), second["pumped_s_ago"]!.GetValue<double>());
+        Assert.True(secondTick - firstTick > 0.1, $"the dispatcher last ticked {secondTick - firstTick:0.000} s later after 300 ms of nothing asked");
         Assert.Null(second["executing"]?.GetValue<string>());
     }
 
