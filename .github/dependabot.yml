@@ -7,7 +7,7 @@
 # The .NET SDK band is the standard's: global.json is shared by every Snail repository and the conformance check compares
 # it by value, so it is raised by hand, in Snail.Sdk first, together with the image the server is built in. A multi-ecosystem
 # group meant to move the two at once brought a pull request that moved global.json alone, the one change that fails with
-# exit code 155. Dependabot therefore follows the build image only inside the band, and the runtime image freely.
+# exit code 155. Dependabot therefore follows the build image only inside the band, and the runtime image inside its major.
 version: 2
 
 updates:
@@ -50,6 +50,9 @@ updates:
     ignore:
       - dependency-name: "*dotnet/sdk"
         versions: [">= 10.0.400"]
+      # The runtime follows the SDK's major, raised by hand with it: aspnet 11 under an SDK 10 build fails the toolchain guard (#10).
+      - dependency-name: "*dotnet/aspnet"
+        update-types: ["version-update:semver-major"]
 
   # Ubuntu stays on its LTS: Blender is a self-contained archive and gains nothing from a newer base, and the GNU tar of 26.04
   # cannot unpack it in an amd64 build emulated on a Mac, where these images are checked.
